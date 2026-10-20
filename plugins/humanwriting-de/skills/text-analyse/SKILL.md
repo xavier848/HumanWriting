@@ -14,7 +14,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" TEXTDATEI
 ```
 
 - Eingabe: `.md`, `.txt`, `.docx`, `.odt` oder `.pdf` (PDF nur mit `pdftotext`; `.doc`, `.rtf` und `.pages` werden mit Meldung abgelehnt). Text aus dem Chat zuerst in eine Datei schreiben (z. B. `/tmp/text.md`) oder per stdin übergeben (`-` als Dateiname).
-- Die Referenzwerte stammen aus Abschnitten à 800 Wörtern. Lange Texte (ab ~1200 Wörtern, das Skript warnt) am besten abschnittsweise messen; Absatz- und Streuungsmaße liegen bei langen Texten sonst höher.
+- Die Referenzwerte stammen aus Abschnitten à 800 Wörtern. Texte über 1200 Wörtern bewertet das Skript deshalb automatisch im **Blockmodus**: Es zerlegt den Text an Absatzgrenzen in Blöcke von etwa 800 Wörtern (eine Überschrift bleibt beim folgenden Absatz, ein Riesenabsatz wird an einer Satzgrenze geteilt), bewertet jeden Block und nimmt je Kennzahl den Median über die Blöcke. Lange Texte müssen also nicht von Hand aufgeteilt werden; am Stück gemessen lägen Absatz- und Streuungsmaße zu hoch.
 - `--format json` liefert alle Werte maschinenlesbar inklusive Satzliste mit Markierungen (für die Umschreib-Schleife).
 - `--alle` zeigt auch die nicht bewerteten Kennzahlen, `--stellen 30` mehr auffällige Sätze.
 - Falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt wurde: Skript suchen mit `find ~/.claude -path '*text-analyse/scripts/analyse.py' 2>/dev/null | head -1`.
@@ -35,8 +35,10 @@ Der Bericht enthält:
    - „↑ erhöhen / ↓ senken“ zeigt die Richtung zum Zielbereich.
 4. **Satzlängen-Verteilung** als Histogramm und **Satzlängen im Verlauf** (Rhythmus sichtbar machen).
 5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `konnektor_anfang`, `konnektor_mitte` (Konnektor im Satzinneren – eher streichen als verschieben), `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel). Die Markierung `gleichfoermig` (Folge fast gleich langer Sätze) ist nur ein Hinweis auf die Stelle: Ähnlich lange Sätze hintereinander sind auch bei Menschen normal. Entscheidend ist die Verteilung insgesamt, nicht einzelne Folgen.
-6. **Grenzfall** (Zusatz an einer gelben oder roten Kennzahl, im JSON `unsicher: true`): Der Wert liegt so nah an P25/P75, dass er innerhalb der typischen Messunsicherheit eines 800-Wörter-Abschnitts schwankt. Gelbe Grenzfälle nicht als Hebel nennen. Weil einzelne Kennzahlen bei dieser Textlänge stark streuen, ist die Modell-Einschätzung das verlässlichere Gesamturteil.
+6. **Grenzfall** (Zusatz an einer gelben oder roten Kennzahl, im JSON `unsicher: true`): Der Wert liegt näher an P25/P75 als die halbe typische Messunsicherheit eines 800-Wörter-Abschnitts; bei längeren Texten schrumpft diese Spanne mit √(800 / Wörter). Gelbe Grenzfälle nicht als Hebel nennen. Weil einzelne Kennzahlen bei dieser Textlänge stark streuen, ist die Modell-Einschätzung das verlässlichere Gesamturteil.
 7. **ℹ️ Funktionswort-Profil** (`fw_profil_llr_pro_1000`, > 0 = menschlich): geht nur in die Modell-Einschätzung ein, nicht in den Score. Nur als Tendenz lesen; nie einzelne Funktionswörter gezielt einstreuen.
+8. **Stärkste KI-Signale im Modell** (im JSON `beitrag` je Kennzahl und `modell_beitraege`, am stärksten KI-ziehend zuerst): Beitrag einer Kennzahl zur Modell-Einschätzung gegenüber einem typischen menschlichen Text. Negativ = zieht Richtung KI. Damit lässt sich erklären, warum die Modell-Einschätzung niedrig ist, auch wenn kaum etwas rot ist.
+9. **Blöcke** (nur im Blockmodus, im JSON `blockmodus`, `bloecke`): Tabelle mit Sätzen von–bis, Wörtern, Score und % menschlich je Block; der Block mit der niedrigsten Modell-Einschätzung ist als „am KI-nächsten“ markiert. Die Kennzahlwerte oben sind dann Mediane über die Blöcke, der Score wird aus diesen Medianen berechnet, die Modell-Einschätzung ist der Median der Block-Einschätzungen.
 
 Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut Score und Modell auf zurückgehaltenen Texten funktionieren, steht in `references/kennzahlen.md`. Wie gemessen wird (Bereinigung, Satzgrenzen, Silben, Teilsätze, Fenster) und welche Maße bewusst fehlen, steht in `references/kennzahlen-methodik.md`.
 
@@ -46,6 +48,7 @@ Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut
 - Die 3–5 wichtigsten Hebel benennen (nach Gewicht sortiert) und die konkreten Sätze zitieren, die sie verursachen.
 - Kennzahlen, die stark miteinander zusammenhängen (z. B. Satzlängen-Variation, -Streuung und Anteil mittellanger Sätze), als **einen** Hebel behandeln. Das Gewicht im Score ist dafür schon gedeckelt.
 - Bei weniger als ~300 Wörtern oder 15 Sätzen ausdrücklich auf die Unsicherheit hinweisen.
+- Im Blockmodus den KI-nächsten Block mit seinen Satznummern nennen; dort lohnt die Überarbeitung zuerst.
 - Wenn der Nutzer Verbesserung möchte: Skill **humanisieren** verwenden.
 
 ## Grenzen

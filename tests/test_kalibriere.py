@@ -16,6 +16,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "kalibrierung", "scripts"))
 import kalibriere  # noqa: E402
 import analyse  # noqa: E402  (Pfad setzt kalibriere)
+import referenzen  # noqa: E402
 
 MUSTER_PFAD = os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "data", "ki_muster.json")
 INHALT = ["arbeit", "markt", "bildung", "studie", "ergebnis", "prozess", "gruppe", "wandel", "methode", "theorie",
@@ -259,6 +260,142 @@ class Modell(unittest.TestCase):
         self.assertEqual(kalibriere.waehle_konfiguration(erg), (9, 0.01))
 
 
+class ZClipping(unittest.TestCase):
+    """S1: z = max(−Z_CLIP, min(Z_CLIP, (x − mittel)/sd)) in Fit, OOF-Vorhersage und Goodhart-Analyse."""
+
+    def paket(self):
+        return {"mittel": {"a": 0.0, "b": 10.0}, "sd": {"a": 1.0, "b": 2.0}}
+
+    def test_konstante_wie_analyse(self):
+        self.assertEqual(kalibriere.Z_CLIP, getattr(analyse, "Z_CLIP", 3.0))
+
+    def test_z_wert(self):
+        self.assertEqual(kalibriere.z_wert(100.0, 0.0, 1.0), kalibriere.Z_CLIP)
+        self.assertEqual(kalibriere.z_wert(-100.0, 0.0, 1.0), -kalibriere.Z_CLIP)
+        self.assertAlmostEqual(kalibriere.z_wert(13.0, 10.0, 2.0), 1.5)
+        self.assertEqual(kalibriere.z_wert(None, 10.0, 2.0), 0.0)  # fehlend = Mittelwert, wie bewerte()
+        self.assertEqual(kalibriere.z_wert(5.0, 4.0, 0.0), 1.0)    # SD 0 → 1
+
+    def test_p_mensch_begrenzt(self):
+        modell = {"merkmale": ["a", "b"], "w": [1.5, -0.5], "b": 0.2}
+        p_rand = kalibriere.p_mensch(modell, self.paket(), {"a": 3.0, "b": 10.0})
+        self.assertAlmostEqual(kalibriere.p_mensch(modell, self.paket(), {"a": 40.0, "b": 10.0}), p_rand)
+        self.assertLess(kalibriere.p_mensch(modell, self.paket(), {"a": 2.0, "b": 10.0}), p_rand)
+        z = 0.2 + 1.5 * 3.0 - 0.5 * (-3.0)
+        self.assertAlmostEqual(kalibriere.p_mensch(modell, self.paket(), {"a": 9.0, "b": -50.0}), 1 / (1 + math.exp(-z)))
+
+    def test_fit_auf_begrenzten_werten(self):
+        rnd = random.Random(7)
+        daten = [{"gruppe": "mensch" if i % 2 else "ki", "a": rnd.gauss(1 if i % 2 else -1, 1)} for i in range(120)]
+        daten[0]["a"] = 60.0  # Ausreißer
+        paket = {"rang": ["a"], "mittel": {"a": 0.0}, "sd": {"a": 1.0}, "daten": daten}
+        mod = kalibriere.fit_modell(paket, 1, 0.01)
+        spalte = [max(-3.0, min(3.0, z["a"])) for z in daten]
+        w, b = kalibriere.logreg_spalten([spalte], [1 if z["gruppe"] == "mensch" else 0 for z in daten], 0.01)
+        self.assertAlmostEqual(mod["w"][0], w[0], places=6)
+        self.assertAlmostEqual(mod["b"], b, places=6)
+
+
+class Auswahl(unittest.TestCase):
+    def test_lambda_gitter(self):
+        g = kalibriere.MODELL_LAMBDA
+        self.assertGreaterEqual(len(g), 10)
+        self.assertLessEqual(min(g), 0.001)
+        self.assertGreaterEqual(max(g), 30)
+        self.assertEqual(list(g), sorted(g, reverse=True))  # absteigend: Warmstart von der starken Strafe aus
+        schritte = [math.log10(a / b) for a, b in zip(g, g[1:])]
+        self.assertLess(max(schritte) - min(schritte), 0.01)  # log-gleichabständig (bis auf Rundung)
+
+    def test_lambda_richtung_staerkere_regularisierung(self):
+        erg = {(6, lam): [{"logloss_bal": v + d} for d in (-0.02, 0.0, 0.02)]
+               for lam, v in ((10.0, 0.40), (1.0, 0.21), (0.1, 0.205), (0.01, 0.20), (0.001, 0.20))}
+        erg.update({(9, lam): [{"logloss_bal": v + d} for d in (-0.02, 0.0, 0.02)]
+                    for lam, v in ((1.0, 0.30), (0.1, 0.25), (0.01, 0.19), (0.001, 0.19))})
+        details = {}
+        # bestes 0,19 ± SE 0,0115 → k = 6 (0,20 ≤ 0,2015); für k = 6: Minimum 0,20 + SE → größtes λ mit ≤ 0,2115 ist 1,0
+        self.assertEqual(kalibriere.waehle_konfiguration(erg, details), (6, 1.0))
+        self.assertEqual(details["k"], 6)
+        self.assertEqual(details["lambda"], 1.0)
+        self.assertAlmostEqual(details["grenze_lambda"], 0.20 + 0.02 / math.sqrt(3))
+        self.assertFalse(details["lambda_am_rand"])
+
+    def test_auswahl_json_behaelt_gitterwerte(self):
+        # Prüfer-Fund: round(λ, 5) machte aus 0,003162 den Nicht-Gitterwert 0,00316 (aus 0,0003162 → 0,00032)
+        erg = {(6, lam): [{"logloss_bal": 0.2 + d + (0.0 if lam < 0.001 else 0.05)} for d in (-0.01, 0.0, 0.01)]
+               for lam in kalibriere.MODELL_LAMBDA}
+        details = {}
+        k, lam = kalibriere.waehle_konfiguration(erg, details)
+        j = kalibriere.auswahl_json(details)
+        self.assertEqual(j["lambda"], lam)
+        self.assertIn(j["bestes"]["lambda"], kalibriere.MODELL_LAMBDA)
+        self.assertEqual(j["lambda_gitter"], sorted(kalibriere.MODELL_LAMBDA))
+        self.assertEqual(kalibriere.auswahl_json({"lambda": 0.003162, "x": {"se": 0.0041934}})["x"]["se"], 0.004193)
+
+
+class KalibrierungsGuete(unittest.TestCase):
+    def test_brier(self):
+        self.assertEqual(kalibriere.brier([1.0, 0.0], [1, 0]), 0.0)
+        self.assertAlmostEqual(kalibriere.brier([0.5] * 4, [1, 1, 1, 0]), 0.25)
+        # balanciert: jede Klasse zählt halb, unabhängig von ihrer Größe
+        self.assertAlmostEqual(kalibriere.brier([0.9, 0.9, 0.9, 0.4], [1, 1, 1, 0], balanciert=True), 0.5 * 0.01 + 0.5 * 0.16)
+
+    def test_ece(self):
+        ps = [0.2] * 5 + [0.8] * 5
+        ys = [1, 0, 0, 0, 0] + [1, 1, 1, 1, 0]
+        self.assertAlmostEqual(kalibriere.ece(ps, ys), 0.0)
+        self.assertAlmostEqual(kalibriere.ece([0.95] * 4, [1, 0, 1, 0]), 0.45)
+        rel = kalibriere.reliabilitaet([1.0, 0.0, 0.05], [1, 0, 0])
+        self.assertEqual(len(rel), kalibriere.ECE_KLASSEN)
+        self.assertEqual((rel[-1]["n_mensch"], rel[0]["n_ki"]), (1, 2))  # p = 1 fällt in die letzte Klasse
+        self.assertIsNone(rel[5]["p_mittel"])
+
+    def test_kalibrierungs_guete(self):
+        g = kalibriere.kalibrierungs_guete([0.9, 0.8, 0.95, 0.1, 0.3], [1, 1, 1, 0, 0])
+        self.assertEqual(set(g["perzentile"]), {"mensch", "ki"})
+        self.assertEqual(set(g["perzentile"]["mensch"]), {"p5", "p10", "p25", "p50", "p75", "p90", "p95"})
+        self.assertAlmostEqual(g["perzentile"]["mensch"]["p50"], 0.9)
+        for k in ("brier", "brier_bal", "ece", "ece_bal", "reliabilitaet"):
+            self.assertIn(k, g)
+
+    def test_ziel_p_mensch(self):
+        self.assertEqual(kalibriere.ziel_p_mensch_von([0.999] * 50), 0.95)   # Deckel
+        self.assertEqual(kalibriere.ziel_p_mensch_von([0.2] * 50), 0.5)      # Boden
+        ps = [0.5 + i / 200 for i in range(100)]
+        self.assertEqual(kalibriere.ziel_p_mensch_von(ps), round(analyse.perzentil(ps, 0.10), 2))
+        self.assertEqual(kalibriere.ziel_p_mensch_von(ps), 0.55)
+
+
+class Goodhart(unittest.TestCase):
+    def setUp(self):
+        daten = [{"gruppe": "ki", "a": -2.0 + 0.1 * i, "b": 1.0, "c": None if i == 4 else -1.0} for i in range(5)]
+        daten += [{"gruppe": "mensch", "a": 2.0, "b": 0.0, "c": 1.0}]
+        metriken = {k: {"mensch": {"p50": p}} for k, p in (("a", 2.0), ("b", 0.0), ("c", 1.0))}
+        self.paket = {"daten": daten, "metriken": metriken, "mittel": {"a": 0.0, "b": 0.0, "c": 0.0},
+                      "sd": {"a": 1.0, "b": 1.0, "c": 1.0}}
+        self.modell = {"merkmale": ["a", "b", "c"], "w": [2.0, -1.0, 0.5], "b": 0.0}
+
+    def test_kontrafaktisch(self):
+        gh = kalibriere.goodhart_analyse(self.modell, self.paket, ziel_p=0.5, top_n=2)
+        self.assertEqual(gh["n_ki"], 5)
+        zeilen = {r["id"]: r for r in gh["merkmale"]}
+        # Logits −5,5 −5,3 −5,1 −4,9 −4,2 (i = 4 ohne c); Median i = 2: 2·(−1,8) − 1 − 0,5 = −5,1.
+        # Nur a auf den Mensch-Median 2: Logit + 2·(2 − a) → 2,5 2,5 2,5 2,5 3,0, Median 2,5
+        self.assertAlmostEqual(gh["median_p_ki"], round(1 / (1 + math.exp(5.1)), 4))
+        self.assertAlmostEqual(zeilen["a"]["median_p"], round(1 / (1 + math.exp(-2.5)), 4))
+        self.assertTrue(zeilen["a"]["ueber_ziel"])
+        self.assertFalse(zeilen["b"]["ueber_ziel"])
+        self.assertAlmostEqual(zeilen["a"]["median_beitrag_ki"], 2.0 * (-1.8 - 2.0))
+        self.assertAlmostEqual(zeilen["c"]["median_beitrag_ki"], 0.5 * (-1.0 - 1.0))  # nur Abschnitte mit Wert
+        self.assertEqual(gh["merkmale"][0]["id"], "a")  # nach Median-Änderung sortiert
+        self.assertEqual(gh["top"]["ids"], ["a", "b"])  # stärkster KI-Zug zuerst
+        self.assertTrue(gh["top"]["ueber_ziel"])
+
+    def test_begrenzt(self):
+        self.paket["daten"][2]["a"] = -50.0  # Ausreißer: Beitrag höchstens koef · (−3 − z(Median))
+        gh = kalibriere.goodhart_analyse(self.modell, self.paket, ziel_p=0.5)
+        self.assertGreaterEqual(min(r["median_beitrag_ki"] for r in gh["merkmale"]), 2.0 * (-3.0 - 2.0))
+
+
 class ScoreWieBewerte(unittest.TestCase):
     def test_score_stimmt_mit_analyse_ueberein(self):
         def ref(p10, p25, p50, p75, p90, gewicht, bewertet=True):
@@ -337,7 +474,9 @@ class EndeZuEnde(unittest.TestCase):
         self.assertIn("fw_profil_llr_pro_1000", zeilen[0])
         with open(os.path.join(self.aus, "bericht.md"), encoding="utf-8") as f:
             bericht = f.read()
-        for teil in ("Kreuzvalidierung", "Cluster redundanter Kennzahlen", "AUROC je Quelle", "Erscheinungsjahr"):
+        for teil in ("Kreuzvalidierung", "Cluster redundanter Kennzahlen", "AUROC je Quelle", "Erscheinungsjahr",
+                     "Wahl von k und λ", "Brier-Score", "ECE", "Reliabilitätstabelle", "score_schwelle = ", "ziel_p_mensch = ",
+                     "Goodhart-Sensitivität"):
             self.assertIn(teil, bericht)
 
     def test_baselines_struktur(self):
@@ -345,7 +484,19 @@ class EndeZuEnde(unittest.TestCase):
         self.assertEqual(t["fw_profil"]["woerter"], list(getattr(analyse, "FW_WOERTER", kalibriere.FW_PILOT)))
         self.assertEqual(set(t["fw_profil"]["rate_mensch"]), set(t["fw_profil"]["woerter"]))
         self.assertGreaterEqual(t["ziel_p_mensch"], 0.5)
+        self.assertLessEqual(t["ziel_p_mensch"], 0.95)
         self.assertIn("score_schwelle", t)
+        self.assertEqual(self.b["version"], "3")
+        self.assertEqual(t["modell"]["z_clip"], kalibriere.Z_CLIP)
+        self.assertIn(t["modell"]["lambda"], kalibriere.MODELL_LAMBDA)
+        gh = t["goodhart"]
+        self.assertEqual({r["id"] for r in gh["merkmale"]}, set(t["modell"]["koeffizienten"]))
+        self.assertLessEqual(len(gh["top"]["ids"]), kalibriere.GOODHART_TOP)
+        kg = self.b["evaluation"]["modell_oof_kalibrierung"]
+        self.assertEqual(len(kg["reliabilitaet"]), kalibriere.ECE_KLASSEN)
+        self.assertTrue(0 <= kg["brier"] <= 1 and 0 <= kg["ece"] <= 1)
+        self.assertIn("auswahl", self.b["evaluation"]["hyperparameter"])
+        self.assertEqual(self.b["evaluation"]["hyperparameter"]["auswahl"]["lambda"], t["modell"]["lambda"])
         self.assertEqual(self.b["korpus"]["paare"], 14)
         ev = self.b["evaluation"]
         self.assertIn("auroc_sd", ev["modell_cv"])
@@ -375,6 +526,35 @@ class EndeZuEnde(unittest.TestCase):
         self.assertTrue(bew["verfuegbar"])
         self.assertIsNotNone(bew["p_mensch"])
         self.assertEqual(bew["ziel_p_mensch"], t["ziel_p_mensch"])
+        if not hasattr(analyse, "Z_CLIP"):
+            self.skipTest("analyse.bewerte ohne z-Clipping (S1)")
+        # S1: dieselbe Wahrscheinlichkeit wie das Modell in kalibriere.py, auch für Werte jenseits von ±3 SD
+        mod = t["modell"]
+        werte = dict(erg["metriken"])
+        k0 = next(iter(mod["koeffizienten"]))
+        werte[k0] = mod["mittel"][k0] + 10 * mod["sd"][k0]
+        erg["metriken"][k0] = werte[k0]
+        logit = mod["intercept"] + sum(c * kalibriere.z_wert(werte.get(k), mod["mittel"][k], mod["sd"][k])
+                                       for k, c in mod["koeffizienten"].items())
+        self.assertAlmostEqual(analyse.bewerte(erg, self.b)["p_mensch"], 1 / (1 + math.exp(-logit)), delta=0.0006)
+
+    def test_referenzen_aus_neuen_baselines(self):
+        t = self.b["textsorten"]["hochschule"]
+        ziel = referenzen.zielwerte(self.b)
+        kenn = referenzen.kennzahlen(self.b)
+        for teil in ("## Schwellen", "Brier-Score", "ECE", "## Goodhart-Sensitivität des Modells", "P10 der menschlichen"):
+            self.assertIn(teil, kenn)
+        nur_modell = [k for k, v in t["metriken"].items() if v.get("nur_modell")]
+        if nur_modell:
+            self.assertIn("## Nur als Tendenz", ziel)
+            tabelle = ziel.split("## Bewertete Kennzahlen")[1].split("\n## ")[0]
+            for k in nur_modell:
+                self.assertNotIn(analyse.NAMEN.get(k, k), tabelle)  # kein Zielbereich
+                self.assertIn(analyse.NAMEN.get(k, k), ziel.split("## Nur als Tendenz")[1])
+        for k in ("fw_profil_llr_pro_1000", "satzklammer_mittel", "teilsatz_verhaeltnis_21", "rhythmus_r1_log",
+                  "konnektoren_pro_1000", "abkuerzungen_pro_1000", "nominalketten_pro_100", "silben_q21", "mattr_klumpung_100"):
+            self.assertGreater(len(referenzen.ERKLAERUNG.get(k, "")), 40, k)
+        self.assertNotIn("rhythmus_autokorrelation", referenzen.ERKLAERUNG)
 
 
 if __name__ == "__main__":

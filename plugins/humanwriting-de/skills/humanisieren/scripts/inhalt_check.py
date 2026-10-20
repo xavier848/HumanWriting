@@ -47,6 +47,52 @@ STOP = set(
     jedoch zudem somit daher deshalb allerdings mehr viele vielen einige jede jeder jedes alle allen
     """.split()
 )
+# Funktionswörter, die beim Umformulieren ohne Inhaltsverlust wegfallen (Präpositionen, Konjunktionen, Konnektoren,
+# Pronomen, Hilfs- und Modalverben, Gradpartikeln): nie als „Begriff verschwunden“ oder „Fachwort ersetzt?“ melden
+FUNKTIONSWOERTER = set(
+    """
+    neben trotz gemäß laut wegen außer innerhalb außerhalb oberhalb unterhalb anhand mithilfe aufgrund bezüglich
+    hinsichtlich angesichts mittels statt anstatt anstelle entgegen entlang gegenüber zufolge zwecks seitens infolge
+    inklusive jenseits diesseits hinter binnen dank samt nebst wider ungeachtet anlässlich zugunsten zulasten mangels
+    entsprechend entsprechende entsprechenden entsprechender betreffend ausgenommen inmitten unweit
+    sowohl weder entweder falls sofern soweit solange sobald wohingegen wenngleich obgleich obschon zumal seitdem
+    weshalb weswegen wieso warum ebenso ebenfalls gleichfalls zugleich gleichzeitig schließlich letztlich
+    letztendlich hingegen dagegen wiederum indes indessen vielmehr stattdessen nämlich beziehungsweise respektive
+    insbesondere besonders weiterhin weiteren darüber hinaus überdies nichtsdestotrotz gleichwohl dennoch trotzdem
+    deswegen darum folglich mithin demnach demzufolge infolgedessen insofern insoweit außerdem ferner jedenfalls
+    immerhin zumindest mindestens wenigstens höchstens beispielsweise vielleicht eventuell möglicherweise
+    sicherlich tatsächlich eigentlich ziemlich durchaus überhaupt bereits bisher bislang damals danach davor dazu
+    darauf daraus darin davon dafür daran darunter hierbei hierzu hierfür hierin hiervon hierdurch hiermit hierauf
+    worauf wodurch womit wobei wofür woraus worin wovon wozu zuvor zunächst anschließend später früher heute
+    heutzutage inzwischen mittlerweile derzeit zuerst zuletzt erstens zweitens drittens einerseits andererseits
+    anderseits immer niemals manchmal stets meist meistens oftmals vielfach teilweise größtenteils weitgehend
+    überwiegend nahezu beinahe wieder allein alleine lediglich ausschließlich sogar selbst jeweils insgesamt
+    zusammenfassend abschließend ebenfalls genauso gerade
+    jener jene jenes jenem jenen welche welcher welches welchem welchen solche solcher solches solchem solchen
+    deren dessen derer denen derjenige diejenige dasjenige diejenigen derselbe dieselbe dasselbe denselben
+    demselben derselben dieselben keine keiner keines keinem keinen einigen einiger einiges manche mancher manches
+    manchen mehrere mehreren sämtliche sämtlichen beide beiden beider andere anderen anderer anderes anderem
+    eigene eigenen eigener eigenes unser unsere unseren unserer unserem ihrer ihren ihrem ihres seine seiner
+    seinen seinem seines etwas nichts jemand niemand
+    worden würde würden wären hätte hätten hatten habe könnte könnten müsste müssten sollten sollen wollen wollte
+    wollten dürfen durfte dürfte dürften möchte möchten konnten mussten gewesen seien wäre werde werdet
+    alles allem jeden jedem ihnen einander weitere weiterer weiteres weiterem wenige wenigen weniger weniges
+    wenigsten vieles vielem vieler meisten meiste beides mehrerer jegliche jeglicher jeglichen jegliches keinerlei
+    etliche etlichen zahlreiche zahlreichen zahlreicher gewisse gewissen gewisser jeweilige jeweiligen jeweiliger
+    sogenannte sogenannten sogenannter meine meiner meines meinem meinen unseres eurer derjenigen denjenigen
+    demjenigen desjenigen jemandem jemanden niemandem niemanden
+    zusätzlich daneben desto sonst ansonsten andernfalls diesbezüglich dementsprechend demgegenüber gleichermaßen
+    vorher nachher hierüber hieraus womöglich nunmehr circa dahingehend worüber woran worum wogegen inwiefern
+    inwieweit ohnehin sowieso keineswegs keinesfalls allenfalls gegebenenfalls seither sodann zumeist zuweilen
+    mitunter bisweilen überall folgendermaßen nichtsdestoweniger sozusagen
+    einschließlich zuzüglich abzüglich abseits vonseiten unbeschadet vorbehaltlich ausweislich exklusive versus
+    könne müsse solle wolle dürfe möge musste mochte geworden
+    """.split()
+)
+STOP |= FUNKTIONSWOERTER
+# Funktionswörter, die großgeschrieben mitten im Satz Nomen sind („des Mangels“, „das Selbst“, „des Mittels“):
+# dort zählen sie weiter als Begriff, nur kleingeschrieben oder am Satzanfang nicht
+NOMEN_HOMOGRAPHE = {"mangels", "selbst", "mittels", "zwecks", "gerade", "nichts", "falls", "trotz"}
 
 # --- Quellenverweise ---------------------------------------------------------
 JAHR = r"(?:1[5-9]\d{2}|20\d{2})[a-z]?(?![\wäöüß])|o\.\s?J\."
@@ -69,6 +115,9 @@ NARRATIV_RE = re.compile(
     rf"(?:{NAME}|{PARTIKEL}(?=\s+[A-ZÄÖÜ]))|\s+{ETAL})*)"
     rf"\s*\(\s*(?P<j>{JAHR})(?P<w>(?:\s*(?:,|;|und|&)\s*(?:{JAHR}|[a-z](?![\wäöüß])))*)(?P<f>[^()]{{0,30}})\)"
 )
+# Vorangestelltes Nomen samt „von“ gehört zum Fließtext, nicht zum Verweis: „Literaturüberblick von Christensen (2019)“,
+# „Laut der Studie von Müller (2020)“ → Verweis = „Christensen (2019)“ bzw. „Müller (2020)“
+VON_PRAEFIX_RE = re.compile(rf"{NAME}\s+von\s+(?=[A-ZÄÖÜ]|{PARTIKEL}\s+[A-ZÄÖÜ])")
 NICHT_AUTOR = {"prozent", "prozentpunkte", "prozentpunkten", "euro", "dollar", "mio", "mrd", "millionen",
                "milliarden", "tausend", "stand", "jahr", "jahre", "jahren", "punkte", "punkten"}
 EBD_RE = re.compile(r"^\s*(?:vgl\.\s*)?(?:ebd\.|ebenda|a\.\s?a\.\s?O\.)", re.I)
@@ -168,6 +217,21 @@ def _autoren(s: str):
     return (namen, etal) if namen and namen[-1] not in NICHT_AUTOR else None
 
 
+def _autor_beginn(a: str) -> int:
+    """Versatz, ab dem der Autorenteil eines narrativen Verweises beginnt. Ein vorangestelltes Nomen samt „von“
+    („Literaturüberblick von“, „Laut der Studie von“) und großgeschriebene Funktionswörter am Anfang („Laut“, „Nach“,
+    „Gemäß“) bleiben im Fließtext; sonst fehlten sie dem Begriffsvergleich („Fachwort ersetzt?“). Bei einem Vornamen
+    vor „von“ („Ludwig von Mises“) bleibt der Vorname im Fließtext – der Schlüssel (Nachname, Jahr) ändert sich nicht."""
+    start = 0
+    for m in VON_PRAEFIX_RE.finditer(a):
+        start = m.end()
+    while True:
+        m = re.match(rf"({NAME})\s+(?=[A-ZÄÖÜ])", a[start:])
+        if not m or m.group(1).lower() not in STOP:
+            return start
+        start += m.end()
+
+
 def _jahre(erstes: str, weitere: str) -> list[str]:
     """„2019a“ + „, b, 2021“ → [2019a, 2019b, 2021]"""
     out = [erstes]
@@ -203,9 +267,10 @@ def quellen(t: str):
         if not au or re.search(r"\d\s*$", t[max(0, m.start() - 3):m.start()]):
             continue                        # „17,1 Prozent (1997)“ ist kein Verweis
         jahre = _jahre(m.group("j"), m.group("w"))
+        beginn = m.start() + _autor_beginn(m.group("a"))    # Schlüssel aus dem ganzen Autorenteil, Spanne ab dem Autor
         for i, j in enumerate(jahre):
-            neu(au[0], au[1], j, _fund(fm) if i == len(jahre) - 1 else "", m.group(0), m.start())
-        spannen.append((m.start(), m.end()))
+            neu(au[0], au[1], j, _fund(fm) if i == len(jahre) - 1 else "", t[beginn:m.end()], beginn)
+        spannen.append((beginn, m.end()))
 
     # Klammern: jedes ;-Teilstück einzeln; nur Autor(en) + Jahr bzw. ebd. gelten als Verweis
     for k in KLAMMER_RE.finditer(t):
@@ -377,9 +442,27 @@ def akronyme(t: str) -> Counter:
     return Counter(a.rstrip("s") if len(a) > 2 else a for a in AKRONYM_RE.findall(t))
 
 
+def _satzanfang(t: str, i: int) -> bool:
+    """Steht das Wort an Position i am Text-, Zeilen- oder Satzanfang (ggf. hinter Anführungszeichen/Klammer)?"""
+    j = i - 1
+    while j >= 0 and t[j] in " \t„“\"»«‚'(*#>-–":
+        j -= 1
+    return j < 0 or t[j] in ".!?:\n"
+
+
+def _ist_begriff(t: str, m: re.Match) -> bool:
+    w = m.group(0)
+    if len(w) < 5:
+        return False
+    if w.lower() not in STOP:
+        return True
+    # „des Mangels“, „das Selbst“: großgeschrieben mitten im Satz ein Nomen, kein Funktionswort
+    return w.lower() in NOMEN_HOMOGRAPHE and w[0].isupper() and not _satzanfang(t, m.start())
+
+
 def begriffe(t: str) -> Counter:
     t = quellen(t)[1]
-    return Counter(stamm(w) for w in WORT_RE.findall(t) if w.lower() not in STOP and len(w) >= 5)
+    return Counter(stamm(m.group(0)) for m in WORT_RE.finditer(t) if _ist_begriff(t, m))
 
 
 def fussnoten(t: str) -> list[tuple[str, int]]:
@@ -555,7 +638,8 @@ def pruefe(alt: str, neu: str) -> dict:
     # lange Fachwörter (Nomen, nicht am Satzanfang) schon bei einmaligem Verschwinden melden
     r_alt, r_neu = quellen(alt)[1], quellen(neu)[1]
     lang = [m.group(0) for m in re.finditer(r"(?<=[\wäöüß,;:)\]] )[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜa-zäöüß]+)*", r_alt)
-            if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2 and m.group(0).lower() not in NICHT_AUTOR]
+            if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2 and m.group(0).lower() not in NICHT_AUTOR
+            and m.group(0).lower() not in STOP]
     staemme_neu = {stamm(x) for x in WORT_RE.findall(r_neu)}
     ersetzt = [w for w in dict.fromkeys(lang) if stamm(w) not in staemme_neu]
     if ersetzt:

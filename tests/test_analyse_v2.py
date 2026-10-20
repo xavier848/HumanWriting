@@ -637,7 +637,8 @@ class Bewertung(unittest.TestCase):
 
     def test_unsicher_status_und_score_unveraendert(self):
         e = analysiere("Wort " * 17 + "Ende. " + ("Wort " * 17 + "Ende. ") * 2)  # Satzlänge 18,0 = knapp an P25
-        e["metriken"]["satzlaenge_mittel"] = 17.5
+        # S3: Schwelle = UNSICHER_FAKTOR (0,5) · se_typ (1,0) bei ≤ 800 Wörtern; 17,6 liegt 0,4 vor P25
+        e["metriken"]["satzlaenge_mittel"] = 17.6
         b = analyse.bewerte(e, self.baselines())
         z = next(z for z in b["kennzahlen"] if z["id"] == "satzlaenge_mittel")
         self.assertTrue(z["unsicher"])

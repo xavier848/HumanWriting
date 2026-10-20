@@ -436,6 +436,96 @@ class Quellen(unittest.TestCase):
         self.assertTrue(any(w["typ"] == "Quellenangabe verändert" for w in res["warnungen"]))
 
 
+class NarrativeVerweiseUndFunktionswoerter(unittest.TestCase):
+    """Regressionen: ein vorangestelltes Nomen samt „von“ gehört nicht zum Verweis; Funktionswörter sind keine Begriffe."""
+
+    def warnungen(self, res, *typen):
+        return [w for w in res["warnungen"] if w["typ"] in typen]
+
+    def test_nomen_von_bleibt_im_resttext(self):
+        faelle = [("Der Literaturüberblick von Christensen (2019) zeigt das.", ["christensen 2019"], "Literaturüberblick von"),
+                  ("Laut der Studie von Müller (2020) gilt das.", ["müller 2020"], "Laut der Studie von"),
+                  ("Die Metaanalyse von Weber et al. (2018, S. 4) belegt das.", ["weber et al. 2018, S. 4"], "Metaanalyse von"),
+                  ("Gemäß Müller und Schmidt (2020) gilt das.", ["müller & schmidt 2020"], "Gemäß")]
+        for text, schluessel, rest in faelle:
+            with self.subTest(text=text):
+                funde, r = inhalt_check.quellen(text)
+                self.assertEqual(sorted(f["schluessel"] for f in funde), schluessel)
+                self.assertIn(rest, r)
+                self.assertNotIn("(", r)  # der Verweis selbst ist ausgeblendet
+                self.assertTrue(funde[0]["roh"].endswith(")") and not funde[0]["roh"].startswith(rest.split()[0]))
+
+    def test_vorname_aendert_schluessel_nicht(self):
+        self.assertEqual([f["schluessel"] for f in inhalt_check.quellen("Ludwig von Mises (1940) schrieb das.")[0]],
+                         [f["schluessel"] for f in inhalt_check.quellen("Das schrieb schon (Mises 1940).")[0]])
+        self.assertEqual([f["schluessel"] for f in inhalt_check.quellen("Das Bundesministerium für Arbeit und Soziales (2021) meldet.")[0]],
+                         [f["schluessel"] for f in inhalt_check.quellen("(Bundesministerium für Arbeit und Soziales 2021)")[0]])
+
+    def test_umgestellter_verweis_ohne_fachwort_warnung(self):
+        paare = [("Christensen (2019) zeigt in seinem Literaturüberblick, dass digitale Werkzeuge helfen.",
+                  "Der Literaturüberblick von Christensen (2019) zeigt, dass digitale Werkzeuge helfen."),
+                 ("Müller (2020) belegt in seiner Längsschnittuntersuchung, dass Teamarbeit wirkt.",
+                  "Laut der Längsschnittuntersuchung von Müller (2020) wirkt Teamarbeit.")]
+        for alt, neu in paare:
+            for a, n in ((alt, neu), (neu, alt)):
+                with self.subTest(alt=a):
+                    res = inhalt_check.pruefe(a, n)
+                    self.assertTrue(res["ok"], (res["harte_verluste"], res["erfindungen"]))
+                    self.assertEqual(self.warnungen(res, "Fachwort ersetzt?", "Begriff verschwunden"), [])
+
+    def test_geloeschter_verweis_mit_nomen_bleibt_harter_verlust(self):
+        res = inhalt_check.pruefe("Laut der Studie von Müller (2020) wirkt Teamarbeit.", "Laut einer Studie wirkt Teamarbeit.")
+        self.assertFalse(res["ok"])
+        self.assertEqual([e["wert"] for e in res["harte_verluste"] if e["typ"] == "Quellenverweis"], ["Müller (2020)"])
+
+    def test_funktionswoerter_nie_begriff_verschwunden(self):
+        alt = ("Neben den Kosten zählt die Zeit. Neben der Qualität zählt der Service. Trotz hoher Kosten investieren Betriebe. "
+               "Trotz allem bleibt der Bedarf. Gemäß der Umfrage wächst der Markt. Gemäß den Daten sinken die Preise. "
+               "Zudem steigt die Nachfrage. Zudem fehlen Fachkräfte. Hinsichtlich der Kosten gibt es Streit. "
+               "Hinsichtlich der Löhne auch. Infolgedessen wächst der Druck. Infolgedessen handeln Betriebe.")
+        neu = ("Außer den Kosten zählt die Zeit. Außer der Qualität zählt der Service. Obwohl die Kosten hoch sind, investieren "
+               "Betriebe. Der Bedarf bleibt. Die Umfrage zeigt: Der Markt wächst. Die Daten zeigen: Die Preise sinken. "
+               "Auch die Nachfrage steigt. Es fehlen Fachkräfte. Bei den Kosten gibt es Streit. Bei den Löhnen auch. "
+               "Deshalb wächst der Druck. Deshalb handeln Betriebe.")
+        res = inhalt_check.pruefe(alt, neu)
+        gemeldet = ", ".join(w["wert"] for w in self.warnungen(res, "Begriff verschwunden", "Fachwort ersetzt?"))
+        for wort in ("neben", "trotz", "gemäß", "zudem", "hinsichtlich", "infolgedessen"):
+            with self.subTest(wort=wort):
+                self.assertNotIn(inhalt_check.stamm(wort), gemeldet.lower())
+        # echte Fachbegriffe werden weiter gemeldet
+        res = inhalt_check.pruefe("Die Pflegefachkräfte klagen. Pflegefachkräfte fehlen.", "Die Pflegekräfte klagen. Pflegekräfte fehlen.")
+        self.assertTrue(self.warnungen(res, "Begriff verschwunden"))
+
+    def test_haeufige_funktionswoerter_nie_begriff_verschwunden(self):
+        # Prüfer-Fund: „vor allem“, „zusätzlich“, Konjunktiv I u. a. fehlten in der Liste
+        for wort in ("allem", "alles", "jeden", "ihnen", "weitere", "zusätzlich", "daneben", "desto", "diesbezüglich",
+                     "dementsprechend", "einschließlich", "könne", "müsse", "musste", "wenigen", "meisten", "sonst"):
+            with self.subTest(wort=wort):
+                res = inhalt_check.pruefe(f"Das Ergebnis ist {wort} gut. Der Befund ist {wort} klar.",
+                                          "Das Ergebnis ist gut. Der Befund ist klar.")
+                self.assertEqual(self.warnungen(res, "Begriff verschwunden", "Neuer häufiger Begriff"), [])
+        res = inhalt_check.pruefe("Vor allem kleine Betriebe leiden. Die Kosten steigen vor allem im Handwerk. "
+                                  "Zusätzlich fehlen Fachkräfte. Zusätzlich steigen die Mieten.",
+                                  "Kleine Betriebe leiden. Die Kosten steigen besonders im Handwerk. Auch fehlen Fachkräfte. "
+                                  "Außerdem steigen die Mieten.")
+        self.assertEqual(self.warnungen(res, "Begriff verschwunden"), [])
+
+    def test_nomen_homographe_bleiben_begriffe(self):
+        # Prüfer-Fund: „des Mangels“, „das Selbst“ sind Nomen und dürfen nicht als Funktionswort wegfallen
+        for alt, neu, stamm in (("Der Mangel an Fachkräften wächst. Die Folgen des Mangels sind gravierend.",
+                                 "Der Engpass an Fachkräften wächst. Die Folgen des Engpasses sind gravierend.", "mangel"),
+                                ("Das Selbst entwickelt sich früh. Nach Mead entsteht das Selbst im Austausch.",
+                                 "Das Ich entwickelt sich früh. Nach Mead entsteht das Ich im Austausch.", "selbst")):
+            with self.subTest(stamm=stamm):
+                self.assertIn(stamm, ", ".join(w["wert"] for w in self.warnungen(inhalt_check.pruefe(alt, neu), "Begriff verschwunden")))
+        # als Funktionswort (klein oder am Satzanfang) weiterhin nie gemeldet
+        res = inhalt_check.pruefe("Selbst kleine Betriebe investieren. Das gilt selbst im Handwerk. Mangels Daten fehlt ein Vergleich. "
+                                  "„Mangels Personal“ schließen Praxen.",
+                                  "Auch kleine Betriebe investieren. Das gilt auch im Handwerk. Ohne Daten fehlt ein Vergleich. "
+                                  "„Ohne Personal“ schließen Praxen.")
+        self.assertEqual(self.warnungen(res, "Begriff verschwunden"), [])
+
+
 class Zitate(unittest.TestCase):
     def test_gerade_anfuehrungszeichen_paaren_richtig(self):
         t = 'Der Begriff "KMU" ist ebenso unscharf wie "Mittelstand". Werner nennt es "die Fähigkeit, sich zu erholen".'

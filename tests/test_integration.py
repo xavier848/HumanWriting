@@ -244,7 +244,9 @@ class EndeZuEnde(unittest.TestCase):
             for k in ("ki_muster_pro_1000", "fw_profil_llr_pro_1000"):
                 self.assertAlmostEqual(z[k], e["metriken"][k], places=4)
             self.assertEqual(bew["score"], round(kalibriere.score(t["metriken"], z)))
-            zz = mod["intercept"] + sum(c * ((z[k] - mod["mittel"][k]) / (mod["sd"][k] or 1.0))
+            # S1: z auf ±Z_CLIP begrenzt wie in kalibriere.py (vorher ungeklippt nachgerechnet; nur grün, solange
+            # im synthetischen Korpus kein |z| > 3 vorkam)
+            zz = mod["intercept"] + sum(c * kalibriere.z_wert(z[k], mod["mittel"][k], mod["sd"][k])
                                         for k, c in mod["koeffizienten"].items() if z.get(k) is not None)
             self.assertAlmostEqual(bew["p_mensch"], round(1 / (1 + math.exp(-max(-30, min(30, zz)))), 3), places=3)
 

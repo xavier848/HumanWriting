@@ -10,10 +10,12 @@ Schritte:
      Dokument (HW02), typische Messunsicherheit se_typ (HW18)
   4. Redundante Kennzahlen bündeln: Cluster |r| ≥ 0,7 in den menschlichen Abschnitten, Gewicht gedeckelt (HW14)
   5. Funktionswort-Profil (NegBin-Log-Likelihood-Quotient, HW07) und Gewichte der KI-Muster aus den Häufigkeiten
-  6. Logistisches Modell; Merkmalszahl und L2-Stärke per wiederholter gruppierter Kreuzvalidierung (5×5, Thema),
-     Evaluation von Modell und Score out-of-fold, finales Modell auf allen Daten; Schwellen score_schwelle und
-     ziel_p_mensch
-  7. Diagnosen: AUROC je Quelle und Texttyp, Korrelation mit dem Erscheinungsjahr (HW19)
+  6. Logistisches Modell auf z-Werten, die auf ±Z_CLIP begrenzt sind (S1, wie analyse.bewerte); Merkmalszahl und
+     L2-Stärke per wiederholter gruppierter Kreuzvalidierung (5×5, Thema) nach der Ein-Standardfehler-Regel
+     (erst k, dann das größte λ), Evaluation von Modell und Score out-of-fold (AUROC, Brier, ECE, Reliabilität),
+     finales Modell auf allen Daten; Schwellen score_schwelle und ziel_p_mensch (P10 der menschlichen OOF-p)
+  7. Diagnosen: kontrafaktische Goodhart-Sensitivität des Modells, AUROC je Quelle und Texttyp, Korrelation mit
+     dem Erscheinungsjahr (HW19)
   8. Wort-/Phrasenlisten: was KI über- und was Menschen überdurchschnittlich nutzen
      (log-odds mit informativem Dirichlet-Prior, Monroe et al. 2008)
 
@@ -47,6 +49,11 @@ SKILL_DATA = os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-an
 sys.path.insert(0, os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "scripts"))
 import analyse  # noqa: E402
 
+try:  # S1: gemeinsame Konstante mit analyse.bewerte()
+    from analyse import Z_CLIP  # noqa: E402
+except ImportError:  # ältere analyse.py ohne Z_CLIP
+    Z_CLIP = 3.0
+
 L_STANDARD = analyse.ABSCHNITT_L  # 800 bereinigte Wörter pro Abschnitt (KI bereinigt: P5 ≈ 794, P10 ≈ 824)
 L_TOLERANZ = 0.95         # Abschnitte unter 0,95·L werden verworfen
 GATE_AUROC = 0.65         # Trennschärfe-Schwelle: AUROC ≥ 0,65 bzw. ≤ 0,35 (alle Abschnitte und Paare)
@@ -54,7 +61,13 @@ MIN_PAARE = 10            # weniger Paare: Gate nicht prüfbar (gilt als nicht b
 CLUSTER_R = 0.7           # |r| innerhalb der menschlichen Abschnitte, ab dem Kennzahlen ein Cluster bilden
 MODELL_R_MAX = 0.8        # Modellmerkmale untereinander |r| < 0,8 (gepoolt, Kollinearität)
 MODELL_K = (6, 9, 12, 15, 20)                 # Merkmalszahlen, zwischen denen die Kreuzvalidierung wählt
-MODELL_LAMBDA = (0.1, 0.03, 0.01, 0.003, 0.001)  # L2-Stärke auf dem mittleren Verlust (absteigend: Warmstart)
+# L2-Stärke auf dem mittleren Verlust: log-gleichabständig in halben Dekaden von 10^1,5 ≈ 31,6 bis 10^−3,5 ≈ 0,0003
+# (absteigend: Warmstart von der starken Strafe aus). Der Log-Loss ist bei fast trennbaren Daten unterhalb von 0,003
+# flach; die untere halbe Dekade unter 0,001 verhindert, dass das Minimum der 1-SE-Regel am Gitterrand liegt.
+MODELL_LAMBDA = tuple(float(f"{10 ** (e / 2):.4g}") for e in range(3, -8, -1))
+ZIEL_P_PERZENTIL, ZIEL_P_MIN, ZIEL_P_MAX = 0.10, 0.5, 0.95  # ziel_p_mensch = P10 der menschlichen OOF-p, begrenzt
+ECE_KLASSEN = 10          # gleich breite Wahrscheinlichkeitsklassen für ECE und Reliabilitätstabelle
+GOODHART_TOP = 3          # Merkmale mit dem stärksten KI-Zug, die die Goodhart-Analyse zusätzlich gemeinsam verschiebt
 BOOTSTRAP_N, BOOTSTRAP_SEED = 300, 1
 CV_WIEDERHOLUNGEN, CV_FOLDS, CV_SEED = 5, 5, 2024
 FW_GLAETTUNG = 0.5        # +0,5 auf die Zählung je Klasse und Wort (HW07)
@@ -80,8 +93,9 @@ KANDIDATEN = {"nominalketten_pro_100", "silben_q21", "mattr_klumpung_100", "rhyt
 META = ("gruppe", "quelle", "quelle_basis", "typ", "jahr", "doc_id", "thema", "abschnitt", "paar", "woerter", "saetze")
 HINWEISE = {
     "satzlaenge_cv": "Wie stark die Satzlängen schwanken. Menschen mischen kurze und lange Sätze stärker.",
-    "rhythmus_sprung_rel": "Ob Satzlängen eher in Phasen kommen (Mensch) oder streng abwechseln (KI).",
-    "rhythmus_r1_log": "Ob Satzlängen eher in Phasen kommen (Mensch) oder streng abwechseln (KI).",
+    "rhythmus_sprung_rel": "Mittlerer Längenunterschied zwischen Nachbarsätzen relativ zur Ø-Satzlänge (nicht bewertet: "
+                           "Duplikat der Satzlängen-Variation).",
+    "rhythmus_r1_log": "Ob lange und kurze Sätze eher in Phasen kommen (Mensch) oder sich streng abwechseln (KI).",
     "anteil_gleichfoermige_laeufe": "Anteil der Sätze in Dreierfolgen fast gleich langer Sätze.",
     "nachbarsatz_ueberlappung": "Menschen greifen Begriffe des Vorsatzes wieder auf, statt ständig Synonyme zu suchen.",
     "mattr_100": "Lexikalische Variation (Informationsfluss). KI-Text wechselt oft zu stark die Wörter (Synonym-Karussell): "
@@ -93,6 +107,13 @@ HINWEISE = {
     "satzklammer_mittel": "Menschen spannen die Satzklammer weiter (mehr Wörter zwischen Hilfsverb und Partizip/Infinitiv).",
     "konnektoren_pro_1000": "Dichte von Konnektoren (zudem, somit, folglich …) in allen Satzstellungen.",
     "nominalketten_pro_100": "Genitiv- und von-Ketten; in menschlichen Fachtexten eher häufiger als bei KI.",
+    "teilsatz_verhaeltnis_21": "Sätze mit genau zwei Teilsätzen im Verhältnis zu Sätzen mit einem: KI baut auffällig oft "
+                               "dasselbe Zweier-Gefüge; Menschen mischen einfache Sätze und längere Gefüge.",
+    "abkuerzungen_pro_1000": "Übliche Abkürzungen (z. B., bzw., d. h., u. a.): in menschlichen Hochschultexten normal, bei KI "
+                             "fast nie. Nur dort verwenden, wo sie natürlich passen.",
+    "silben_q21": "Zweisilber im Verhältnis zu Einsilbern; KI-Text hat etwas mehr Zweisilber.",
+    "mattr_klumpung_100": "Ob Begriffe lokal gebündelt wiederkehren (Mensch) oder die Wortwahl gleichmäßig gestreut "
+                          "variiert (KI). Kernbegriffe im Absatz ruhig mehrfach verwenden.",
 }
 
 
@@ -713,9 +734,17 @@ def kalibriere_daten(zeilen: list[dict], keys: list[str], muster_liste: list[dic
             "gew": gew, "muster": mg, "token": tok, "profil": profil, "daten": daten, "n_paare": len(paare)}
 
 
+def z_wert(x, mittel: float, sd: float) -> float:
+    """S1: z = max(−Z_CLIP, min(Z_CLIP, (x − mittel)/sd)), identisch mit analyse.bewerte(); fehlend = 0 (Mittelwert).
+    Die Begrenzung verhindert, dass ein einzelner Ausreißer (z. B. 40 Semikolons pro 1000) die Wahrscheinlichkeit
+    allein bestimmt."""
+    if x is None:
+        return 0.0
+    return max(-Z_CLIP, min(Z_CLIP, (x - mittel) / (sd or 1.0)))
+
+
 def _standardisiert(paket: dict, z: dict, k: str) -> float:
-    x = z.get(k)
-    return 0.0 if x is None else (x - paket["mittel"][k]) / paket["sd"][k]  # fehlend = Mittelwert (wie bewerte)
+    return z_wert(z.get(k), paket["mittel"][k], paket["sd"][k])
 
 
 def fit_modell(paket: dict, k: int, lam: float, start=None) -> dict:
@@ -771,8 +800,8 @@ def mittel_sd(ergebnisse: list[dict]) -> dict:
     for k in ("auroc", "genauigkeit", "bal_genauigkeit", "median_mensch", "median_ki", "logloss_bal"):
         xs = [e[k] for e in ergebnisse if k in e]
         if xs:
-            out[k] = round(statistics.fmean(xs), 3)
-            out[k + "_sd"] = round(statistics.stdev(xs), 3) if len(xs) > 1 else 0.0
+            out[k] = round(statistics.fmean(xs), 4)
+            out[k + "_sd"] = round(statistics.stdev(xs), 4) if len(xs) > 1 else 0.0
     out["folds"] = len(ergebnisse)
     return out
 
@@ -832,16 +861,179 @@ def kreuzvalidierung(zeilen, keys, muster_liste, fw_woerter, wiederholungen=CV_W
             "folds_gesamt": wiederholungen * folds}
 
 
-def waehle_konfiguration(erg_modell: dict) -> tuple:
-    """Ein-Standardfehler-Regel auf dem balancierten Log-Loss out-of-fold: die einfachste Konfiguration (wenige
-    Merkmale, dann starke Strafe), deren Mittel höchstens einen Standardfehler über dem besten liegt."""
+def waehle_konfiguration(erg_modell: dict, details: dict | None = None) -> tuple:
+    """Ein-Standardfehler-Regel auf dem balancierten Log-Loss out-of-fold, in zwei Schritten:
+
+    1. Beste Konfiguration (k*, λ*) = kleinster mittlerer Log-Loss; SE = SD über die Folds / √Folds.
+       k = kleinstes k, dessen bestes λ höchstens Minimum + 1 SE erreicht (wenige Merkmale bevorzugt).
+    2. Für dieses k: λ = größtes λ, dessen mittlerer Log-Loss höchstens das Minimum dieses k plus dessen SE
+       beträgt (stärkere Regularisierung bevorzugt; der Log-Loss belohnt bei fast trennbaren Daten sonst immer
+       schärfere Wahrscheinlichkeiten).
+
+    details (optional) wird mit den Zwischenwerten für den Bericht gefüllt."""
     werte = {kl: [e["logloss_bal"] for e in v if "logloss_bal" in e] for kl, v in erg_modell.items()}
     mittel = {kl: statistics.fmean(xs) for kl, xs in werte.items() if xs}
-    bestes = min(mittel, key=mittel.get)
-    xs = werte[bestes]
-    se = statistics.stdev(xs) / math.sqrt(len(xs)) if len(xs) > 1 else 0.0
-    nah = [kl for kl, m in mittel.items() if m <= mittel[bestes] + se]
-    return min(nah, key=lambda kl: (kl[0], -kl[1]))
+    se = {kl: (statistics.stdev(werte[kl]) / math.sqrt(len(werte[kl])) if len(werte[kl]) > 1 else 0.0) for kl in mittel}
+    bestes = min(mittel, key=lambda kl: (mittel[kl], kl[0], -kl[1]))
+    grenze = mittel[bestes] + se[bestes]
+    bestes_je_k = {}
+    for kl, m in mittel.items():
+        if kl[0] not in bestes_je_k or (m, -kl[1]) < (mittel[bestes_je_k[kl[0]]], -bestes_je_k[kl[0]][1]):
+            bestes_je_k[kl[0]] = kl
+    k = min(kk for kk, kl in bestes_je_k.items() if mittel[kl] <= grenze)
+    eigen = bestes_je_k[k]
+    grenze_k = mittel[eigen] + se[eigen]
+    lam = max(kl[1] for kl, m in mittel.items() if kl[0] == k and m <= grenze_k)
+    if details is not None:
+        lam_alle = sorted({kl[1] for kl in mittel})
+        details.update({"bestes": {"k": bestes[0], "lambda": bestes[1], "logloss": mittel[bestes], "se": se[bestes]},
+                        "grenze_k": grenze, "k": k,
+                        "bestes_k": {"lambda": eigen[1], "logloss": mittel[eigen], "se": se[eigen]},
+                        "grenze_lambda": grenze_k, "lambda": lam, "logloss": mittel[(k, lam)],
+                        "lambda_am_rand": lam in (lam_alle[0], lam_alle[-1]),
+                        "bestes_am_rand": bestes[1] in (lam_alle[0], lam_alle[-1]),
+                        "lambda_gitter": lam_alle})
+    return k, lam
+
+
+def auswahl_json(details: dict) -> dict:
+    """Zwischenwerte der k/λ-Wahl für baselines.json: Gleitkommazahlen auf 4 signifikante Stellen. Feste
+    Nachkommastellen machten aus λ = 0,003162 sonst 0,00316 (bzw. aus 0,0003162 0,00032), also einen Wert, der nicht
+    im Gitter liegt und von hyperparameter.lambda abweicht."""
+    def runde(v):
+        if isinstance(v, float):
+            return float(f"{v:.4g}")
+        if isinstance(v, dict):
+            return {k: runde(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [runde(x) for x in v]
+        return v
+    return {k: runde(v) for k, v in details.items()}
+
+
+# ---------------------------------------------------------------------------
+# Kalibrierung der Wahrscheinlichkeiten, Schwellen, Goodhart-Sensitivität
+# ---------------------------------------------------------------------------
+
+def _klassengewichte(ys: list[int]) -> list[float]:
+    """Gewicht 0,5/n_Klasse je Beobachtung: beide Klassen zählen gleich (wie das klassenbalancierte Modell)."""
+    n1 = sum(ys)
+    n0 = len(ys) - n1
+    return [(0.5 / n1 if y else 0.5 / n0) if (n1 and n0) else 1.0 / len(ys) for y in ys]
+
+
+def brier(ps: list[float], ys: list[int], balanciert: bool = False) -> float:
+    """Brier-Score = mittlerer quadratischer Fehler der Wahrscheinlichkeit (y = 1: menschlich); balanciert: beide
+    Klassen mit Gewicht 0,5 (das Modell ist klassenbalanciert geschätzt, der Korpus hat mehr Mensch-Abschnitte)."""
+    if not ps:
+        return float("nan")
+    ws = _klassengewichte(ys) if balanciert else [1.0 / len(ps)] * len(ps)
+    return sum(w * (p - y) ** 2 for p, y, w in zip(ps, ys, ws)) / sum(ws)
+
+
+def reliabilitaet(ps: list[float], ys: list[int], klassen: int = ECE_KLASSEN) -> list[dict]:
+    """Reliabilitätstabelle über gleich breite Klassen [i/K, (i+1)/K) (die letzte schließt 1 ein): Anzahl je Gruppe,
+    mittlere Vorhersage und beobachteter Mensch-Anteil, roh und klassenbalanciert."""
+    ws = _klassengewichte(ys)
+    out = []
+    for i in range(klassen):
+        idx = [j for j, p in enumerate(ps) if min(klassen - 1, int(p * klassen)) == i]
+        if not idx:
+            out.append({"von": i / klassen, "bis": (i + 1) / klassen, "n_mensch": 0, "n_ki": 0, "gewicht_bal": 0.0,
+                        "p_mittel": None, "anteil_mensch": None, "p_mittel_bal": None, "anteil_mensch_bal": None})
+            continue
+        n_m = sum(ys[j] for j in idx)
+        w = sum(ws[j] for j in idx)
+        out.append({"von": i / klassen, "bis": (i + 1) / klassen, "n_mensch": n_m, "n_ki": len(idx) - n_m,
+                    "gewicht_bal": w,
+                    "p_mittel": sum(ps[j] for j in idx) / len(idx), "anteil_mensch": n_m / len(idx),
+                    "p_mittel_bal": sum(ws[j] * ps[j] for j in idx) / w,
+                    "anteil_mensch_bal": sum(ws[j] * ys[j] for j in idx) / w})
+    return out
+
+
+def ece(ps: list[float], ys: list[int], klassen: int = ECE_KLASSEN, balanciert: bool = False) -> float:
+    """Expected Calibration Error: Σ_Klassen Anteil · |mittlere Vorhersage − beobachteter Mensch-Anteil|."""
+    if not ps:
+        return float("nan")
+    summe = 0.0
+    for z in reliabilitaet(ps, ys, klassen):
+        if z["p_mittel"] is None:
+            continue
+        if balanciert:
+            summe += z["gewicht_bal"] * abs(z["p_mittel_bal"] - z["anteil_mensch_bal"])
+        else:
+            summe += (z["n_mensch"] + z["n_ki"]) / len(ps) * abs(z["p_mittel"] - z["anteil_mensch"])
+    return summe
+
+
+def ziel_p_mensch_von(p_menschlich: list[float]) -> float:
+    """ziel_p_mensch = P10 der menschlichen Out-of-fold-Wahrscheinlichkeiten, auf [0,5; 0,95] begrenzt, 2 Stellen:
+    90 % der echten menschlichen Abschnitte erreichen das Ziel (vorher P25: zu streng für den Coach)."""
+    if not p_menschlich:
+        return ZIEL_P_MIN
+    return round(max(ZIEL_P_MIN, min(ZIEL_P_MAX, perz(sorted(p_menschlich), ZIEL_P_PERZENTIL))), 2)
+
+
+def kalibrierungs_guete(ps: list[float], ys: list[int]) -> dict:
+    """OOF-Brier, ECE, Perzentile der Wahrscheinlichkeiten je Gruppe und Reliabilitätstabelle."""
+    pm = sorted(p for p, y in zip(ps, ys) if y)
+    pk = sorted(p for p, y in zip(ps, ys) if not y)
+    stufen = (0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95)
+    return {"brier": round(brier(ps, ys), 4), "brier_bal": round(brier(ps, ys, balanciert=True), 4),
+            "ece": round(ece(ps, ys), 4), "ece_bal": round(ece(ps, ys, balanciert=True), 4), "klassen": ECE_KLASSEN,
+            "perzentile": {g: {f"p{round(100 * q)}": round(perz(xs, q), 4) for q in stufen} for g, xs in
+                           (("mensch", pm), ("ki", pk)) if xs},
+            "reliabilitaet": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in z.items()}
+                              for z in reliabilitaet(ps, ys)]}
+
+
+def goodhart_analyse(modell: dict, paket: dict, ziel_p: float, top_n: int = GOODHART_TOP) -> dict:
+    """(d) Kontrafaktische Goodhart-Sensitivität des finalen Modells auf den KI-Abschnitten.
+
+    Je Modellmerkmal wird NUR dieses Merkmal auf den menschlichen Median (dokumentgewichtet, = mensch_p50 in
+    bewerte) gesetzt, alle anderen bleiben; berichtet werden der Median von p_mensch vorher/nachher, der Median der
+    Änderung, der Anteil der KI-Abschnitte, die danach ziel_p_mensch erreichen, und ob der Median-KI-Abschnitt es
+    allein erreicht. Dasselbe für die top_n Merkmale mit dem stärksten KI-Zug gemeinsam: Beitrag wie S2
+    (koef · (z(wert) − z(mensch_p50)), beide auf ±Z_CLIP begrenzt), Median über die KI-Abschnitte mit Wert,
+    am negativsten zuerst."""
+    ki = [z for z in paket["daten"] if z["gruppe"] == "ki"]
+    merkmale = list(modell["merkmale"])
+    if not ki or not merkmale:
+        return {}
+    koef = dict(zip(merkmale, modell["w"]))
+    p50 = {m: paket["metriken"][m]["mensch"]["p50"] for m in merkmale}
+    z50 = {m: z_wert(p50[m], paket["mittel"][m], paket["sd"][m]) for m in merkmale}
+    zs = [{m: _standardisiert(paket, z, m) for m in merkmale} for z in ki]
+    basis = [modell["b"] + sum(koef[m] * zz[m] for m in merkmale) for zz in zs]
+
+    def sig(s):
+        return 1 / (1 + math.exp(-max(-30.0, min(30.0, s))))
+
+    p0 = [sig(s) for s in basis]
+    med0 = statistics.median(p0)
+
+    def verschiebe(ids):
+        p1 = [sig(s + sum(koef[m] * (z50[m] - zz[m]) for m in ids)) for s, zz in zip(basis, zs)]
+        med1 = statistics.median(p1)
+        return {"median_p": round(med1, 4), "median_delta": round(statistics.median([b - a for a, b in zip(p0, p1)]), 4),
+                "anteil_ueber_ziel": round(sum(p >= ziel_p for p in p1) / len(p1), 4), "ueber_ziel": med1 >= ziel_p}
+
+    beitrag = {}
+    for m in merkmale:
+        xs = [koef[m] * (zz[m] - z50[m]) for z, zz in zip(ki, zs) if z.get(m) is not None]
+        beitrag[m] = statistics.median(xs) if xs else 0.0
+    zeilen = []
+    for m in merkmale:
+        zeilen.append({"id": m, "koef": round(koef[m], 4), "mensch_p50": p50[m],
+                       "median_beitrag_ki": round(beitrag[m], 4), **verschiebe([m])})
+    zeilen.sort(key=lambda r: (-r["median_delta"], r["median_beitrag_ki"]))
+    top = sorted(merkmale, key=lambda m: (beitrag[m], m))[:top_n]
+    return {"methode": "kontrafaktisch, finales Modell: je Merkmal nur dieses auf den menschlichen Median gesetzt; "
+                       f"Median über {len(ki)} KI-Abschnitte; z auf ±{Z_CLIP:g} begrenzt (S1)",
+            "ziel_p_mensch": ziel_p, "n_ki": len(ki), "median_p_ki": round(med0, 4),
+            "merkmale": zeilen,
+            "top": {"ids": top, "median_beitrag_ki": [round(beitrag[m], 4) for m in top], **verschiebe(top)}}
 
 
 # ---------------------------------------------------------------------------
@@ -937,14 +1129,78 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
         z.append(f"| {name} | {_pm(e, 'auroc')} | {_pm(e, 'genauigkeit')} | {_pm(e, 'bal_genauigkeit')} | "
                  f"{_pm(e, 'median_mensch', 2)} | {_pm(e, 'median_ki', 2)} |")
     hp = ev["hyperparameter"]
-    z += ["", f"Gewählte Modellkonfiguration (Ein-Standardfehler-Regel auf dem balancierten Log-Loss out-of-fold): {hp['k']} Merkmale, λ = {hp['lambda']}. "
-          f"Out-of-fold gepoolt: Modell-AUROC {ev['modell_oof_auroc']}, Score-AUROC {ev['score_oof_auroc']}. "
-          f"In-sample (finales Modell auf allen Daten): Modell-AUROC {ev['modell_alle']['auroc']}, Score-AUROC {ev['score_alle']['auroc']}.",
-          "", f"**Schwellen:** score_schwelle = {t['score_schwelle']} (Mitte der Out-of-fold-Score-Mediane), "
-          f"ziel_p_mensch = {t['ziel_p_mensch']} (P25 der menschlichen Out-of-fold-Wahrscheinlichkeiten, mindestens 0,5).", "",
+    aw = hp.get("auswahl", {})
+    z += ["", "### Wahl von k und λ", "",
+          f"Modell: L2-regularisierte logistische Regression (Klassen balanciert) auf z-Werten, die auf ±{Z_CLIP:g} begrenzt "
+          f"sind (z = max(−{Z_CLIP:g}, min({Z_CLIP:g}, (x − Mittel)/SD)), identisch in Fit, Out-of-fold-Vorhersage, Schwellen, Goodhart-Analyse "
+          f"und analyse.bewerte). λ-Gitter (log-gleichabständig, halbe Dekaden): {', '.join(f'{x:g}' for x in MODELL_LAMBDA[::-1])}; "
+          f"k-Gitter: {', '.join(str(x) for x in MODELL_K)}.", "",
+          "Ein-Standardfehler-Regel auf dem balancierten Log-Loss out-of-fold (SE = SD über die Folds / √Folds), Reihenfolge:", ""]
+    if aw:
+        b_ = aw["bestes"]
+        z += [f"1. Beste Konfiguration: k = {b_['k']}, λ = {b_['lambda']:g} mit Log-Loss {b_['logloss']:.4f} (SE {b_['se']:.4f}); "
+              f"Grenze {aw['grenze_k']:.4f}." + (" ⚠ Das Minimum liegt am Rand des λ-Gitters." if aw.get("bestes_am_rand") else ""),
+              f"2. k = kleinstes k, dessen bestes λ die Grenze einhält: **k = {hp['k']}** (bestes λ dort {aw['bestes_k']['lambda']:g}, "
+              f"Log-Loss {aw['bestes_k']['logloss']:.4f}, SE {aw['bestes_k']['se']:.4f}).",
+              f"3. λ = größtes λ (stärkste Regularisierung) für dieses k mit Log-Loss ≤ Minimum(k) + SE(k) = {aw['grenze_lambda']:.4f}: "
+              f"**λ = {hp['lambda']:g}** (Log-Loss {aw['logloss']:.4f})."
+              + (" ⚠ λ liegt am Rand des Gitters." if aw.get("lambda_am_rand") else "")]
+    else:
+        z += [f"Gewählt: {hp['k']} Merkmale, λ = {hp['lambda']}."]
+    z += ["", f"Out-of-fold gepoolt (Mittel über die Wiederholungen je Abschnitt): Modell-AUROC {ev['modell_oof_auroc']}, "
+          f"Score-AUROC {ev['score_oof_auroc']}. In-sample (finales Modell auf allen Daten): Modell-AUROC "
+          f"{ev['modell_alle']['auroc']}, Score-AUROC {ev['score_alle']['auroc']}.", "",
           "| k | λ | AUROC | bal. Genauigkeit | Log-Loss (bal.) |", "|---|---|---|---|---|"]
     for zeile in diag["gitter"]:
-        z.append(f"| {zeile['k']} | {zeile['lambda']} | {_pm(zeile, 'auroc')} | {_pm(zeile, 'bal_genauigkeit')} | {_pm(zeile, 'logloss_bal')} |")
+        mark = " ◀" if (zeile["k"], zeile["lambda"]) == (hp["k"], hp["lambda"]) else ""
+        z.append(f"| {zeile['k']} | {zeile['lambda']:g} | {_pm(zeile, 'auroc')} | {_pm(zeile, 'bal_genauigkeit')} | "
+                 f"{_pm(zeile, 'logloss_bal', 4)}{mark} |")
+    kg = ev.get("modell_oof_kalibrierung")
+    if kg:
+        z += ["", "### Kalibrierung der Modell-Wahrscheinlichkeit (out-of-fold)", "",
+              f"Brier-Score {kg['brier']:.4f} (klassenbalanciert {kg['brier_bal']:.4f}) · ECE ({kg['klassen']} gleich breite "
+              f"Klassen) {kg['ece']:.4f} (klassenbalanciert {kg['ece_bal']:.4f}). Das Modell ist klassenbalanciert geschätzt; "
+              "die balancierten Werte gewichten beide Gruppen gleich (Prior 50 : 50), die rohen folgen dem Korpusverhältnis.", "",
+              "| Gruppe | P5 | P10 | P25 | P50 | P75 | P90 | P95 |", "|---|---|---|---|---|---|---|---|"]
+        for g, name in (("mensch", "Mensch"), ("ki", "KI")):
+            pz = kg["perzentile"].get(g)
+            if pz:
+                z.append(f"| {name} | " + " | ".join(f"{pz[k]:.3f}" for k in ("p5", "p10", "p25", "p50", "p75", "p90", "p95")) + " |")
+        z += ["", "Reliabilitätstabelle (gleich breite Klassen der Out-of-fold-Wahrscheinlichkeit):", "",
+              "| p-Klasse | n Mensch | n KI | Ø Vorhersage | Anteil Mensch | Ø Vorhersage (bal.) | Anteil Mensch (bal.) |",
+              "|---|---|---|---|---|---|---|"]
+        for r in kg["reliabilitaet"]:
+            if r["p_mittel"] is None:
+                z.append(f"| {r['von']:.1f}–{r['bis']:.1f} | 0 | 0 | – | – | – | – |")
+                continue
+            z.append(f"| {r['von']:.1f}–{r['bis']:.1f} | {r['n_mensch']} | {r['n_ki']} | {r['p_mittel']:.3f} | "
+                     f"{r['anteil_mensch']:.3f} | {r['p_mittel_bal']:.3f} | {r['anteil_mensch_bal']:.3f} |")
+    z += ["", "### Schwellen", "",
+          f"- **score_schwelle = {t['score_schwelle']}**: Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI "
+          "(Score je Abschnitt gemittelt über die Wiederholungen).",
+          f"- **ziel_p_mensch = {t['ziel_p_mensch']}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-"
+          f"Wahrscheinlichkeiten, begrenzt auf [{ZIEL_P_MIN}; {ZIEL_P_MAX}], auf 2 Stellen gerundet "
+          f"({100 - round(100 * ZIEL_P_PERZENTIL)} % der menschlichen Abschnitte erreichen es)."]
+    gh = t.get("goodhart")
+    if gh:
+        name = analyse.NAMEN.get
+        z += ["", "## Goodhart-Sensitivität (kontrafaktisch, finales Modell)", "",
+              f"Je Modellmerkmal wird nur dieses Merkmal in allen {gh['n_ki']} KI-Abschnitten auf den menschlichen Median "
+              "gesetzt (alles andere bleibt). Median p_mensch der KI-Abschnitte vorher: "
+              f"{gh['median_p_ki']:.4f}; Ziel: {gh['ziel_p_mensch']}. Beitrag = koef · (z(Wert) − z(Mensch-Median)), Median "
+              "über die KI-Abschnitte (negativ = zieht Richtung KI). ⚠ = das Merkmal allein hebt den Median-KI-Abschnitt "
+              "auf ziel_p_mensch: Wer nur darauf hinschreibt, bekäme ohne echten Stilwechsel ein „menschliches“ Urteil.", "",
+              "| Merkmal | Koef. | Mensch-Median | Median-Beitrag KI | Median p nachher | Median Δp | KI-Abschnitte ≥ Ziel | allein über Ziel |",
+              "|---|---|---|---|---|---|---|---|"]
+        for r in gh["merkmale"]:
+            z.append(f"| {name(r['id'], r['id'])} | {r['koef']:+.3f} | {r['mensch_p50']:.4g} | {r['median_beitrag_ki']:+.3f} | "
+                     f"{r['median_p']:.4f} | {r['median_delta']:+.4f} | {r['anteil_ueber_ziel']:.0%} | {'⚠ ja' if r['ueber_ziel'] else 'nein'} |")
+        tp = gh["top"]
+        z += ["", f"Die {len(tp['ids'])} Merkmale mit dem stärksten KI-Zug gemeinsam ("
+              + ", ".join(f"{name(m, m)} {b:+.2f}" for m, b in zip(tp["ids"], tp["median_beitrag_ki"]))
+              + f"): Median p nachher {tp['median_p']:.4f}, Median Δp {tp['median_delta']:+.4f}, "
+              f"{tp['anteil_ueber_ziel']:.0%} der KI-Abschnitte ≥ Ziel"
+              + (" – ⚠ der Median-KI-Abschnitt erreicht damit ziel_p_mensch." if tp["ueber_ziel"] else " – der Median-KI-Abschnitt bleibt unter ziel_p_mensch.")]
     z += ["", "## Kennzahlen: Trennschärfe, Paar-Gate, Cluster", "",
           f"Gate: AUROC auf allen Abschnitten und auf den themengleichen Paaren ≥ {GATE_AUROC} bzw. ≤ {1 - GATE_AUROC:.2f} "
           f"(gleiche Richtung), Bootstrap-95-%-Intervalle ({BOOTSTRAP_N} Ziehungen nach Dokument, Seed {BOOTSTRAP_SEED}) von "
@@ -1133,12 +1389,13 @@ def main(argv=None) -> int:
     # --- Kreuzvalidierung -------------------------------------------------------
     cv = kreuzvalidierung(zeilen, keys, muster_json["muster"], fw_woerter, args.cv_wiederholungen, args.cv_folds,
                           boot_n=args.bootstrap, log=log)
-    k_best, lam_best = waehle_konfiguration(cv["modell"])
+    auswahl = {}
+    k_best, lam_best = waehle_konfiguration(cv["modell"], auswahl)
     gruppen = [z["gruppe"] for z in zeilen]
     oof_p = [analyse.mittel(cv["oof_modell"][(k_best, lam_best)][i]) if cv["oof_modell"][(k_best, lam_best)][i] else None
              for i in range(len(zeilen))]
     oof_s = [analyse.mittel(cv["oof_score"][i]) if cv["oof_score"][i] else None for i in range(len(zeilen))]
-    ziel_p = round(max(0.5, perz([p for p, g in zip(oof_p, gruppen) if g == "mensch" and p is not None], 0.25)), 2)
+    ziel_p = ziel_p_mensch_von([p for p, g in zip(oof_p, gruppen) if g == "mensch" and p is not None])
     schwelle = round(score_schwelle_von([g for g, s in zip(gruppen, oof_s) if s is not None], [s for s in oof_s if s is not None]), 1)
 
     # --- Finale Kalibrierung auf allen Daten --------------------------------------
@@ -1148,6 +1405,7 @@ def main(argv=None) -> int:
     metriken = paket["metriken"]
     log(f"Final: {sum(v['bewertet'] for v in metriken.values())} Kennzahlen bewertet, {len(paket['cluster'])} Cluster, "
         f"Modell k={k_best}, λ={lam_best} ({time.time() - t_start:.0f} s)")
+    goodhart = goodhart_analyse(modell, paket, ziel_p)
 
     # Muster-Gewichte schreiben
     muster_bericht = []
@@ -1184,14 +1442,19 @@ def main(argv=None) -> int:
         "score_oof_auroc": round(auroc([s for g, s in ok_s if g == "mensch"], [s for g, s in ok_s if g == "ki"]), 3),
         "modell_alle": {k: round(v, 3) for k, v in evaluiere(gruppen, p_alle, 0.5).items()},
         "score_alle": {k: round(v, 3) for k, v in evaluiere(gruppen, s_alle, schwelle).items()},
-        "hyperparameter": {"k": k_best, "lambda": lam_best},
+        "modell_oof_kalibrierung": kalibrierungs_guete([p for _, p in ok_p], [int(g == "mensch") for g, _ in ok_p]),
+        "hyperparameter": {"k": k_best, "lambda": lam_best, "z_clip": Z_CLIP,
+                           "auswahl": auswahl_json(auswahl)},
         "score_schwelle": schwelle,
         "ziel_p_mensch": ziel_p,
+        "ziel_p_mensch_methode": f"P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Wahrscheinlichkeiten, "
+                                 f"begrenzt auf [{ZIEL_P_MIN:g}; {ZIEL_P_MAX:g}]".replace(".", ","),
+        "score_schwelle_methode": "Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI",
     }
 
     n_m = sum(g == "mensch" for g in gruppen)
     baselines = {
-        "version": "2",
+        "version": "3",  # v3: z-Clipping (S1), λ nach 1-SE-Regel Richtung stärkerer Strafe, Goodhart-Feld
         "beschreibung": "Referenzwerte für analyse.py, berechnet von kalibrierung/scripts/kalibriere.py. "
                         f"Abschnitte à {args.laenge} bereinigte Wörter; Zielbereich = mittlere 50 % der menschlichen "
                         "Abschnitte (P25–P75, dokumentgewichtet).",
@@ -1214,10 +1477,11 @@ def main(argv=None) -> int:
                            "intercept": round(modell["b"], 4),
                            "mittel": {k: round(paket["mittel"][k], 5) for k in modell["merkmale"]},
                            "sd": {k: round(paket["sd"][k], 5) for k in modell["merkmale"]},
-                           "lambda": lam_best},
+                           "lambda": lam_best, "z_clip": Z_CLIP},
                 "fw_profil": paket["profil"],
                 "score_schwelle": schwelle,
                 "ziel_p_mensch": ziel_p,
+                "goodhart": goodhart,
                 "satzlaengen_verteilung_mensch": analyse.verteilung(satzlaengen["mensch"]),
                 "satzlaengen_verteilung_ki": analyse.verteilung(satzlaengen["ki"]),
             }

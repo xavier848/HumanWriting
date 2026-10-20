@@ -27,6 +27,8 @@ Messkonventionen (ausführlich: references/kennzahlen-methodik.md):
 - satzlaenge_dispersion = Var/Ø (Ords I), satzlaenge_schiefe = g1, autokorrelation normiert mit 1/N.
 - Längenabhängige Kennzahlen (satzlaenge_schiefe, mattr_klumpung_100) = Median über Fenster à 800 Wörter
   (Länge der Kalibrierabschnitte); kürzere Texte werden am Stück gemessen.
+- Blockmodus (analysiere_und_bewerte): Texte über 1200 Wörtern werden in Blöcke von etwa 800 Wörtern zerlegt und
+  blockweise bewertet; die Gesamtbewertung nutzt je Kennzahl den Median über die Blöcke.
 """
 from __future__ import annotations
 
@@ -739,8 +741,13 @@ def zerlege_bloecke(text: str) -> dict:
     text = _entferne_code(text)
     text, tabellenzeilen = entferne_md_tabellen(text)
     absaetze, ueberschriften, listenpunkte = [], [], []
+    folge: list[tuple[str, int]] = []  # Textreihenfolge für den Blockmodus: (Art, Index in der jeweiligen Liste)
     abgeschnitten = False
     fussnoten_text = zitatbloecke = 0
+
+    def neu(liste: list, art: str, inhalt: str) -> None:
+        folge.append((art, len(liste)))
+        liste.append(inhalt)
 
     # 1) Blöcke an Leerzeilen, Fußnotendefinitionen entfernen, Blöcke mit einfachen Umbrüchen teilen
     bloecke: list[list[str]] = []
@@ -808,15 +815,15 @@ def zerlege_bloecke(text: str) -> dict:
             if s.startswith(">"):  # Blockzitat: fremder Wortlaut
                 zitatbloecke += 1
                 if prosa:
-                    absaetze.append(" ".join(prosa))
+                    neu(absaetze, "absatz", " ".join(prosa))
                     prosa = []
                 in_liste, vorige_art = False, "zitat"
                 continue
             if re.match(r"^#{1,6}\s", s) and zi > 0:  # Überschrift ohne Leerzeile davor
                 if prosa:
-                    absaetze.append(" ".join(prosa))
+                    neu(absaetze, "absatz", " ".join(prosa))
                     prosa = []
-                ueberschriften.append(re.sub(r"^#+\s*", "", s))
+                neu(ueberschriften, "ueberschrift", re.sub(r"^#+\s*", "", s))
                 in_liste, vorige_art = False, "ueberschrift"
                 continue
             if in_liste and not LISTE_RE.match(s) and (
@@ -826,25 +833,25 @@ def zerlege_bloecke(text: str) -> dict:
             if (len(zeilen) == 1 and not vorher_liste and NUM_KAPITEL_RE.match(s)
                     and ist_ueberschrift(LISTE_RE.sub("", s, count=1))
                     and not (bi + 1 < len(bloecke) and _listenart(bloecke[bi + 1][0].strip()) == "zahl")):
-                ueberschriften.append(s)  # '1. Einleitung' als eigene Zeile
+                neu(ueberschriften, "ueberschrift", s)  # '1. Einleitung' als eigene Zeile
                 vorige_art = "ueberschrift"
                 continue
             if ist_listenzeile(zeilen, zi, in_liste, vorige_art):
                 if prosa:
-                    absaetze.append(" ".join(prosa))
+                    neu(absaetze, "absatz", " ".join(prosa))
                     prosa = []
-                listenpunkte.append(LISTE_RE.sub("", s, count=1))
+                neu(listenpunkte, "liste", LISTE_RE.sub("", s, count=1))
                 in_liste, vorige_art = True, "liste"
                 continue
             in_liste = False
             if not prosa and ist_ueberschrift(s) and (len(zeilen) == 1 or re.match(r"^#{1,6}\s", s) or FETTZEILE_RE.match(s)):
-                ueberschriften.append(re.sub(r"^#+\s*|^\*\*|\*\*:?$", "", s))
+                neu(ueberschriften, "ueberschrift", re.sub(r"^#+\s*|^\*\*|\*\*:?$", "", s))
                 vorige_art = "ueberschrift"
                 continue
             prosa.append(s)
             vorige_art = "prosa"
         if prosa:
-            absaetze.append(" ".join(prosa))
+            neu(absaetze, "absatz", " ".join(prosa))
         vorher_liste = vorige_art == "liste"
     return {
         "absaetze": absaetze,
@@ -854,6 +861,7 @@ def zerlege_bloecke(text: str) -> dict:
         "literatur_abgeschnitten": abgeschnitten,
         "fussnoten_text": fussnoten_text,
         "zitatbloecke": zitatbloecke,
+        "folge": folge,
     }
 
 
@@ -1074,6 +1082,7 @@ def schiefe(xs):
 
 
 ABSCHNITT_L = 800  # Wörter je Kalibrierabschnitt (kalibriere.L_STANDARD); Fensterlänge längenabhängiger Kennzahlen
+BLOCK_AB = 1200  # = 1,5·ABSCHNITT_L: darüber bewertet analysiere_und_bewerte im Blockmodus (Schnittstelle S4)
 
 
 def fenster_starts(n: int, L: int = ABSCHNITT_L) -> list[int]:
@@ -1514,20 +1523,42 @@ def nominalketten(saetze_text: list[str]) -> list[int]:
 # Hauptanalyse
 # ---------------------------------------------------------------------------
 
+def hinweis_langer_text(n_w: int) -> str:
+    """Hinweis für Texte über BLOCK_AB Wörter, wenn analysiere_text sie am Stück misst."""
+    return (f"{n_w} Wörter – die Referenzwerte stammen aus Abschnitten à {ABSCHNITT_L} Wörtern. Bewertet wird ein so "
+            f"langer Text deshalb im Blockmodus (Blöcke von etwa {ABSCHNITT_L} Wörtern, je Kennzahl der Median); am Stück "
+            "gemessen liegen Absatz- und Streuungsmaße (CV) höher.")
+
+
 def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict | None = None,
                     letzter_absatz_gekuerzt: bool = False) -> dict:
     """Berechnet alle Rohmetriken. Gibt dict mit 'metriken', 'saetze', 'muster_treffer', 'info' zurück.
 
     fw_profil: Funktionswort-Profil aus baselines.json (setzt fw_profil_llr_pro_1000).
     letzter_absatz_gekuerzt: letzter Absatz zählt nicht in die Absatz-Kennzahlen (gekürzter Abschnitt)."""
+    return _analysiere(text, muster, fw_profil, letzter_absatz_gekuerzt)[0]
+
+
+def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
+                letzter_absatz_gekuerzt: bool, struktur: dict | None = None) -> tuple[dict, dict]:
+    """analysiere_text plus Zwischenstände für den Blockmodus: Struktur (mit Textreihenfolge), Sätze je
+    Roh-Absatz (auch leere) und Wörter je Satz.
+
+    struktur: bereits zerlegte Struktur (wie zerlege_bloecke); dann wird text nicht erneut zerlegt (Blockmodus).
+    Absätze, deren Index in struktur['bereinigt'] steht, bestehen schon aus bereinigten Sätzen (Teilstück eines
+    Riesenabsatzes) und werden nicht ein zweites Mal bereinigt (bereinige_absatz ist nicht idempotent)."""
     if muster is None:
         muster = lade_muster()
-    struktur = zerlege_bloecke(text)
+    if struktur is None:
+        struktur = zerlege_bloecke(text)
     zaehler: Counter = Counter()
     absatz_saetze: list[list[str]] = []
-    for a in struktur["absaetze"]:
-        sauber = bereinige_absatz(a, zaehler)
+    roh_saetze: list[list[str]] = []  # je Eintrag von struktur["absaetze"], auch ohne Satz
+    schon_bereinigt = set(struktur.get("bereinigt", ()))
+    for ai, a in enumerate(struktur["absaetze"]):
+        sauber = a if ai in schon_bereinigt else bereinige_absatz(a, zaehler)
         s = zerlege_saetze(sauber)
+        roh_saetze.append(s)
         if s:
             absatz_saetze.append(s)
 
@@ -1818,10 +1849,8 @@ def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict
         info["warnungen"].append(f"Nur {n_s} Sätze – Verteilungsmaße (Varianz, Rhythmus) sind wenig aussagekräftig.")
     elif n_s < 30:
         info["warnungen"].append(f"Nur {n_s} Sätze – Rhythmuswert unsicher (SE ≈ 1/√n), wird nicht bewertet.")
-    if n_w > 1.5 * ABSCHNITT_L:  # kein Blockmodus: Referenz = Abschnitte à ABSCHNITT_L Wörter (HW01)
-        info["warnungen"].append(f"{n_w} Wörter – die Referenzwerte stammen aus Abschnitten à {ABSCHNITT_L} Wörtern. Absatz- und "
-                                 "Streuungsmaße (CV) liegen bei langen Texten höher; für die Umschreib-Schleife besser "
-                                 f"Abschnitte von etwa {ABSCHNITT_L} Wörtern messen.")
+    if n_w > BLOCK_AB:  # Referenz = Abschnitte à ABSCHNITT_L Wörter (HW01); analysiere_und_bewerte ersetzt den Hinweis
+        info["warnungen"].append(hinweis_langer_text(n_w))
     for s in saetze:
         s.pop("tokens", None)
         s.pop("konnektor_start", None)
@@ -1834,7 +1863,7 @@ def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict
         "muster_treffer": treffer_liste,
         "info": info,
         "fw_zaehlung": {"n": n_w, "k": dict(fw_zaehlung)},
-    }
+    }, {"struktur": struktur, "roh_saetze": roh_saetze, "woerter_je_satz": w_je_satz}
 
 
 FW_SET = set(FW_WOERTER) | FUNKTIONSWOERTER
@@ -1956,10 +1985,22 @@ def _abstand(wert, ziel, streu):
     return abs(wert - ziel) / streu if streu else abs(wert - ziel)
 
 
+Z_CLIP = 3.0  # Logit-Modell: standardisierte Merkmale auf ±Z_CLIP begrenzt (S1; kalibriere.py importiert den Wert)
+UNSICHER_FAKTOR = 0.5  # 'unsicher': Abstand zur Grenze < UNSICHER_FAKTOR · se_typ · √(ABSCHNITT_L / n) (S3)
+
+
+def z_standard(x: float, mu: float, sigma: float | None) -> float:
+    """z-Wert eines Modellmerkmals mit Clipping auf ±Z_CLIP (S1); sd 0/None zählt als 1."""
+    return max(-Z_CLIP, min(Z_CLIP, (x - mu) / (sigma or 1.0)))
+
+
 def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule") -> dict:
     """Ordnet jede Kennzahl gegen die menschliche Referenzverteilung ein (grün/gelb/rot).
 
-    'unsicher' = Wert liegt näher als se_typ an der nächsten Grenze P25/P75 (Status und Score unverändert).
+    'unsicher' (S3) = |Wert − nächste Grenze P25/P75| < UNSICHER_FAKTOR · se_typ · √(ABSCHNITT_L / max(ABSCHNITT_L, n)),
+    n = ergebnis['info']['woerter'] (fehlt die Angabe: ABSCHNITT_L); Status und Score bleiben unverändert.
+    Logit-Modell mit z-Clipping (S1); 'beitrag' je Modellmerkmal = koef · (z(Wert) − z(Mensch-Median)), negativ =
+    zieht Richtung KI, dazu 'modell_beitraege' aufsteigend sortiert (S2).
     Fehlt fw_profil_llr_pro_1000 und enthält die Textsorte ein fw_profil, wird es aus ergebnis['fw_zaehlung']
     nachberechnet und in ergebnis['metriken'] eingetragen."""
     m = ergebnis["metriken"]
@@ -1972,7 +2013,25 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
         wert = fw_llr_zaehlung(z.get("k", {}), z.get("n", 0), fw)
         m["fw_profil_llr_pro_1000"] = round(wert, 4) if wert is not None else None
     n_s = ergebnis.get("info", {}).get("saetze")
+    n_woerter = ergebnis.get("info", {}).get("woerter") or 0
+    unsicher_skala = UNSICHER_FAKTOR * math.sqrt(ABSCHNITT_L / max(ABSCHNITT_L, n_woerter))
     ref = ts.get("metriken", {})
+
+    # Logit-Modell (S1) und Beiträge (S2): Referenzpunkt ist der menschliche Median, ohne Referenzwert das Modellmittel
+    modell = ts.get("modell")
+    p_mensch, beitraege = None, {}
+    if modell:
+        logit = modell["intercept"]
+        for key, coef in modell["koeffizienten"].items():
+            if m.get(key) is None:
+                continue  # fehlend = Mittelwert (z = 0), wie in kalibriere.py
+            mu, sigma = modell["mittel"][key], modell["sd"][key]
+            z_wert = z_standard(m[key], mu, sigma)
+            logit += coef * z_wert
+            p50 = ((ref.get(key) or {}).get("mensch") or {}).get("p50")
+            # gerundet; + 0.0 macht aus −0.0 (negativer Koeffizient · 0, z. B. Semikolons am Median 0) eine 0.0
+            beitraege[key] = round(coef * (z_wert - (z_standard(p50, mu, sigma) if p50 is not None else 0.0)), 4) + 0.0
+        p_mensch = round(1 / (1 + math.exp(-max(-30, min(30, logit)))), 3)
     zeilen = []
     gew_summe = gew_punkte = 0.0
     for key, r in ref.items():
@@ -1993,7 +2052,7 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
         if status != "gruen":
             richtung = "erhoehen" if wert < mensch["p25"] else "senken"
         se = r.get("se_typ")
-        unsicher = bool(se) and min(abs(wert - mensch["p25"]), abs(wert - mensch["p75"])) < se
+        unsicher = bool(se) and min(abs(wert - mensch["p25"]), abs(wert - mensch["p75"])) < unsicher_skala * se
         bewertet = r.get("bewertet", False)
         if key == "rhythmus_r1_log" and n_s is not None and n_s < 30:
             bewertet = False  # Reihenfolgemaß bei < 30 Sätzen zu unsicher
@@ -2012,6 +2071,7 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
             "unsicher": unsicher,
             "ki_naeher": ki_naeher,
             "richtung": richtung,
+            "beitrag": round(beitraege[key], 4) if key in beitraege else None,
             "hinweis": r.get("hinweis", ""),
         }
         if r.get("cluster") is not None:
@@ -2022,19 +2082,222 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
             gew_summe += g
             gew_punkte += g * {"gruen": 1.0, "gelb": 0.5, "rot": 0.0}[status]
     score = round(100 * gew_punkte / gew_summe) if gew_summe else None
-    modell = ts.get("modell")
-    p_mensch = None
-    if modell:
-        z = modell["intercept"]
-        for key, coef in modell["koeffizienten"].items():
-            if m.get(key) is not None:
-                mu, sigma = modell["mittel"][key], modell["sd"][key] or 1.0
-                z += coef * ((m[key] - mu) / sigma)
-        p_mensch = round(1 / (1 + math.exp(-max(-30, min(30, z)))), 3)
     zeilen.sort(key=lambda z: (not z["bewertet"], {"rot": 0, "gelb": 1, "gruen": 2}[z["status"]], -(z["gewicht"] or 0)))
+    modell_beitraege = sorted(({"id": k, "name": NAMEN.get(k, k), "beitrag": round(b, 4)} for k, b in beitraege.items()),
+                              key=lambda e: (e["beitrag"], e["id"]))
     return {"verfuegbar": True, "kennzahlen": zeilen, "score": score, "p_mensch": p_mensch,
+            "modell_beitraege": modell_beitraege,
             "score_schwelle": ts.get("score_schwelle"), "ziel_p_mensch": ts.get("ziel_p_mensch"),
             "korpus": baselines.get("korpus", {})}
+
+
+# ---------------------------------------------------------------------------
+# Blockmodus (S4): lange Texte in Blöcken à etwa ABSCHNITT_L Wörtern bewerten
+# ---------------------------------------------------------------------------
+
+ABSATZ_KENNZAHLEN = ("absaetze", "absatzlaenge_mittel", "absatzlaenge_cv", "saetze_pro_absatz", "saetze_pro_absatz_cv",
+                     "anteil_einsatz_absaetze")
+BLOCK_HINWEIS = "Blockmodus:"  # Anfang des Hinweises in info['warnungen'] (Bericht zeigt ihn als Info, nicht als Warnung)
+
+
+def _block_einheiten(intern: dict) -> list[dict]:
+    """Prosa-Einheiten in Textreihenfolge mit Wortzahl und globalen Satzindizes (0-basiert, wie ergebnis['saetze']).
+
+    Ein Absatz über 1,5·ABSCHNITT_L Wörtern zerfällt in Einzelsätze ('teil'), damit er an einer Satzgrenze geteilt
+    werden kann. Überschriften hängen vor der folgenden Einheit, Listenpunkte hinter der vorigen (außer nach einer
+    Überschrift). Verzeichnis-/Literatur-Überschriften werden weggelassen, damit auch _blocktext neu gemessen nichts
+    abschneidet; Tabellen und Blockzitate zählen ohnehin nur in info."""
+    struktur, roh_saetze, w_je_satz = intern["struktur"], intern["roh_saetze"], intern["woerter_je_satz"]
+    einheiten: list[dict] = []
+    offen: list[str] = []  # Überschriften/Listen vor der nächsten Einheit
+    gi = 0
+    for art, idx in struktur.get("folge", []):
+        if art == "absatz":
+            saetze = roh_saetze[idx]
+            if not saetze:
+                continue  # Absatz ohne Satz (z. B. nur Belege): auch am Stück nicht gemessen
+            nrn = list(range(gi, gi + len(saetze)))
+            gi += len(saetze)
+            w = sum(w_je_satz[i] for i in nrn)
+            if w > 1.5 * ABSCHNITT_L and len(saetze) > 1:
+                for j, (satz, nr) in enumerate(zip(saetze, nrn)):
+                    einheiten.append({"vor": offen, "nach": [], "text": satz, "absatz": idx, "teil": True,
+                                      "letzter_teil": j == len(saetze) - 1, "saetze": [nr], "woerter": w_je_satz[nr]})
+                    offen = []
+            else:
+                einheiten.append({"vor": offen, "nach": [], "text": struktur["absaetze"][idx], "absatz": idx,
+                                  "teil": False, "letzter_teil": True, "saetze": nrn, "woerter": w})
+                offen = []
+        elif art == "ueberschrift":
+            u = struktur["ueberschriften"][idx]
+            if not (LITERATUR_UEBERSCHRIFT.match(u) or INHALTSVERZEICHNIS_UEBERSCHRIFT.match(u)):
+                offen.append("# " + u)
+        elif art == "liste":
+            zeile = "- " + struktur["listenpunkte"][idx]
+            if einheiten and not offen:
+                einheiten[-1]["nach"].append(zeile)
+            else:
+                offen.append(zeile)
+    if offen and einheiten:
+        einheiten[-1]["nach"].extend(offen)
+    return einheiten
+
+
+def _bloecke_planen(einheiten: list[dict], L: int = ABSCHNITT_L) -> list[list[dict]]:
+    """Gierig an Absatzgrenzen: Ein Block schließt, sobald er ≥ 0,75·L Wörter hat und die nächste Einheit ihn weiter
+    von L entfernen würde. Ein Rest unter 0,75·L kommt zum vorigen Block."""
+    bloecke: list[list[dict]] = []
+    akt: list[dict] = []
+    akt_w = 0
+    for e in einheiten:
+        if akt and akt_w >= 0.75 * L and abs(akt_w + e["woerter"] - L) > abs(akt_w - L):
+            bloecke.append(akt)
+            akt, akt_w = [], 0
+        akt.append(e)
+        akt_w += e["woerter"]
+    if akt:
+        if bloecke and akt_w < 0.75 * L:
+            bloecke[-1].extend(akt)
+        else:
+            bloecke.append(akt)
+    return bloecke
+
+
+def _blockstruktur(block: list[dict]) -> dict:
+    """Struktur eines Blocks wie zerlege_bloecke, direkt aus den Einheiten des Gesamttexts: Roh-Absätze (Bereinigung wie
+    am Stück), Teilsätze eines geteilten Absatzes als ein Absatz, Überschriften und Listenpunkte in Textreihenfolge.
+
+    Der Block wird bewusst nicht erneut aus Text zerlegt: Ein Teilstück eines Riesenabsatzes, das mit '2. …' oder
+    'a) …' beginnt, würde sonst als ein einziger Listenpunkt gelesen (Block ohne Wörter), ein aus Zeilen mit je einem
+    '|' zusammengefügter Absatz als Tabellenzeile."""
+    st = {"absaetze": [], "ueberschriften": [], "listenpunkte": [], "tabellenzeilen": 0,
+          "literatur_abgeschnitten": False, "fussnoten_text": 0, "zitatbloecke": 0, "folge": [], "bereinigt": []}
+    listen = {"absatz": st["absaetze"], "ueberschrift": st["ueberschriften"], "liste": st["listenpunkte"]}
+
+    def neu(art: str, inhalt: str) -> None:
+        st["folge"].append((art, len(listen[art])))
+        listen[art].append(inhalt)
+
+    def zusatz(zeilen: list[str]) -> None:  # aus _block_einheiten: '# Überschrift' bzw. '- Listenpunkt'
+        for z in zeilen:
+            neu("ueberschrift" if z.startswith("# ") else "liste", z[2:])
+
+    offener_absatz = None
+    for e in block:
+        if e["vor"]:
+            zusatz(e["vor"])
+            offener_absatz = None
+        if e["teil"] and offener_absatz == e["absatz"]:
+            st["absaetze"][-1] += " " + e["text"]
+        else:
+            neu("absatz", e["text"])
+            if e["teil"]:  # aus bereinigten Sätzen: in _analysiere nicht erneut bereinigen
+                st["bereinigt"].append(len(st["absaetze"]) - 1)
+        offener_absatz = e["absatz"] if e["teil"] else None
+        if e["nach"]:
+            zusatz(e["nach"])
+            offener_absatz = None
+    return st
+
+
+def _blocktext(block: list[dict]) -> str:
+    """Text eines Blocks (Anzeige/Tests); gemessen wird über _blockstruktur, nicht über diesen Text."""
+    st = _blockstruktur(block)
+    praefix = {"absatz": ("", st["absaetze"]), "ueberschrift": ("# ", st["ueberschriften"]),
+               "liste": ("- ", st["listenpunkte"])}
+    return "\n\n".join(praefix[art][0] + praefix[art][1][i] for art, i in st["folge"])
+
+
+def _satzbereiche(plan: list[list[dict]], block_erg: list[dict], saetze: list[dict]) -> list[tuple[int, int]]:
+    """Globale Satznummern (von, bis) je Block. Stimmen die neu gemessenen Satzzahlen mit dem Gesamttext überein,
+    ergeben sie sich fortlaufend; sonst über Textabgleich (Rückfall: Satzindizes der Einheiten)."""
+    gemessen = [e["info"]["saetze"] for e in block_erg]
+    erwartet = [sum(len(u["saetze"]) for u in block) for block in plan]
+    if gemessen == erwartet and sum(gemessen) == len(saetze):
+        out, start = [], 1
+        for n in gemessen:
+            out.append((start, start + n - 1))
+            start += n
+        return out
+    texte = [s["text"] for s in saetze]
+    out, zeiger = [], 0
+    for block, e in zip(plan, block_erg):
+        nrn = [i for u in block for i in u["saetze"]]
+        von, bis = nrn[0], nrn[-1]  # Rückfall
+        bt = [s["text"] for s in e["saetze"]]
+        if bt:
+            treffer = [i for i in range(zeiger, len(texte)) if texte[i] == bt[0]]
+            if treffer:
+                von = min(treffer, key=lambda i: abs(i - nrn[0]))
+                ende = [i for i in range(von, len(texte)) if texte[i] == bt[-1]]
+                if ende:
+                    bis = min(ende, key=lambda i: abs(i - (von + len(bt) - 1)))
+        out.append((von + 1, bis + 1))
+        zeiger = bis + 1
+    return out
+
+
+def analysiere_und_bewerte(text: str, muster: list[dict] | None = None, baselines: dict | None = None,
+                           textsorte: str = "hochschule") -> tuple[dict, dict]:
+    """Analyse und Bewertung in einem Schritt (S4), mit Blockmodus für lange Texte.
+
+    ergebnis = analysiere_text(text) wie bisher (alle Sätze mit globaler Nummer, Flags, info). Über BLOCK_AB bereinigten
+    Wörtern wird der Text in Blöcke von etwa ABSCHNITT_L Wörtern zerlegt (Länge der Referenzabschnitte), jeder Block
+    gemessen und bewertet; die Gesamtbewertung nutzt je Kennzahl den Median über die Blöcke (nur Kennzahlen, die in
+    mindestens der Hälfte der Blöcke vorhanden sind), p_mensch = Median der Block-p_mensch. Zusätzliche Felder:
+    'blockmodus', 'n_woerter', 'bloecke'. muster/baselines None = Standarddateien; {} = ohne Referenzwerte."""
+    if muster is None:
+        muster = lade_muster()
+    if baselines is None:
+        baselines = lade_baselines()
+    fw_profil = ((baselines or {}).get("textsorten", {}).get(textsorte) or {}).get("fw_profil")
+    ergebnis, intern = _analysiere(text, muster, fw_profil, False)
+    n = ergebnis["info"]["woerter"]
+    verfuegbar = bool(baselines) and textsorte in baselines.get("textsorten", {})
+    plan = _bloecke_planen(_block_einheiten(intern)) if n > BLOCK_AB and verfuegbar else []
+    if not plan:
+        bewertung = bewerte(ergebnis, baselines, textsorte)
+        bewertung.update(blockmodus=False, n_woerter=n, bloecke=[])
+        return ergebnis, bewertung
+
+    block_erg, block_bew = [], []
+    for block in plan:
+        gekuerzt = block[-1]["teil"] and not block[-1]["letzter_teil"]
+        e = _analysiere("", muster, fw_profil, gekuerzt, struktur=_blockstruktur(block))[0]
+        if not e["metriken"].get("absaetze"):  # kein vollständiger Absatz (Stück eines Riesenabsatzes)
+            for k in ABSATZ_KENNZAHLEN:
+                e["metriken"][k] = None
+        block_erg.append(e)
+        block_bew.append(bewerte(e, baselines, textsorte))
+
+    schluessel = list(dict.fromkeys(k for e in block_erg for k in e["metriken"]))
+    median_m = {}
+    for k in schluessel:
+        werte = [e["metriken"][k] for e in block_erg if e["metriken"].get(k) is not None]
+        median_m[k] = round(statistics.median(werte), 4) if werte and 2 * len(werte) >= len(block_erg) else None
+    n_s_typisch = statistics.median(e["info"]["saetze"] for e in block_erg)  # für die Rhythmus-Regel (< 30 Sätze)
+    bewertung = bewerte({"metriken": median_m, "info": {"saetze": n_s_typisch, "woerter": n}}, baselines, textsorte)
+    ps = [b["p_mensch"] for b in block_bew if b.get("p_mensch") is not None]
+    bewertung["p_mensch"] = round(statistics.median(ps), 3) if ps else None
+
+    bloecke = []
+    for nr, (e, b, (von, bis)) in enumerate(zip(block_erg, block_bew, _satzbereiche(plan, block_erg, ergebnis["saetze"])), 1):
+        rot = sum(1 for z in b["kennzahlen"] if z["bewertet"] and not z["nur_modell"] and z["status"] == "rot")
+        bloecke.append({"nr": nr, "woerter": e["info"]["woerter"], "satz_von": von, "satz_bis": bis,
+                        "score": b["score"], "p_mensch": b.get("p_mensch"), "rot": rot})
+    bewertung.update(blockmodus=True, n_woerter=n, bloecke=bloecke)
+
+    k = len(bloecke)
+    hinweis = (f"{BLOCK_HINWEIS} {n} Wörter, bewertet in {k} Blöcken von etwa {ABSCHNITT_L} Wörtern" if k > 1 else
+               f"{BLOCK_HINWEIS} {n} Wörter, bewertet als ein Block (ein Rest unter {round(0.75 * ABSCHNITT_L)} Wörtern "
+               "wird nicht abgetrennt)")
+    hinweis += (f" – die Referenzwerte stammen aus Abschnitten à {ABSCHNITT_L} Wörtern. "
+                + ("Kennzahlen und Score beruhen auf dem Median über die Blöcke, die Modell-Einschätzung ist der Median "
+                   "der Blöcke." if k > 1 else "Kennzahlen, Score und Modell-Einschätzung stammen aus diesem Block."))
+    warn = ergebnis["info"]["warnungen"]
+    alt = hinweis_langer_text(n)
+    ergebnis["info"]["warnungen"] = [hinweis if w == alt else w for w in warn] if alt in warn else [hinweis] + warn
+    return ergebnis, bewertung
 
 
 # ---------------------------------------------------------------------------
@@ -2064,15 +2327,23 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
                + (f" · {info['zitate_entfernt']} Quellenverweise (für die Messung ausgeblendet)" if info["zitate_entfernt"] else "")
                + (" · Literaturverzeichnis ignoriert" if info["literatur_abgeschnitten"] else ""))
     for w in info["warnungen"]:
-        out.append(f"\n> ⚠️ {w}")
+        out.append(f"\n> {'ℹ️' if w.startswith(BLOCK_HINWEIS) else '⚠️'} {w}")
+    bloecke = (bewertung.get("bloecke") or []) if bewertung.get("blockmodus") else []
     if bewertung.get("verfuegbar"):
         out.append("")
         teile = []
+        median = " (Median der Blöcke)" if len(bloecke) > 1 else ""
         if bewertung["score"] is not None:
             teile.append(f"**Menschlichkeits-Score: {bewertung['score']}/100**")
         if bewertung.get("p_mensch") is not None:
-            teile.append(f"Modell-Einschätzung: {round(100 * bewertung['p_mensch'])} % menschlich")
+            teile.append(f"Modell-Einschätzung: {round(100 * bewertung['p_mensch'])} % menschlich{median}")
         out.append(" · ".join(teile))
+        ki_ziehend = [b for b in bewertung.get("modell_beitraege") or [] if b["beitrag"] < 0][:3]
+        if ki_ziehend:
+            out.append("\nStärkste KI-Signale im Modell (Beitrag zum Logit gegenüber einem typischen menschlichen Text): "
+                       + ", ".join(f"{b['name']} ({fmt(b['beitrag'])})" for b in ki_ziehend))
+        if len(bloecke) > 1:
+            out.append(f"\n_Blockmodus: Werte in der Tabelle = Median über {len(bloecke)} Blöcke._")
         out.append("")
         out.append("| | Kennzahl | Wert | Mensch (Zielbereich P25–P75) | Mensch Median | KI Median | Aufgabe |")
         out.append("|---|---|---|---|---|---|---|")
@@ -2098,6 +2369,18 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
             )
         if not alle:
             out.append("\n_Nur trennscharfe Kennzahlen gezeigt; alle mit `--alle`._")
+        if bloecke:
+            out.append(f"\n**Blöcke** (je etwa {ABSCHNITT_L} Wörter, wie die Referenzabschnitte)\n")
+            out.append("| Block | Sätze | Wörter | Score | % menschlich |")
+            out.append("|---|---|---|---|---|")
+            ki_naechster = None
+            if len(bloecke) > 1:
+                ki_naechster = min(bloecke, key=lambda b: (b["p_mensch"] if b["p_mensch"] is not None else 2.0,
+                                                           b["score"] if b["score"] is not None else 101))["nr"]
+            for b in bloecke:
+                p = f"{round(100 * b['p_mensch'])} %" if b["p_mensch"] is not None else "–"
+                marke = " ← am KI-nächsten" if b["nr"] == ki_naechster else ""
+                out.append(f"| {b['nr']} | {b['satz_von']}–{b['satz_bis']} | {b['woerter']} | {fmt(b['score'])} | {p}{marke} |")
     else:
         out.append("\n_Keine Referenzwerte gefunden (data/baselines.json) – zeige Rohwerte._\n")
         out.append("| Kennzahl | Wert |\n|---|---|")
@@ -2142,12 +2425,10 @@ def main(argv=None) -> int:
 
     text = lies_datei(args.datei)
     baselines = lade_baselines(args.baselines)
-    fw_profil = ((baselines or {}).get("textsorten", {}).get(args.textsorte) or {}).get("fw_profil")
-    ergebnis = analysiere_text(text, lade_muster(args.muster), fw_profil=fw_profil)
+    ergebnis, bewertung = analysiere_und_bewerte(text, lade_muster(args.muster), baselines or {}, args.textsorte)
     if args.datei.lower().endswith(".pdf"):
         ergebnis["info"]["warnungen"].append("PDF-Eingabe: Absätze sind aus dem Seitenlayout rekonstruiert – "
                                              "Absatzkennzahlen nur eingeschränkt verlässlich.")
-    bewertung = bewerte(ergebnis, baselines, args.textsorte)
     if args.format == "json":
         ausgabe = {"info": ergebnis["info"], "metriken": ergebnis["metriken"], "bewertung": bewertung, "muster_treffer": ergebnis["muster_treffer"]}
         if not args.ohne_saetze:
