@@ -67,6 +67,8 @@ NARRATIV_RE = re.compile(
     rf"(?<![\wäöüß'’-])(?P<a>{NAME}(?:(?:\s+|\s*[&/]\s*|\s+und\s+)(?:{NAME}|{PARTIKEL}(?=\s+[A-ZÄÖÜ]))|\s+{ETAL})*)"
     rf"\s*\(\s*(?P<j>{JAHR})(?P<w>(?:\s*(?:,|;|und|&)\s*(?:{JAHR}|[a-z](?![\wäöüß])))*)(?P<f>[^()]{{0,30}})\)"
 )
+NICHT_AUTOR = {"prozent", "prozentpunkte", "prozentpunkten", "euro", "dollar", "mio", "mrd", "millionen",
+               "milliarden", "tausend", "stand", "jahr", "jahre", "jahren", "punkte", "punkten"}
 EBD_RE = re.compile(r"^\s*(?:vgl\.\s*)?(?:ebd\.|ebenda|a\.\s?a\.\s?O\.)", re.I)
 KLAMMER_RE = re.compile(r"\(([^()]*)\)")
 
@@ -158,7 +160,7 @@ def _autoren(s: str):
         w = re.findall(NAME, teil)
         if w:
             namen.append(w[-1].rstrip(".").lower())
-    return (namen, etal) if namen else None
+    return (namen, etal) if namen and namen[-1] not in NICHT_AUTOR else None
 
 
 def _jahre(erstes: str, weitere: str) -> list[str]:
@@ -193,8 +195,8 @@ def quellen(t: str):
         if f.strip() and not (fm and not f[fm.end():].strip()):
             continue                        # z. B. „Umsatz (2020: 23 %)“ ist kein Verweis
         au = _autoren(m.group("a"))
-        if not au:
-            continue
+        if not au or re.search(r"\d\s*$", t[max(0, m.start() - 3):m.start()]):
+            continue                        # „17,1 Prozent (1997)“ ist kein Verweis
         jahre = _jahre(m.group("j"), m.group("w"))
         for i, j in enumerate(jahre):
             neu(au[0], au[1], j, _fund(fm) if i == len(jahre) - 1 else "", m.group(0), m.start())
@@ -299,13 +301,19 @@ def zahl_funde(t: str) -> list[dict]:
         elif VORWAEHRUNG_RE.search(vor):
             einheit += _einheit(VORWAEHRUNG_RE.search(vor).group(0), EINHEIT)
         weich = not einheit and bool(re.match(r"-[a-zäöüß]", t[m.end():m.end() + 2]))
-        out.append({"wert": wert + einheit, "weich": weich, "roh": t[a:e], "pos": a, "laenge": e - a})
+        out.append({"wert": wert + einheit, "weich": weich, "roh": t[a:e], "pos": a, "laenge": e - a, "einheit": einheit})
+    # Einheit in Spannen nur einmal geschrieben: „von 45,2 auf 38,7 %“, „3 bis 5 Mrd. Euro“ → beide mit Einheit
+    for z, n in reversed(list(zip(out, out[1:]))):
+        if not z["einheit"] and not z["weich"] and n["einheit"] and \
+                re.fullmatch(r"\s*(?:bis|auf|und|oder|zu|[–/-])\s*", t[z["pos"] + z["laenge"]:n["pos"]]):
+            z["einheit"] = n["einheit"]
+            z["wert"] += n["einheit"]
     for m in ZAHLWORT_RE.finditer(t):
         wert = ZAHLWORT[m.group(0).lower()]
         eh = EINHEIT_RE.match(t, m.end())
         if eh:
             wert += _einheit(eh.group(0), EINHEIT)
-        out.append({"wert": wert, "weich": True, "roh": m.group(0), "pos": m.start(), "laenge": len(m.group(0))})
+        out.append({"wert": wert, "weich": True, "roh": m.group(0), "pos": m.start(), "laenge": len(m.group(0)), "einheit": ""})
     return sorted(out, key=lambda z: z["pos"])
 
 
@@ -442,6 +450,9 @@ def _naehe(text: str, namen, jahr: str, breite: int = 80) -> bool:
 
 
 def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
+    """Meldet Quellenverluste/-erfindungen. Rückgabe: Jahre aufgelöster Verweise (alt, neu), die auf der
+    Gegenseite jetzt als Zahl im Fließtext stehen und beim Zahlenvergleich gutgeschrieben werden."""
+    gut_alt, gut_neu = [], []
     fehlt, dazu = differenz(Counter(q["schluessel"] for q in q_alt), Counter(q["schluessel"] for q in q_neu))
     fehlt, dazu = list(dict.fromkeys(fehlt)), list(dict.fromkeys(dazu))
     # gleiche Jahr/Fundstelle und gemeinsamer Autor → Angabe verändert (Koautor, et al.), keine Erfindung
@@ -461,6 +472,7 @@ def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
         if _naehe(rest_neu, q["namen"], q["jahr"]) and not q["fund"]:
             res["warnungen"].append({"typ": "Quellenverweis umformuliert", "wert": q["roh"],
                                      "hinweis": "Autor und Jahr stehen noch im Text, aber nicht mehr als Verweis – prüfen."})
+            gut_alt.append(re.sub(r"[a-z]$", "", q["jahr"]))
             continue
         res["harte_verluste"].append({"typ": "Quellenverweis", "wert": q["roh"], "schluessel": f,
                                       "kontext_original": kontext(alt, q["pos"], len(q["roh"]))})
@@ -469,9 +481,11 @@ def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
         if _naehe(rest_alt, q["namen"], q["jahr"]) and not q["fund"]:
             res["warnungen"].append({"typ": "Quellenverweis umformuliert", "wert": q["roh"],
                                      "hinweis": "Autor und Jahr standen im Original im Fließtext – prüfen."})
+            gut_neu.append(re.sub(r"[a-z]$", "", q["jahr"]))
             continue
         res["erfindungen"].append({"typ": "Quellenverweis", "wert": q["roh"], "schluessel": d,
                                    "kontext_neu": kontext(neu, q["pos"], len(q["roh"]))})
+    return gut_alt, gut_neu
 
 
 def _vergleiche_zitate(alt, neu, res):
@@ -500,9 +514,11 @@ def pruefe(alt: str, neu: str) -> dict:
 
     q_alt, rest_alt = quellen(alt)
     q_neu, rest_neu = quellen(neu)
+    gut_alt, gut_neu = _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res)
     # Positionen im Rest-Text entsprechen denen im Original (Verweise sind nur ausgeblendet)
-    _vergleiche_zahlen(alt, neu, zahl_funde(rest_alt), zahl_funde(rest_neu), res)
-    _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res)
+    z_alt = zahl_funde(rest_alt) + [{"wert": j, "weich": False, "roh": j, "pos": -1, "laenge": 0} for j in gut_alt]
+    z_neu = zahl_funde(rest_neu) + [{"wert": j, "weich": False, "roh": j, "pos": -1, "laenge": 0} for j in gut_neu]
+    _vergleiche_zahlen(alt, neu, z_alt, z_neu, res)
     _vergleiche_zitate(alt, neu, res)
     res["warnungen"].extend(zahlen_vertauscht(rest_alt, rest_neu))
 
