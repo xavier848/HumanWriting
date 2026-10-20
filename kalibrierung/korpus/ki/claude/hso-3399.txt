@@ -1,0 +1,39 @@
+## Aufbau eines Newsletters: von Header bis Footer, Betreffzeile und Pre-Header
+
+Ein Newsletter folgt in der Regel einem wiederkehrenden Aufbau, der Empfängern die Orientierung erleichtert und die Wiedererkennung des Absenders sichert. Im Folgenden werden die einzelnen Bestandteile von oben nach unten beschrieben und jeweils Empfehlungen für ihre Gestaltung abgeleitet. Anschließend wird auf Betreffzeile, Absender und Pre-Header eingegangen, die bereits vor dem Öffnen der E-Mail sichtbar sind.
+
+### Header und Navigation
+
+Der Header ist zentral dafür, dass Empfänger den Newsletter auf einen Blick dem Absender zuordnen können. Wichtigstes Element ist das Logo, das für Wiedererkennung sorgt. Da der Blick beim Lesen in der Regel links oben einsetzt, sollte es auf der linken Seite platziert werden, was auch Ergebnisse aus Eye-Tracking-Studien bestätigen. Der Header erstreckt sich idealerweise über die volle Breite des Newsletters und kann bei Bedarf um weitere Elemente ergänzt werden. Pre-Header und Header sind meist bei allen Aussendungen identisch. Für Abwechslung können saisonale Motive sorgen, etwa zu Ostern oder Weihnachten, ohne dass die Wiedererkennbarkeit darunter leidet.
+
+Unterhalb des Headers folgt häufig eine Navigationsleiste. Sie stellt einen optischen Bezug zur Website her, sollte diese jedoch nicht exakt kopieren. Ausklappmenüs, wie sie auf Websites üblich sind, lassen sich in E-Mails technisch nicht umsetzen. Die Links der Navigationsleiste führen zudem auf die Website und nicht zu bestimmten Stellen innerhalb des Newsletters. Auf diese Weise erhalten Empfänger einen direkten Zugang zu zentralen Bereichen des Onlineangebots, etwa zu einzelnen Produktkategorien.
+
+### Einleitung und Inhaltsbereich
+
+An die Navigation schließt sich das Editorial an, das auch als „Teaser mit Bild“ bezeichnet wird. Ein großes Bild oder eine Grafik mit wenig Text dient hier als Blickfang und gibt zugleich einen Vorgeschmack auf die Inhalte des Newsletters.
+
+Darauf folgen eine personalisierte Anrede und ein kurzer Einleitungstext. Dieser sollte das Thema des Newsletters klären und Neugier wecken. Besonders wirkungsvoll ist es, ein aktuelles Bedürfnis der Kunden aufzugreifen und eine passende Lösung innerhalb des Newsletters in Aussicht zu stellen. Abgeschlossen wird die Einleitung mit einem positiven Gruß, beispielsweise mit dem Wunsch des Teams, viel Freude beim Lesen zu haben. Optional können eine Unterschrift oder ein Foto eines Mitarbeiters ergänzt werden, um eine größere Nähe zum Empfänger herzustellen. Wie dies in der Praxis umgesetzt werden kann, zeigen die Beispiele zweier Unternehmen in Abbildung 18.
+
+Im anschließenden Content-Bereich werden wechselnde Themen vorgestellt. Jeder Beitrag besteht typischerweise aus einem Bild, einer Überschrift, einem kurzen Teaser und einem Call-to-Action-Button. Der Button muss sich optisch vom übrigen Inhalt abheben und eindeutig erkennen lassen, welche Handlung der Empfänger durch einen Klick auslöst.
+
+Der Teaser soll lediglich einen Anreiz bieten und nicht den gesamten Inhalt vorwegnehmen. Über den Call-to-Action gelangt der Empfänger auf eine Landingpage, die den ausführlichen Inhalt bereitstellt. Hierfür können eigens erstellte oder bereits bestehende Seiten der Website genutzt werden. Eine gute Landingpage zeichnet sich durch eine klare Handlungsaufforderung, eine informative Beschreibung und ein markenkonformes Design aus. Die eigentliche Conversion findet somit auf der Landingpage statt, während der Newsletter als vorgeschaltetes Lockmittel fungiert.
+
+### Footer
+
+Der Footer nimmt in vielen Newslettern einen großen Teil der E-Mail ein, sodass die Bezeichnung „Fußzeile“ seine Bedeutung eher untertreibt. Eye-Tracking-Untersuchungen zeigen allerdings, dass Leser den Footer nur selten erreichen, da sie ihn vor allem mit rechtlichen Angaben verbinden. Typische Inhalte sind die Möglichkeit zur Abmeldung, das Impressum, das entweder vollständig abgebildet oder verlinkt wird, Links zu den Social-Media-Kanälen des Unternehmens sowie eine weitere Navigation. Die Abmeldung erfolgt meist über einen Link im Newsletter. Sie darf nicht erschwert werden, und nach der Abmeldung sind die Daten des Nutzers zu löschen. Obwohl der Footer nur wenig Aufmerksamkeit erhält, sollte er daher sorgfältig gestaltet werden, da er wichtige Pflichtangaben bündelt und zugleich Raum für weiterführende Angebote bietet.
+
+### Betreffzeile und Absender
+
+Die Betreffzeile entscheidet maßgeblich darüber, ob ein Newsletter geöffnet wird. Kerninhalt und Nutzen sollten daher sofort erkennbar sein. Der Betreff sollte kurz gehalten werden und die wichtigsten Informationen an den Anfang stellen, damit diese auch dann sichtbar bleiben, wenn der Text gekürzt dargestellt wird. Weil E-Mail-Clients Betreffzeilen unterschiedlich darstellen, empfiehlt sich vor dem Versand ein Test der Vorschau.
+
+Als Richtwert gilt eine Länge von 40 bis 50 Zeichen, da längere Betreffzeilen in der Regel abgeschnitten werden. Auf Smartphones sind sogar nur etwa 20 Zeichen sichtbar. Schlüsselbegriffe erhöhen die Bereitschaft, die E-Mail zu öffnen. Fragen, Prozentzahlen oder Emoticons können zusätzlich Aufmerksamkeit erzeugen, sollten jedoch sparsam eingesetzt werden.
+
+Um nicht im Spamordner zu landen, sollten Reizwörter wie „free“, „cash“ oder „$$$“ vermieden werden. Gleiches gilt für Betreffzeilen in Großbuchstaben sowie für englische Formulierungen bei deutschsprachigen Empfängern. Rabatte und eine persönliche Anrede sind im Betreff dennoch möglich (vgl. Kapitel 6.4).
+
+Absender und Betreff werden von den Empfängern immer wahrgenommen, auch wenn sie die E-Mail nicht öffnen. Daher sollte keinesfalls „Newsletter“ als Absender und gleichzeitig „November-Newsletter“ als Betreff gewählt werden, da in diesem Fall der Markenname vollständig verloren geht. Als Absender empfiehlt sich stattdessen der Name des Unternehmens.
+
+### Pre-Header
+
+Der Pre-Header umfasst die ersten Textzeilen der E-Mail, die in vielen Clients in der Vorschau neben Absender und Betreff angezeigt werden. Er sollte den Betreff nicht wiederholen, sondern ergänzen. Wird er nicht gezielt gestaltet, bildet der Client ihn standardmäßig aus den ersten Wörtern der E-Mail. In der Praxis bleibt der Pre-Header deshalb häufig ungenutzt und enthält lediglich einen Hinweis auf mögliche Darstellungsprobleme, wodurch wertvoller Platz für eine zusätzliche Botschaft verschenkt wird. Sinnvoller ist es, den Pre-Header bewusst als Fortsetzung der Betreffzeile zu formulieren und darin einen weiteren Anreiz zum Öffnen zu setzen.
+
+Insgesamt zeigt sich, dass jedes Element eines Newsletters eine eigene Funktion erfüllt: Betreff, Absender und Pre-Header entscheiden über das Öffnen, Header und Editorial über den ersten Eindruck, der Content-Bereich über den Klick und der Footer über die rechtliche Absicherung. Erst im Zusammenspiel dieser Bestandteile kann ein Newsletter seine Wirkung als Instrument im E-Mail-Marketing voll entfalten.

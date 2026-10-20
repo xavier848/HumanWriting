@@ -54,8 +54,10 @@ class Woerter(unittest.TestCase):
         self.assertIn("3,5", toks)
 
     def test_silben(self):
-        faelle = {"Haus": 1, "Unternehmen": 4, "Mitarbeiter": 4, "Strategie": 4, "Studie": 3, "Bau": 1,
-                  "Arbeit": 2, "Information": 4, "Kommunikation": 5, "beeinflussen": 4}
+        # Silbendefinition nach HW04 (Best: Vokal oder Diphthong, Duden-Trennung als Gold): Stra-te-gie 3, Stu-die 2,
+        # In-for-ma-ti-on 5, Kom-mu-ni-ka-ti-on 6 (vorher Gleitlaut-Zählung 4/3/4/5); Goldliste in test_analyse_v2.py
+        faelle = {"Haus": 1, "Unternehmen": 4, "Mitarbeiter": 4, "Strategie": 3, "Studie": 2, "Bau": 1,
+                  "Arbeit": 2, "Information": 5, "Kommunikation": 6, "beeinflussen": 4}
         richtig = sum(analyse.silben(w) == n for w, n in faelle.items())
         self.assertGreaterEqual(richtig, 8, {w: analyse.silben(w) for w in faelle})
 

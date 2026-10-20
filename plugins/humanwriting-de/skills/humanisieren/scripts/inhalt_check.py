@@ -64,7 +64,9 @@ FUND_RE = re.compile(
 PRAEFIX_RE = re.compile(r"^(?:\s*(?:[a-zäöüß][\wäöüß]*\.?(?:\s?[a-zäöüß]\.)*|z\.\s?B\.|Vgl\.|Siehe|Zit\.\s?n\.|Ebenso|So))+(?=\s|$)")
 AUTOREN_RE = re.compile(rf"^(?:\s|{NAME}(?![\wÄÖÜäöüß'’-])\.?|{PARTIKEL}(?![\wäöüß])|&|/|,|und|and|{ETAL}|\(Hrsg\.\)|Hrsg\.)+$")
 NARRATIV_RE = re.compile(
-    rf"(?<![\wäöüß'’-])(?P<a>{NAME}(?:(?:\s+|\s*[&/]\s*|\s+und\s+)(?:{NAME}|{PARTIKEL}(?=\s+[A-ZÄÖÜ]))|\s+{ETAL})*)"
+    # Komma zwischen Namen nur in Listen, die mit & / und enden (Reid, Stajduhar & Chappel (2010))
+    rf"(?<![\wäöüß'’-])(?P<a>{NAME}(?:(?:\s+|\s*[&/]\s*|\s+und\s+|,\s*(?=[^()]{{0,80}}?(?:&|\bund\b)\s*{NAME}\s*\())"
+    rf"(?:{NAME}|{PARTIKEL}(?=\s+[A-ZÄÖÜ]))|\s+{ETAL})*)"
     rf"\s*\(\s*(?P<j>{JAHR})(?P<w>(?:\s*(?:,|;|und|&)\s*(?:{JAHR}|[a-z](?![\wäöüß])))*)(?P<f>[^()]{{0,30}})\)"
 )
 NICHT_AUTOR = {"prozent", "prozentpunkte", "prozentpunkten", "euro", "dollar", "mio", "mrd", "millionen",
@@ -456,6 +458,7 @@ def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
     fehlt, dazu = differenz(Counter(q["schluessel"] for q in q_alt), Counter(q["schluessel"] for q in q_neu))
     fehlt, dazu = list(dict.fromkeys(fehlt)), list(dict.fromkeys(dazu))
     # gleiche Jahr/Fundstelle und gemeinsamer Autor → Angabe verändert (Koautor, et al.), keine Erfindung
+    gepaart = set()
     for f in list(fehlt):
         qa = _erster(q_alt, "schluessel", f)
         for d in dazu:
@@ -465,8 +468,9 @@ def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
                 res["warnungen"].append({"typ": "Quellenangabe verändert", "wert": f"{qa['roh']} → {qn['roh']}",
                                          "hinweis": "Autorenangabe weicht ab (Koautor, et al.) – prüfen."})
                 fehlt.remove(f)
-                dazu.remove(d)
+                gepaart.add(d)
                 break
+    dazu = [d for d in dazu if d not in gepaart]
     for f in fehlt:
         q = _erster(q_alt, "schluessel", f)
         if _naehe(rest_neu, q["namen"], q["jahr"]) and not q["fund"]:

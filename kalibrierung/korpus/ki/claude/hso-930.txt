@@ -1,0 +1,31 @@
+## Mediennutzung Jugendlicher: Communities und Smartphones (JIM-Daten) sowie Aufbau der eigenen Umfrage
+
+Im Folgenden werden zunächst zentrale Befunde der JIM-Studie zur Nutzung von Online-Communities und Smartphones durch Jugendliche dargestellt. Im Anschluss daran werden Aufbau und Stichprobe der eigenen Schülerbefragung beschrieben sowie erste Ergebnisse zur Computernutzung vorgestellt.
+
+### Nutzung von Online-Communities
+
+Nach den Ergebnissen der JIM-Studie (Medienpädagogischer Forschungsverbund Südwest [mpfs], o. J.) sind Jugendliche im Durchschnitt in 1,2 Online-Communities aktiv. Marktführer ist Facebook, das von 80 % der Jugendlichen genutzt wird. Zu den häufigsten Tätigkeiten innerhalb der Communities zählen das Versenden von Nachrichten (84 %), das Chatten (79 %) sowie das Anklicken des „Gefällt mir“-Buttons (73 %). Letzteres nutzen Haupt- und Realschüler knapp zehn Prozentpunkte häufiger als Gymnasiasten. Darüber hinaus dienen Communities dazu, nach anderen Personen zu suchen, Links zu teilen, Pinnwandeinträge zu verfassen sowie Fotos und Videos hochzuladen (ebd.).
+
+Im Durchschnitt haben Jugendliche 209 Freunde in ihrem Profil. Dabei zeigen sich deutliche Unterschiede nach Alter: Während die 16- bis 17-Jährigen auf durchschnittlich 381 Freunde kommen, sind es bei den 12- bis 13-Jährigen lediglich 162. Auch der besuchte Schultyp spielt eine Rolle. Realschüler verzeichnen mit durchschnittlich 337 Freunden fast das 1,5-Fache der Gymnasiasten (ebd.). Die Zahl der Kontakte wächst also mit zunehmendem Alter erheblich, sodass sich die sozialen Netzwerke der Jugendlichen im Laufe der Zeit deutlich ausweiten.
+
+Mit der Nutzung von Online-Communities sind verschiedene Risiken verbunden, die vor allem die Bereiche Privatsphäre, Datenschutz und Mobbing betreffen. Zwei Drittel der Jugendlichen haben eigene Fotos oder Videos in ihrem Profil hinterlegt, etwas weniger machen Angaben zu ihren Hobbys. Jeweils 43 % geben ihre E-Mail-Adresse an bzw. stellen Bilder von sich, ihren Freunden oder ihrer Familie online. Ihre Handynummer veröffentlichen dagegen nur 5 % (ebd.). Viele Inhalte sind nur für Freunde sichtbar, und die Jugendlichen selbst halten ihre Daten überwiegend für ausreichend geschützt. Angesichts der großen Zahl an Kontakten, die nicht immer persönlich bekannt sein dürften, ist diese Selbsteinschätzung jedoch kritisch zu betrachten.
+
+Die Kommunikation über das Internet erleichtert zudem Mobbing. Etwa ein Drittel der Jugendlichen hat bereits erlebt, dass jemand im Bekanntenkreis Opfer von Cybermobbing wurde. Am häufigsten berichten dies die 16- bis 17-Jährigen, Mädchen häufiger als Jungen und vor allem Realschüler. Sieben Prozent der Jugendlichen waren nach eigenen Angaben selbst schon betroffen, wobei Mädchen auch hier häufiger genannt werden als Jungen (ebd.).
+
+### Handy- und Smartphonebesitz
+
+Nahezu alle Jugendlichen besitzen ein Handy (96 %), 72 % verfügen über ein Smartphone. Der Smartphonebesitz steigt mit dem Alter deutlich an: Bei den 12- bis 13-Jährigen besitzt gut die Hälfte ein solches Gerät, bei den 18- bis 19-Jährigen sind es 80 %. Unterschiede nach Schultyp oder Geschlecht zeigen sich hingegen nicht (ebd.). 88 % der Handybesitzer können mit ihrem Gerät mobil ins Internet gehen, 60 % verfügen dafür über eine Flatrate. Auch hier lassen sich keine Unterschiede nach Geschlecht, Alter oder Schultyp feststellen. Das Smartphone hat sich damit als ständiger Begleiter etabliert, der den Zugang zum Internet unabhängig von Ort und Zeit ermöglicht.
+
+Auf ihren Smartphones haben Jugendliche durchschnittlich 19 Apps installiert, wobei Jungen mit 24 Apps deutlich mehr nutzen als Mädchen mit 15. Die meistgeladene App ist WhatsApp, die insgesamt 70 % der Smartphonebesitzer installiert haben. Bei den 12- bis 13-Jährigen ist es gut die Hälfte, ab 14 Jahren liegt der Anteil bei über 70 %. Haupt- und Realschüler nutzen WhatsApp etwas häufiger als Gymnasiasten (ebd.). Trotz der vielfältigen Möglichkeiten bleiben Telefonieren und das Versenden von SMS die am häufigsten genutzten Funktionen. Musik hören, im Internet surfen und die Nutzung von Communities folgen mit jeweils rund 60 %, während Fotografieren, Spiele und Radio von weniger als der Hälfte regelmäßig genutzt werden (ebd.).
+
+### Aufbau der eigenen Umfrage
+
+Ergänzend zu den bundesweiten Daten der JIM-Studie wurde eine eigene Befragung durchgeführt, um die Mediennutzung von Schülerinnen und Schülern vor Ort genauer zu untersuchen. Geplant war, an beiden beteiligten Schulen jeweils die Klassenstufen 5, 7 und 9 zu befragen, am Gymnasium zusätzlich eine 12. Klasse. Da eine 9. Klasse des Gymnasiums kurzfristig ausfiel, sind die 14- bis 15-Jährigen in der Stichprobe schwächer vertreten. Um diese Verzerrung auszugleichen, werden die Ergebnisse in Prozentwerten dargestellt.
+
+Insgesamt nahmen 111 Kinder und Jugendliche an der schriftlichen Befragung per Fragebogen teil, davon 46 Schülerinnen und Schüler der Gesamtschule und 65 des Gymnasiums. Die Ergebnisse werden in den Grafiken teilweise nach Geschlecht, Alter und Schultyp differenziert dargestellt. Für Gesamtaussagen werden im Text zusätzlich Mittelwerte angegeben.
+
+### Computerbesitz und -nutzung
+
+57 % der Befragten besitzen einen eigenen Computer, ein Drittel nutzt den Computer der Eltern, und 11 % haben keinen eigenen Zugang zu einem Computer. Nennenswerte Unterschiede nach Geschlecht oder Schultyp zeigen sich dabei nicht. Deutlicher fallen die Unterschiede nach Alter aus: Bei den 10- bis 11-Jährigen halten sich eigener Computer und Computer der Eltern in etwa die Waage. Von den 12- bis 13-Jährigen besitzen nur 37 % einen eigenen Computer, bei den 14- bis 15-Jährigen sind es bereits vier von fünf und bei den 16- bis 18-Jährigen 96 %. Mit zunehmendem Alter wird der eigene Computer somit nahezu selbstverständlich, während jüngere Schülerinnen und Schüler häufiger auf das Gerät der Eltern angewiesen sind.
+
+Zum Lernen wird der Computer dagegen nur selten eingesetzt. Lediglich 7 % der Befragten nutzen regelmäßig Lernprogramme, weitere 22 % gelegentlich. Die große Mehrheit der Kinder und Jugendlichen nutzt den Computer demnach vorrangig für andere Zwecke als für das schulische Lernen.
