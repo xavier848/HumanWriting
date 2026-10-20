@@ -136,3 +136,16 @@ class Cli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Coach(unittest.TestCase):
+    def test_coach_laeuft_und_schreibt_verlauf(self):
+        import coach
+        text = ("## Einleitung\n\nDie Arbeitgebermarke ist für kleine Unternehmen wichtig. Darüber hinaus verdeutlicht dies, dass "
+                "die Mitarbeitenden profitieren; die Bindung steigt. Insgesamt zeigt sich ein klarer Effekt für die Unternehmen.\n\n"
+                "Die Studie untersucht drei Fälle aus dem Mittelstand. Sie nutzt Interviews mit Führungskräften und Beschäftigten.\n")
+        c = coach.coache(text * 3, None, 10)
+        self.assertIn("hinweise", c)
+        texte = " ".join(h["text"] for h in c["hinweise"])
+        self.assertIn("Mitarbeitende", texte)  # Nutzer-Vorgabe generisches Maskulinum wird immer gemeldet
+        self.assertIn("Semikolon", texte)

@@ -64,12 +64,13 @@ LICENSE = re.compile(
     r"Nutzungsbedingungen|Terms of use|Deposit-Lizenz|Deposit Licen[cs]e|Creative Commons|"
     r"creativecommons\.org|Empfohlene Zitierung|Suggested Citation|Dieser Beitrag ist mit Zustimmung|"
     r"www\.ssoar\.info|urn:nbn:de|Diese Version ist zitierbar|Alle Rechte vorbehalten|ISSN\s?\d|ISBN\s?\d|"
-    r"[\w.+-]+@[\w-]+\.[\w.]+|\bTel\.?\s*:|\bFax\s*:|Download unter|Die vertretene Auffassung",
+    r"[\w.+-]+@[\w-]+\.[\w.]+|\bTel\.?\s*:|\bFax\s*:|Download unter|Die vertretene Auffassung|"
+    r"Gewährt wird ein nicht exklusives|Urheberrechtshinweise|nicht-kommerziellen Gebrauch bestimmt",
     re.IGNORECASE,
 )
 URL = re.compile(r"https?://\S+|www\.\S+")
 # Fußnotenziffer direkt am Wort ("Unternehmen12", "Unternehmen.12"), aber nicht in Zahlen ("0,67", "Web 2.0", "CO2")
-INLINE_FOOTNOTE = re.compile(r"(?:(?<=[a-zäöüß][.,;:!?])|(?<=[a-zäöüß)\"“”»]))(\d{1,3})(?=[\s,.;:]|$)")
+INLINE_FOOTNOTE = re.compile(r"(?:(?<=[a-zäöüß)][.,;:!?])|(?<=[a-zäöüß)\"“”»]))(\d{1,3})(?=[\s,.;:]|$)")
 HYPHEN_KEEP_NEXT = {"und", "oder", "bzw.", "sowie", "als", "bis", "noch", "wie", "u.", "&"}
 TERMINAL = re.compile(r"[.!?:\"“”»«)]$")
 BULLET = re.compile(r"^\s*([•·▪■□◦○●➢➤►✓✔\-–—*]|\d{1,2}[.)]\s|[a-z]\)\s)\s*")
@@ -128,6 +129,7 @@ class Gruppe:
 
 def normalisiere_text(t: str) -> str:
     t = unicodedata.normalize("NFC", t)
+    t = re.sub(r"\u00ad(?=\w)", "-", t)  # weiches Trennzeichen mitten im Wort ist ein echter Bindestrich ("BSD­Unix")
     for a, b in LIGATUREN.items():
         t = t.replace(a, b)
     return re.sub(r"[-]", "", t)  # Private-Use-Zeichen (Wingdings-Aufzählungszeichen)
@@ -442,6 +444,7 @@ def extract(path: str) -> tuple[str, dict]:
         p = INLINE_FOOTNOTE.sub("", p)
         p = re.sub(r"\s+([.,;:!?])", r"\1", p)
         p = re.sub(r"\b([A-ZÄÖÜ]) ([A-ZÄÖÜ]{3,})\b", r"\1\2", p)  # Kapitälchen im Fließtext
+        p = re.sub(r"(?<=[a-zäöüß]),(?=[A-Za-zÄÖÜäöüß])", ", ", p)  # fehlendes Leerzeichen nach Komma (enger Blocksatz)
         p = re.sub(r"^(Abstract|Zusammenfassung|Kurzfassung|Einleitung|Einführung|Vorwort|Fazit|Ausblick|Danksagung)\s+(?=[A-ZÄÖÜ][a-zäöü])", "", p)
         grund = prose_problem(p)
         if grund:

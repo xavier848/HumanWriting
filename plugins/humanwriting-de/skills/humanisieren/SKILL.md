@@ -1,73 +1,55 @@
 ---
 name: humanisieren
-description: Überarbeitet einen vorhandenen deutschen Text (z. B. einen KI-Entwurf einer Hausarbeit, Bachelorarbeit oder Aufgabenbearbeitung) in einer Prüfschleife, bis seine statistischen Kennzahlen im Bereich menschlicher Hochschultexte liegen, ohne den Inhalt zu verändern. Ablauf: messen → gezielt umschreiben → erneut messen und Inhalt prüfen, so lange bis alles stimmt. Verwende diesen Skill, wenn ein Text „menschlicher“, „natürlicher“, „weniger nach KI“ klingen, „humanisiert“, stilistisch überarbeitet oder „durch die Schleife geschickt“ werden soll.
+description: Bringt einen deutschen Hochschultext (Hausarbeit, Bachelorarbeit, Aufgabenbearbeitung) in einer Messschleife auf das Stilniveau menschlicher Hochschultexte. Standard ist der Coach-Modus – messen, dann konkrete satzgenaue Arbeitsaufträge geben („Satz 7 und 8 verbinden“, „Semikolon in Satz 12 ersetzen“, „Begriff aus Satz 3 wieder aufgreifen“), der Nutzer formuliert selbst, dann erneut messen, bis alles grün ist. Nur auf ausdrücklichen Wunsch überarbeitet Claude den Text selbst. Verwende diesen Skill, wenn ein Text „menschlicher“, „natürlicher“, „weniger nach KI“ klingen soll, wenn jemand Feedback zum Stil oder einen Schreib-Coach möchte, oder einen Text „durch die Schleife schicken“ will.
 ---
 
-# Humanisieren – Umschreib-Schleife mit Messung und Inhaltsprüfung
+# Humanisieren – Stil-Coach mit Messschleife
 
-Ziel: Der Text hat danach **denselben Inhalt** (alle Aussagen, Zahlen, Quellen, Zitate, Fachbegriffe, Gliederung), aber Kennzahlen im menschlichen Zielbereich. Gemessen wird ausschließlich mit Skripten, nie geschätzt.
+Ziel: ein Text, dessen messbare Stilmerkmale denen echter Hochschularbeiten entsprechen – bei unverändertem Inhalt. Gemessen wird immer mit Skripten, nie geschätzt.
 
-Skripte:
-- Analyse: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" DATEI [--format json]`
+Skripte (falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt ist: `find ~/.claude -path '*humanisieren/scripts/coach.py'`):
+- Coach: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/coach.py" DATEI --verlauf DATEI.coach.json`
+- Analyse (Detailwerte): `python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" DATEI`
 - Inhaltscheck: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/inhalt_check.py" ORIGINAL NEU`
-- Falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt ist: `find ~/.claude -path '*text-analyse/scripts/analyse.py'` bzw. `-path '*humanisieren/scripts/inhalt_check.py'`.
 
-Techniken je Kennzahl: `references/techniken.md`. Floskeln mit Ersatz: `../menschlich-schreiben/references/ki-muster.md`. Zielwerte: `../menschlich-schreiben/references/zielwerte.md`.
+## Welcher Modus?
 
-## Schritt 0: Vorbereiten
+**Coach-Modus (Standard).** Immer, wenn nicht ausdrücklich „schreib es um“ / „überarbeite du es“ verlangt wird – und grundsätzlich für Texte, die als eigene Leistung abgegeben werden (Hausarbeit, Bachelorarbeit, Prüfungsleistung mit Eigenständigkeitserklärung). Claude formuliert dabei keine Sätze des Textes neu, sondern sagt präzise, was zu ändern ist. Die Worte stammen vom Nutzer.
 
-1. Text als Datei sichern: `<name>.original.md` (wird nie verändert) und Arbeitskopie `<name>.md`. Liegt der Text nur im Chat vor, beide Dateien anlegen (Arbeitsordner oder `/tmp/humanisieren/`).
-2. **Lange Texte abschnittsweise:** Bei mehr als ~2.500 Wörtern Kapitel für Kapitel durch die Schleife schicken (jedes Kapitel hat genug Sätze für stabile Werte) und am Ende das Gesamtdokument noch einmal messen.
-3. **Inhaltsinventar** erstellen und als `<name>.inventar.md` speichern: nummerierte Liste jeder inhaltlichen Aussage (eine Zeile pro Aussage, knapp), plus alle Zahlen, Quellenverweise, wörtlichen Zitate, Fachbegriffe und Eigennamen. Das Inventar ist der Maßstab für „Inhalt gleich“.
+**Überarbeiten-Modus.** Nur wenn der Nutzer ausdrücklich möchte, dass Claude selbst umschreibt. Dann vorher einmal kurz darauf hinweisen: Von Claude formulierter Text trägt Anthropics Text-Wasserzeichen (statistisch in der Wortwahl, für Bildungseinrichtungen über eine Erkennungs-Schnittstelle prüfbar). Stilistische Überarbeitung ändert daran nichts. Für eigene Prüfungsleistungen den Coach-Modus empfehlen und auf die KI-Regeln der Hochschule hinweisen.
 
-## Schritt 1: Messen
+Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder KI-Detektoren zu umgehen.
 
-```bash
-python3 ".../analyse.py" <name>.md --format json --ohne-saetze > /tmp/runde0.json   # Kennzahlen
-python3 ".../analyse.py" <name>.md --stellen 40                                      # Bericht + Stellen
-```
-Notiere Score, Modell-Wahrscheinlichkeit und alle bewerteten Kennzahlen mit Status 🔴/🟡, Richtung (↑/↓) und Gewicht.
+## Coach-Modus
 
-## Schritt 2: Umschreibplan für diese Runde
+1. **Text als Datei.** Liegt der Text nur im Chat vor, als `.md` speichern (Arbeitsordner oder `/tmp/coach/`). Bei mehr als ~2.500 Wörtern kapitelweise coachen.
+2. **Messen und coachen:**
+   ```bash
+   python3 ".../coach.py" text.md --verlauf text.coach.json
+   ```
+   Der Bericht enthält Score, Modell-Einschätzung, die 3–4 wichtigsten Hebel (mit Wert und Zielbereich) und konkrete Stellen, Absatz für Absatz.
+3. **Dem Nutzer zurückgeben:** die Hebel in eigenen Worten kurz erklären und die konkreten Stellen als Arbeitsliste ausgeben – mit Satznummer und Satzanfang, damit er sie findet. Pro Runde höchstens ~10–15 Aufträge, die wichtigsten zuerst.
+   - Erklären *was* und *warum* („Absatz 3 hat fünf Sätze mit 17–21 Wörtern. Menschen mischen stärker: einen Satz deutlich kürzen oder zwei zu einem langen verbinden.“).
+   - Keine fertigen Ersatzsätze für seinen Text liefern. Allgemeine Beispiele zur Technik aus `references/techniken.md` sind erlaubt (an fremden Beispielsätzen, nicht an seinem Text).
+   - Bei Floskeln die Ersatzstrategie nennen („Ergebnis direkt nennen, ohne Ankündigung“), nicht die fertige Formulierung.
+4. **Nutzer überarbeitet selbst** und meldet sich (oder speichert die Datei). Dann Schritt 2 mit derselben `--verlauf`-Datei wiederholen: Der Bericht zeigt den Fortschritt (Score vorher → nachher, welche Kennzahlen besser oder schlechter wurden).
+5. **Inhalt sichern:** Nach jeder Runde `inhalt_check.py` gegen die Ausgangsfassung laufen lassen und fehlende Zahlen, Quellen oder Zitate melden.
+6. **Fertig**, wenn der Coach „Ziel erreicht“ meldet (keine bewertete Kennzahl rot, Score ≥ 80) oder der Nutzer zufrieden ist.
 
-- Wähle **höchstens 3–4 Hebel** pro Runde: zuerst rote Kennzahlen mit dem höchsten Gewicht, dann gelbe.
-- Ordne jedem Hebel die konkreten Sätze/Absätze zu (Satznummern und Markierungen aus dem Bericht, z. B. `gleichfoermig`, `konnektor_anfang`, `muster:…`).
-- Plane die Technik aus `references/techniken.md`. Beispiel: „Satzlängen-Variation ↑: in Abs. 2 Sätze 5+6 zu einem Satz mit Relativsatz verbinden, Satz 9 in zwei Sätze teilen, nach Satz 12 einen kurzen Folgerungssatz bilden (Inhalt aus Satz 12, nicht neu).“
+Fragen des Nutzers („Wie mache ich einen Satz länger, ohne Inhalt zu erfinden?“) mit den Techniken aus `references/techniken.md` beantworten, gern mit eigenen neutralen Beispielsätzen.
 
-## Schritt 3: Gezielt umschreiben
+## Überarbeiten-Modus
 
-Regeln:
-- **Nur die geplanten Stellen ändern.** Den übrigen Text nicht anfassen. Kein Komplett-Neuschreiben pro Runde – das verschiebt den Inhalt.
-- **Keine neuen Inhalte:** keine neuen Beispiele, Zahlen, Quellen, Behauptungen, Wertungen. Umstellen, Zusammenführen, Teilen, Kürzen von Füllwörtern und Ersetzen von Floskeln durch die schlichte Aussage sind erlaubt.
-- **Unantastbar:** Zahlen, Quellenverweise (exakt), wörtliche Zitate, Fachbegriffe, Eigennamen, Überschriften, Fußnotenmarker, Abbildungs-/Tabellenverweise.
-- Fachbegriffe vereinheitlichen statt variieren. Wenn der Entwurf für dieselbe Sache drei Wörter benutzt, auf den Hauptbegriff zurückführen (das senkt die zu hohe Wortschatzvielfalt und erhöht die Begriffsaufnahme).
-- Keine neuen Floskeln einbauen (ki-muster.md), keine Gedankenstriche.
-- Die Datei mit dem Edit-Werkzeug ändern (gezielte Ersetzungen), nicht neu schreiben.
+Nur nach ausdrücklichem Wunsch und dem Hinweis oben.
 
-## Schritt 4: Erneut messen und Inhalt prüfen
+0. Original sichern (`<name>.original.md`), Arbeitskopie `<name>.md`, Inhaltsinventar erstellen (jede Aussage, alle Zahlen, Quellen, Zitate, Fachbegriffe) als `<name>.inventar.md`.
+1. `coach.py <name>.md --verlauf <name>.coach.json` – die Hebel und Stellen sind der Umschreibplan.
+2. Höchstens 3–4 Hebel pro Runde, **nur die genannten Stellen** mit dem Edit-Werkzeug ändern (Techniken: `references/techniken.md`). Keine neuen Inhalte, Zahlen, Quellen oder Beispiele. Zahlen, Quellenverweise, wörtliche Zitate, Fachbegriffe, Überschriften und Fußnotenmarker bleiben unangetastet. Generisches Maskulinum, keine Gedankenstriche, keine Floskeln aus `../menschlich-schreiben/references/ki-muster.md`.
+3. `coach.py` erneut (Fortschritt prüfen) und `inhalt_check.py <name>.original.md <name>.md`. Bei ❌ sofort korrigieren; jede Aussage des Inventars muss sinngleich erhalten sein.
+4. Wiederholen, bis „Ziel erreicht“, höchstens 6 Runden; nach zwei Runden ohne Fortschritt stoppen und erklären, woran es hängt.
+5. Abschluss: Vorher/Nachher-Tabelle (Score, Modell, bewertete Kennzahlen), Ergebnis des Inhaltschecks, Pfad zur Datei.
 
-```bash
-python3 ".../analyse.py" <name>.md --stellen 40
-python3 ".../inhalt_check.py" <name>.original.md <name>.md
-```
-- **Inhaltscheck mit ❌** (fehlende/neue Zahl, Quelle, Zitat, Fußnote): sofort korrigieren, bevor es weitergeht.
-- Warnungen prüfen („Begriff verschwunden“, „Umfang“): Bei Verlust eines Fachbegriffs oder >15 % Längenänderung nachbessern.
-- **Inventar-Abgleich durch dich:** Jede Aussage des Inventars muss im neuen Text sinngleich vorkommen; keine Aussage darf hinzugekommen sein. Bei Abweichung zurücknehmen.
-- Hat sich eine Kennzahl verschlechtert, die vorher grün war, diese Änderung prüfen und gegebenenfalls zurücknehmen.
+## Grenzen (dem Nutzer bei Bedarf sagen)
 
-## Schritt 5: Wiederholen oder beenden
-
-Wiederhole Schritt 2–4. **Beenden**, sobald eine Bedingung erfüllt ist:
-- ✅ Ziel erreicht: keine bewertete Kennzahl rot **und** Menschlichkeits-Score ≥ 80 **und** Inhaltscheck ohne ❌.
-- ⏹ 6 Runden erreicht.
-- ⏹ Zwei Runden ohne Verbesserung des Scores → stoppen und erklären, welche Kennzahl sich nicht ohne Inhaltsänderung bewegen lässt.
-
-## Schritt 6: Abschlussbericht
-
-Dem Nutzer ausgeben:
-1. Tabelle **Vorher → Nachher** für Score, Modell-Wahrscheinlichkeit und jede bewertete Kennzahl (Wert, Zielbereich, Status).
-2. Anzahl Runden und welche Hebel benutzt wurden.
-3. Ergebnis des Inhaltschecks und Bestätigung des Inventar-Abgleichs (oder offene Punkte).
-4. Den überarbeiteten Text bzw. den Pfad zur Datei.
-
-Hinweis an den Nutzer, wenn zutreffend: Die Kennzahlen messen Stilstatistik. Sie garantieren nicht, wie ein kommerzieller KI-Detektor urteilt.
+- Die Kennzahlen messen Stil, nicht Urheberschaft. „Ziel erreicht“ heißt: statistisch unauffällig im Vergleich zu echten Hochschularbeiten – nicht „nicht als KI erkennbar“.
+- Das Modell („X % menschlich“) ist ein Fortschrittsanzeiger dieses Werkzeugs, kein Detektor-Ergebnis.

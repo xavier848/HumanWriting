@@ -11,9 +11,11 @@ Dieser Skill legt fest, *wie* du schreibst. Die Zielwerte stammen aus einer Kali
 
 1. **Inhalt klären.** Aufgabenstellung, Gliederung, vorhandene Quellen und Vorgaben (Umfang, Zitierstil) aus dem Kontext übernehmen. Fehlt Wesentliches, kurz nachfragen.
 2. **Schreiben** nach den Regeln unten – abschnittsweise, nicht alles in einem Zug.
-3. **Messen.** Den fertigen Text in eine Datei schreiben und mit dem Skill **text-analyse** prüfen:
-   `python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" DATEI`
-4. **Nachbessern.** Sind bewertete Kennzahlen rot, mit dem Skill **humanisieren** gezielt überarbeiten (Inhalt bleibt gleich). Erst abgeben, wenn keine bewertete Kennzahl mehr rot ist.
+3. **Messen.** Den fertigen Text in eine Datei schreiben und prüfen:
+   `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/coach.py" DATEI`
+4. **Nachbessern** mit dem Skill **humanisieren** (Coach-Modus), bis keine bewertete Kennzahl mehr rot ist.
+
+**Eigene Prüfungsleistungen** (Hausarbeit, Bachelorarbeit mit Eigenständigkeitserklärung): Von Claude formulierter Text trägt Anthropics Text-Wasserzeichen, das Hochschulen prüfen können. Dort diesen Skill für Gliederung, Argumentationsgerüst, Stichpunkte und Musterabschnitte nutzen, die der Nutzer **selbst ausformuliert** – und den Coach-Modus zum Feinschliff seiner eigenen Fassung. Auf die KI-Regeln der Hochschule hinweisen, wenn der Nutzer einen fertigen Abgabetext verlangt.
 
 ## Die Regeln
 

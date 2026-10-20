@@ -428,6 +428,12 @@ def main() -> int:
                   "methode": "log-odds ratio mit informativem Dirichlet-Prior (Monroe, Colaresi & Quinn 2008), nur Train-Split, min. 4 Dokumente"}
     with open(os.path.join(args.aus, "wortlisten.json"), "w", encoding="utf-8") as f:
         json.dump(wortlisten, f, ensure_ascii=False, indent=1)
+    # kompakte Fassung fürs Plugin (Coach): nur Inhalts-/Stilwörter, keine reinen Funktionswörter
+    def kompakt(eintraege, n=80):
+        return [e for e in eintraege if not all(t in analyse.FUNKTIONSWOERTER or len(t) < 3 for t in e["ngramm"].split())][:n]
+    with open(os.path.join(os.path.dirname(args.baselines), "wortlisten.json"), "w", encoding="utf-8") as f:
+        json.dump({"methode": wortlisten["methode"], "ki_typisch": kompakt(wortlisten["ki_typisch"]),
+                   "mensch_typisch": kompakt(wortlisten["mensch_typisch"])}, f, ensure_ascii=False, indent=1)
 
     # --- Bericht ----------------------------------------------------------------
     zeilen_md = ["# Kalibrierungsbericht", ""]

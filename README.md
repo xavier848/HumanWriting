@@ -8,7 +8,7 @@ Claude-Code-Plugin für **menschlich geschriebene deutsche Hochschultexte** (Hau
 |---|---|---|
 | `menschlich-schreiben` | Beim Schreiben von Uni-Texten | Stilregeln mit kalibrierten Zielwerten (Satzlängen-Mix, Begriffswiederholung, keine Floskeln/Gedankenstriche …), Selbstcheck mit der Analyse |
 | `text-analyse` | Text vermessen | `analyse.py`: Satzlänge und -varianz, Verteilung, Rhythmus, Wortlänge, Silben, Wortschatzvielfalt, Begriffsaufnahme, Satzbau, Zeichensetzung, Absätze, Lesbarkeit, KI-Muster – jeweils mit Zielbereich (Mensch) und KI-Median, Score und Modell-Wahrscheinlichkeit |
-| `humanisieren` | Vorhandenen Text überarbeiten | Schleife: messen → gezielt umschreiben → erneut messen + Inhaltscheck (`inhalt_check.py`) → bis alle bewerteten Kennzahlen im menschlichen Bereich sind und der Inhalt unverändert ist |
+| `humanisieren` | Stil-Coach mit Messschleife | Standard: `coach.py` misst und gibt satzgenaue Arbeitsaufträge, du formulierst selbst, dann wird erneut gemessen (mit Fortschritt). Auf Wunsch überarbeitet Claude selbst, mit Inhaltscheck (`inhalt_check.py`). |
 
 ## Installation (Claude Code, auch Desktop-App)
 
@@ -46,4 +46,5 @@ Eine englische Variante kommt als eigenes Plugin (`humanwriting-en`), damit jede
 
 ## Grenzen
 
-Die Kennzahlen beschreiben Stilstatistik. Ein Text im grünen Bereich ist statistisch unauffällig. Das ist kein Nachweis menschlicher Urheberschaft, und kommerzielle KI-Detektoren nutzen zusätzlich andere Verfahren.
+- Die Kennzahlen beschreiben Stilstatistik. Ein Text im grünen Bereich ist im Stil unauffällig – das ist kein Nachweis menschlicher Urheberschaft, und KI-Detektoren arbeiten mit anderen Verfahren.
+- **Wasserzeichen:** Anthropic markiert von Claude formulierten Text statistisch in der Wortwahl ([Ankündigung](https://www.anthropic.com/news/claude-text-watermark)); Bildungseinrichtungen können eine Erkennungs-Schnittstelle nutzen. Stilistisches Überarbeiten durch Claude ändert daran nichts. Deshalb ist der Coach-Modus der Standard: Die Formulierungen stammen vom Nutzer, Claude misst und gibt Hinweise. Für Abgaben gelten die KI-Regeln der jeweiligen Hochschule.
