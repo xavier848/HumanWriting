@@ -9,8 +9,10 @@
 """
 from __future__ import annotations
 
+import glob
 import json
 import os
+import re
 import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -178,6 +180,63 @@ def kennzahlen(b) -> str:
     return "\n".join(zeilen) + "\n"
 
 
+def _formen(eintrag: str) -> list[str]:
+    """Suchformen eines Listeneintrags: Wendungen exakt, Wörter mit typischen Flexionsendungen."""
+    kern = re.sub(r"\(.*?\)\s*", "", eintrag).replace("sich ", "").strip().lower()
+    if " " in kern:
+        return [kern]
+    if kern.endswith("en") and len(kern) > 5:  # Verb: Infinitiv, Präsens, Partizip
+        st = kern[:-2]
+        return [kern, st + "t", st + "e", st + "st", st + "te", st + "ten", "ge" + st + "t", kern + "d"]
+    return [kern, kern + "e", kern + "en", kern + "n", kern + "er", kern + "es", kern + "s", kern + "em"]
+
+
+def persoenlicher_wortschatz(liste: dict) -> str | None:
+    korpus = os.path.join(REPO, "kalibrierung", "korpus")
+    texte = {g: [] for g in ("mensch", "ki")}
+    for g in texte:
+        for pfad in glob.glob(os.path.join(korpus, g, "*", "*.txt")):
+            with open(pfad, encoding="utf-8") as fh:
+                texte[g].append(fh.read().lower())
+    if not texte["mensch"] or not texte["ki"]:
+        return None
+    gross = {g: " ".join(t) for g, t in texte.items()}
+    n = {g: max(1, len(re.findall(r"[a-zäöüß]+", gross[g]))) for g in gross}
+    zeilen = [
+        "# Persönlicher Wortschatz",
+        "",
+        "Automatisch erzeugt aus `kalibrierung/persoenlich/wortschatz.json` (kalibrierung/scripts/referenzen.py). Nicht von Hand bearbeiten.",
+        "",
+        "Wörter und Wendungen aus Xaviers eigenen Nachrichten, die auch in Hausarbeiten passen. Verwende sie, **wo sie inhaltlich passen** – nie als Pflichtvokabel. "
+        "Jedes Wort ist mit den Kalibrierungskorpora abgeglichen (Treffer pro 1000 Wörter, menschliche Hochschultexte vs. Claude-Texte):",
+        "",
+        "- ✅ **menschentypisch** (Menschen nutzen es mindestens 1,5× so oft wie Claude): bevorzugen",
+        "- ⚪ **neutral**: normal verwenden",
+        "- ⚠️ **eher KI-typisch** (Claude nutzt es mindestens 1,5× so oft): erlaubt, aber nicht häufen",
+        "",
+        "Seltene Wörter (unter 0,05 pro 1000 in beiden Korpora) sind statistisch unsicher und als neutral markiert.",
+        "",
+    ]
+    for gruppe, woerter in liste["gruppen"].items():
+        zeilen += [f"## {gruppe}", "", "| | Wort | Mensch | Claude |", "|---|---|---|---|"]
+        for w in woerter:
+            formen = _formen(w)
+            muster = re.compile(r"\b(" + "|".join(re.escape(f) for f in formen) + r")\b")
+            r = {g: 1000 * len(muster.findall(gross[g])) / n[g] for g in gross}
+            verh = (r["ki"] + 0.02) / (r["mensch"] + 0.02)
+            if max(r.values()) < 0.05:
+                symbol = "⚪"
+            elif verh >= 1.5:
+                symbol = "⚠️"
+            elif verh <= 1 / 1.5:
+                symbol = "✅"
+            else:
+                symbol = "⚪"
+            zeilen.append(f"| {symbol} | {w} | {r['mensch']:.2f} | {r['ki']:.2f} |".replace(".", ","))
+        zeilen.append("")
+    return "\n".join(zeilen) + "\n"
+
+
 def main() -> int:
     b = lade(os.path.join(SKILLS, "text-analyse", "data", "baselines.json"))
     mu = lade(os.path.join(SKILLS, "text-analyse", "data", "ki_muster.json"))
@@ -188,6 +247,11 @@ def main() -> int:
         os.path.join(SKILLS, "menschlich-schreiben", "references", "ki-muster.md"): kimuster(mu, wl),
         os.path.join(SKILLS, "text-analyse", "references", "kennzahlen.md"): kennzahlen(b),
     }
+    wortschatz_pfad = os.path.join(REPO, "kalibrierung", "persoenlich", "wortschatz.json")
+    if os.path.exists(wortschatz_pfad):
+        inhalt = persoenlicher_wortschatz(lade(wortschatz_pfad))
+        if inhalt:
+            ausgaben[os.path.join(SKILLS, "menschlich-schreiben", "references", "persoenlicher-wortschatz.md")] = inhalt
     for pfad, inhalt in ausgaben.items():
         os.makedirs(os.path.dirname(pfad), exist_ok=True)
         with open(pfad, "w", encoding="utf-8") as fh:

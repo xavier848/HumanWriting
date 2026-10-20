@@ -5,7 +5,7 @@ description: Schreibt deutsche Hochschultexte – Hausarbeit, Bachelor-/Masterar
 
 # Menschlich schreiben (deutsche Hochschultexte)
 
-Dieser Skill legt fest, *wie* du schreibst. Die Zielwerte stammen aus einer Kalibrierung an echten deutschen Hausarbeiten, Abschlussarbeiten und Fachtexten (vor 2022) im Vergleich zu KI-Texten zu denselben Themen. Konkrete Zahlen: `references/zielwerte.md`. Floskeln und Ersatzstrategien: `references/ki-muster.md`. Vorher/Nachher-Beispiele: `references/beispiele.md`.
+Dieser Skill legt fest, *wie* du schreibst. Die Zielwerte stammen aus einer Kalibrierung an echten deutschen Hausarbeiten, Abschlussarbeiten und Fachtexten (vor 2022) im Vergleich zu KI-Texten zu denselben Themen. Konkrete Zahlen: `references/zielwerte.md`. Floskeln und Ersatzstrategien: `references/ki-muster.md`. Vorher/Nachher-Beispiele: `references/beispiele.md`. Persönlicher Wortschatz des Nutzers: `references/persoenlicher-wortschatz.md`.
 
 ## Ablauf
 
@@ -51,7 +51,13 @@ Verboten, auch nicht durch Synonyme ersetzen: „spielt eine zentrale/entscheide
 - Absätze unterschiedlich lang halten. Ein Absatz mit zwei Sätzen neben einem mit sieben ist normal.
 - Absätze nicht mit einem zusammenfassenden Kommentarsatz beenden („Somit wird deutlich, dass …“). Der letzte Satz bringt Inhalt oder leitet über.
 
-### 8. Inhaltlich konkret bleiben
+### 8. Persönlicher Wortschatz
+Der Text soll nach dem Nutzer klingen, nicht nach einem generischen Autor. `references/persoenlicher-wortschatz.md` listet Wörter und Wendungen aus seinen eigenen Formulierungen, abgeglichen mit den Korpora:
+- ✅-Wörter (menschentypisch) bevorzugen, wo sie passen, z. B. „im Vergleich zu“, „basierend auf“, „anhand von“, „Beispiel“, „Thema“, „Theorie“.
+- ⚪-Wörter normal verwenden; ⚠️-Wörter erlaubt, aber nicht häufen.
+- Nie Wörter erzwingen, nur damit sie vorkommen.
+
+### 9. Inhaltlich konkret bleiben
 - Behauptungen mit Quelle, Zahl, Beispiel oder Begründung versehen statt mit Wertungsadjektiven.
 - Einschränkungen und Gegenpositionen dort nennen, wo sie fachlich hingehören, nicht als symmetrische Abwägungsformel.
 - **Keine erfundenen Quellen, Zahlen oder Zitate.** Fehlt eine Quelle, Platzhalter `[Quelle]` setzen und den Nutzer darauf hinweisen.
