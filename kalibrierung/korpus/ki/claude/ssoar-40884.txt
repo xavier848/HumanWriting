@@ -1,0 +1,27 @@
+## Stichprobe und Befunde zur Arbeitssituation in Jobcentern unter NPM-Einfluss
+
+### Beschreibung der Stichprobe
+
+An der Online-Befragung nahmen insgesamt 4.514 Beschäftigte teil. Der Frauenanteil liegt bei 65 % und entspricht damit in etwa dem Wert der ABBA-Studie (66,7 %). Eine Rücklaufquote lässt sich aufgrund des Online-Designs nicht bestimmen. Das Alter wurde in fünf Gruppen erfasst, wobei die Mehrheit der Befragten zwischen 31 und 50 Jahre alt ist. Die größten Tätigkeitsbereiche sind die Leistungssachbearbeitung und die Vermittlung, die zusammen 67 % der Stichprobe ausmachen. 18,5 % der Befragten arbeiten in Teilzeit, 12 % sind befristet beschäftigt – deutlich weniger als in der ABBA-Studie, in der dieser Anteil bei 30 % lag. 22,4 % der Teilnehmenden sind verbeamtet, 77,6 % angestellt.
+
+### Erfassung der Arbeitsbedingungen
+
+Die Arbeitsbedingungen wurden über Einzelitems erhoben, die teils aus der DGUV-Mitarbeiterbefragung übernommen und teils selbst entwickelt wurden. Ziel war es, ein möglichst umfassendes Bild potenzieller Belastungen zu gewinnen. Für die Auswertung wurden die Tätigkeitsbereiche nach ihrem Bezug zum New Public Management (NPM) gruppiert: Leistungssachbearbeitung, Fallmanagement, Vermittlung und Leitung bilden die Gruppe mit NPM-Bezug, Empfang, Backoffice und Verwaltung die Gruppe ohne NPM-Bezug. Die Kategorie „Sonstige“ wurde aus der Analyse ausgeschlossen.
+
+### Befunde im Gruppenvergleich
+
+Beschäftigte, deren Arbeit nicht über Kennzahlen gemessen wird, schätzen sich besser in der Lage ein, den an sie gestellten Anforderungen zu genügen. Die Zielklarheit ist dagegen unabhängig vom NPM-Bezug hoch. Bei der Frage, ob die eigene Meinung oder Emotionen unterdrückt werden müssen, zeigt sich zwar ein signifikanter, aber nur kleiner Unterschied zwischen den Gruppen; in beiden Gruppen liegen die Werte hoch. Dies deutet auf eine Belastung durch Emotionsarbeit hin.
+
+Die Arbeit wird in beiden Gruppen als sinnvoll und wichtig wahrgenommen, wobei Beschäftigte ohne NPM-Bezug minimal positivere Werte aufweisen. Hierin liegt ein Potenzial für Public Service Motivation (PSM). Dem steht jedoch ein geringer Stolz auf das Jobcenter gegenüber, der auf eine schwache Identifikation mit der Organisation schließen lässt und Zweifel daran weckt, ob Extrarollenverhalten zu erwarten ist. Die Bereitschaft, Probleme der Arbeit als eigene zu betrachten, ist unter NPM-Bedingungen leicht höher, der Unterschied ist jedoch nicht signifikant. Auch die persönliche Bedeutung des Arbeitsplatzes wird in beiden Gruppen ähnlich eingeschätzt.
+
+Gesetzliche und organisatorische Änderungen, wie sie die Governance im SGB II mit sich bringt, werden in allen Bereichen als hoch belastend erlebt, am stärksten jedoch in den controllingnahen Bereichen. Im Fallmanagement und in der Vermittlung spielt die Auslastung von Maßnahmen als Grund für Zuweisungen kaum eine Rolle; die Vielfalt der verfügbaren Integrationsinstrumente wird eher als unzureichend bewertet. Die Berücksichtigung kundenspezifischer Hemmnisse und Integrationschancen wird von den Beschäftigten mit NPM-Bezug, also den Anwenderinnen und Anwendern, deutlich höher eingeschätzt. Die „Beobachter“ ohne NPM-Bezug sehen eine Kundenorientierung hingegen eher nicht gegeben. Zugleich orientiert sich der Einsatz von Instrumenten an Zielvorgaben, woraus ein Druck zum sogenannten Cream Skimming entsteht, also zur bevorzugten Förderung von Kundinnen und Kunden mit guten Integrationschancen.
+
+Der kollegiale Austausch ist für alle Beschäftigten wichtig, unter NPM-Bedingungen jedoch signifikant wichtiger. Dies lässt sich durch einen erhöhten Unterstützungsbedarf im Umgang mit Emotionsarbeit erklären. Auffällig ist zudem, dass die Befragten eine Geringschätzung ihres Arbeitsplatzes auch in ihrem Freundeskreis wahrnehmen. Ein NPM-Bezug verringert darüber hinaus die Bereitschaft, den eigenen Beruf weiterzuempfehlen.
+
+### Faktorenanalyse
+
+Um die Struktur der Belastungen zu verdichten, wurde eine Hauptkomponentenanalyse über die 22 Items durchgeführt. Die Zahl der Faktoren wurde anhand des Kaiser-Kriteriums, des Scree-Tests sowie inhaltlicher Überlegungen bestimmt; die Rotation erfolgte nach dem Varimax-Verfahren. Im Ergebnis ließen sich drei Faktoren extrahieren.
+
+Der Faktor „Situative Arbeitsbelastung“ umfasst fünf Items, die die psychische und physische Belastung im konkreten Arbeitsbereich abbilden. Mit einem Cronbachs α von 0,71 weist er eine akzeptable interne Konsistenz auf. Der Faktor „NPM-Belastung“ besteht aus zwei Items, die zweistufig erhoben wurden: Zunächst wurde über eine Filterfrage erfasst, ob überhaupt ein Einfluss wahrgenommen wird, anschließend dessen Stärke. Einen starken Einfluss externer Zielvorgaben berichten 80,8 % der Befragten, einen starken Einfluss von Controlling und Statistik 85,9 % (N = 4.278).
+
+Insgesamt zeigen die Befunde, dass sich die Arbeitssituation von Beschäftigten mit und ohne NPM-Bezug in vielen Punkten nur graduell unterscheidet. Deutliche Unterschiede ergeben sich jedoch dort, wo Kennzahlensteuerung und Zielvorgaben unmittelbar in die Arbeit eingreifen.
