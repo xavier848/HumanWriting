@@ -10,7 +10,7 @@ Grundsatz aus den Daten: **Gleichmäßigkeit ist das Kernsignal von KI-Text.** E
 
 KI-Entwürfe bestehen aus mittellangen Sätzen (12–24 Wörter) mit vielen kurzen Teilsätzen. Menschen erreichen ihre größere Streuung über **den langen Rand**: argumentierende Passagen in langen, dichten Sätzen.
 
-1. **Bündeln:** Zwei bis drei inhaltlich zusammengehörige Sätze ähnlicher Länge zu einem langen Satz zusammenführen – dort, wo argumentiert, begründet oder abgewogen wird.
+1. **Bündeln:** Zwei inhaltlich zusammengehörige Sätze ähnlicher Länge zu einem langen Satz zusammenführen – dort, wo argumentiert, begründet oder abgewogen wird. Nur Sätze bündeln, die dieselbe Sache behandeln, und **nie so, dass eine Aussage danach einer Quelle zugeschrieben wird, von der sie nicht stammt** („Müller (2019) zeigt X. Y gilt außerdem.“ darf nicht zu „Müller (2019) zeigt X und Y“ werden).
 2. **Nominal verdichten statt anhängen:** Den langen Satz durch Präpositional- und Genitivgruppen bauen, nicht durch angehängte „und“-Teilsätze.
    - „…, weil die Kosten steigen.“ → „… wegen der steigenden Kosten …“
    - „Die Unternehmen investieren. Sie wollen Fachkräfte binden.“ → „Zur Bindung von Fachkräften investieren die Unternehmen …“
@@ -18,9 +18,11 @@ KI-Entwürfe bestehen aus mittellangen Sätzen (12–24 Wörter) mit vielen kurz
 4. **Kurze Sätze sparsam und echt:** Einen kurzen Satz nur für ein echtes Zwischenergebnis oder eine Einschränkung, höchstens einmal pro Absatz – nicht als Rhythmus-Effekt.
 5. **Nicht streng abwechseln.** Kein Muster kurz–lang–kurz–lang. Ähnlich lange Sätze dürfen aufeinander folgen: lieber eine Erklärpassage aus zwei, drei langen Sätzen und danach eine kurze Folgerung.
 
-**Satzlänge Ø zu niedrig:** wie oben bündeln und verdichten. **Zu hoch:** die längsten Sätze an einer inhaltlichen Wende teilen.
+**Maß:** Ziel ist die menschliche Verteilung, nicht „möglichst lang“: etwa 15 % der Sätze mit 30+ Wörtern (mittlere Hälfte 8–24 %), rund 3 % mit 40+, häufigste Klasse 16–20 Wörter, Ø 18–23 Wörter. Der Coach gibt nur so viele Bündel-Aufträge, wie bis zum Median fehlen, und meldet „Überkorrektur“, wenn eine Kennzahl auf die andere Seite kippt.
 
-**Rhythmus (Autokorrelation der Satzlängen) zu niedrig/negativ** (Längen springen ständig hin und her): Längen in Phasen ordnen – Erklärpassagen lang, Folgerungen kurz – statt Satz für Satz abzuwechseln.
+**Satzlänge Ø zu niedrig:** wie oben bündeln und verdichten. **Zu hoch oder zu viele lange Sätze:** die längsten Sätze an einer inhaltlichen Wende teilen; die mittellangen Sätze (16–20 Wörter) bleiben das Rückgrat.
+
+**Rhythmus (Autokorrelation der Satzlängen) zu niedrig/negativ** (Längen springen ständig hin und her): Längen in Phasen ordnen – Erklärpassagen lang, Folgerungen kurz – statt Satz für Satz abzuwechseln. Paarweises Bündeln (in jedem Absatz genau ein Paar) erzeugt selbst einen Zickzack; besser eine zusammenhängende Erklärpassage verdichten.
 
 ## Satzbau
 
@@ -42,7 +44,7 @@ KI-Entwürfe bestehen aus mittellangen Sätzen (12–24 Wörter) mit vielen kurz
 
 KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen.
 1. Die **Kernbegriffe** des Textes (der Coach listet sie) wörtlich wieder aufgreifen. Für jeden Fachgegenstand **einen** Hauptbegriff, Synonyme darauf zurückführen.
-2. Satzanschlüsse über das wiederholte Nomen statt über „Dies“/„Diese“: „Dies erhöht die Bindung.“ → „Die klare EVP erhöht die Bindung.“
+2. Satzanschlüsse über das wiederholte Nomen statt über Possessiva am Satzanfang („Ihre Wirkung …“, „Seine Grenzen …“ – bei Claude doppelt so häufig wie bei Menschen): „Ihre Wirkung ist begrenzt.“ → „Die Wirkung der Förderprogramme ist begrenzt.“ „Dies“, „Dabei“ und „Dadurch“ am Satzanfang sind dagegen in menschlichen Arbeiten sogar häufiger und dürfen bleiben.
 3. Füll-Synonyme streichen („relevant, bedeutsam und wichtig“ → „wichtig“).
 
 ## Konnektoren und Satzanfänge
@@ -58,7 +60,7 @@ KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen
 
 ## Funktionswörter
 
-**Funktionswort-Profil** (stärkstes Einzelsignal, aber nur indirekt steuerbar): Menschen schreiben häufiger mit *es* („es gibt“, „es zeigt sich“), *wie*-Vergleichen, *auch*, *durch*; Claude häufiger mit *als*, *sich*, *dass*. Das ist eine **Tendenz** für die eigene Formulierung, keine Anweisung, einzelne Wörter einzustreuen. Wer natürlich formuliert, nominal verdichtet und Konnektoren streicht, verschiebt das Profil von selbst.
+**Funktionswort-Profil** (stärkstes Einzelsignal, aber nur indirekt steuerbar): Menschen schreiben häufiger mit *es* („es gibt“), *wie*-Vergleichen, *auch*, *durch*; Claude häufiger mit *als*, *sich*, *dass*. Konkret umsetzbar: „lässt sich … zeigen/ableiten“ (bei Claude 3,5-mal häufiger) → „kann … gezeigt werden“; „zeigt sich, dass X“ / „ergibt sich, dass X“ → X direkt sagen; „dass“-Sätze nach Redeverben in Nominalgruppen verwandeln („zeigt, dass die Kosten steigen“ → „zeigt den Anstieg der Kosten“). Das ist eine **Tendenz** für die eigene Formulierung, keine Anweisung, einzelne Wörter einzustreuen. Wer natürlich formuliert, nominal verdichtet und Konnektoren streicht, verschiebt das Profil von selbst.
 
 ## Zeichensetzung
 

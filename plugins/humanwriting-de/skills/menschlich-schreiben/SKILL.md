@@ -24,15 +24,16 @@ Menschliche Hochschultexte streuen in der Satzlänge stärker – vor allem durc
 - Begründungen, Abwägungen und Bedingungen in langen Sätzen formulieren, die durch **Nominal- und Präpositionalgruppen** verdichtet sind („wegen der steigenden Kosten“ statt „…, weil die Kosten steigen“), nicht durch angehängte „und“-Teilsätze.
 - Ähnlich lange Sätze dürfen aufeinander folgen. **Nicht** kurz–lang–kurz abwechseln – genau dieses Zickzack ist KI-typisch.
 - Kurze Sätze nur für echte Zwischenergebnisse oder Einschränkungen, sparsam.
+- **Maß halten:** Lange Sätze heißt etwa **jeder sechste Satz** mit 30 oder mehr Wörtern (Menschen: Median 15 %, mittlere Hälfte 8–24 %), nur vereinzelt über 40 Wörter (Median 3 %). Die häufigste Klasse bleibt 16–20 Wörter, die Ø-Satzlänge liegt bei 18–23 Wörtern. Werden fast alle Sätze lang, ist das genauso auffällig wie Einheitslänge und schwerer zu lesen.
 - Zielwerte für Ø-Satzlänge, Variation und Verteilung: `references/zielwerte.md`.
 
 ### 1a. Satzklammer füllen
-Zwischen Hilfsverb und Partizip/Infinitiv stehen bei Menschen deutlich mehr Wörter (Ø ~7 gegen ~5 bei Claude). Angaben zu Zeit, Ort, Art, Grund und Mittel ins Mittelfeld holen: „Die Daten wurden *im Frühjahr 2019 in einer Online-Befragung unter 240 Beschäftigten* erhoben.“ statt Angaben in eigene Sätze oder Nebensätze auszulagern.
+Zwischen Hilfsverb und Partizip/Infinitiv stehen bei Menschen deutlich mehr Wörter (Ø ~7 gegen ~5 bei Claude). Angaben zu Zeit, Ort, Art, Grund und Mittel ins Mittelfeld holen: „Die Daten wurden *im Frühjahr 2019 in einer Online-Befragung unter 240 Beschäftigten* erhoben.“ statt Angaben in eigene Sätze oder Nebensätze auszulagern. Nicht übertreiben: Ketten aus vier, fünf Präpositionalgruppen machen den Satz schwer lesbar.
 
 ### 2. Begriffe wiederholen statt variieren
 Menschen greifen das Schlüsselwort des Vorsatzes wieder auf. KI wechselt ständig zu Synonymen und erzeugt dadurch eine unnatürlich hohe Wortschatzvielfalt.
 - Einen Fachbegriff, einmal eingeführt, beibehalten (*Arbeitgebermarke* bleibt *Arbeitgebermarke*, nicht abwechselnd *Employer Brand*, *Unternehmensmarke*, *Arbeitgeberimage*).
-- Anschluss an den Vorsatz über das wiederholte Nomen herstellen („Die Arbeitgebermarke …“), nicht über „Dies …“.
+- Anschluss an den Vorsatz über das wiederholte Nomen herstellen („Die Arbeitgebermarke …“), nicht über Possessiva am Satzanfang („Ihre Wirkung …“, „Seine Grenzen …“ – bei Claude doppelt so häufig). Ein schlichtes „Dies“, „Dabei“ oder „Dadurch“ am Satzanfang ist dagegen in menschlichen Arbeiten üblich.
 - Keine Synonym-Ketten, um „Wiederholungen zu vermeiden“. In Fachtexten ist Wiederholung präzise.
 
 ### 3. Konnektoren und Satzanfänge
