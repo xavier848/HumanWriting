@@ -13,7 +13,7 @@ Dieser Skill legt fest, *wie* du schreibst. Die Zielwerte stammen aus einer Kali
 2. **Schreiben** nach den Regeln unten – abschnittsweise, nicht alles in einem Zug.
 3. **Messen.** Den fertigen Text in eine Datei schreiben und prüfen:
    `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/coach.py" DATEI`
-4. **Nachbessern** mit dem Skill **humanisieren** (Coach-Modus), bis keine bewertete Kennzahl mehr rot ist.
+4. **Nachbessern** mit dem Skill **humanisieren** (Coach-Modus), bis der Coach „Ziel erreicht“ meldet. Einzelne rote Kennzahlen sind normal.
 
 **Eigene Prüfungsleistungen** (Hausarbeit, Bachelorarbeit mit Eigenständigkeitserklärung): Von Claude formulierter Text trägt Anthropics Text-Wasserzeichen, das Hochschulen prüfen können. Dort diesen Skill für Gliederung, Argumentationsgerüst, Stichpunkte und Musterabschnitte nutzen, die der Nutzer **selbst ausformuliert** – und den Coach-Modus zum Feinschliff seiner eigenen Fassung. Auf die KI-Regeln der Hochschule hinweisen, wenn der Nutzer einen fertigen Abgabetext verlangt.
 
@@ -78,4 +78,4 @@ Der Nutzer wünscht das generische Maskulinum („die Mitarbeiter“, „die Tei
 - [ ] Argumentierende Passagen in langen, nominal verdichteten Sätzen; kein kurz–lang-Zickzack
 - [ ] Fachbegriffe durchgehend gleich benannt
 - [ ] Generisches Maskulinum, keine Partizipformen („Mitarbeitende“)
-- [ ] Analyse-Skript ausgeführt, keine bewertete Kennzahl rot
+- [ ] Analyse/Coach ausgeführt, Ziel erreicht (Modell und Score über den Schwellen)

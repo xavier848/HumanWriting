@@ -1,6 +1,6 @@
 ---
 name: humanisieren
-description: Bringt einen deutschen Hochschultext (Hausarbeit, Bachelorarbeit, Aufgabenbearbeitung) in einer Messschleife auf das Stilniveau menschlicher Hochschultexte. Standard ist der Coach-Modus – messen, dann konkrete satzgenaue Arbeitsaufträge geben („Satz 7 und 8 verbinden“, „Semikolon in Satz 12 ersetzen“, „Begriff aus Satz 3 wieder aufgreifen“), der Nutzer formuliert selbst, dann erneut messen, bis alles grün ist. Nur auf ausdrücklichen Wunsch überarbeitet Claude den Text selbst. Verwende diesen Skill, wenn ein Text „menschlicher“, „natürlicher“, „weniger nach KI“ klingen soll, wenn jemand Feedback zum Stil oder einen Schreib-Coach möchte, oder einen Text „durch die Schleife schicken“ will.
+description: Bringt einen deutschen Hochschultext (Hausarbeit, Bachelorarbeit, Aufgabenbearbeitung) in einer Messschleife auf das Stilniveau menschlicher Hochschultexte. Standard ist der Coach-Modus – messen, dann konkrete satzgenaue Arbeitsaufträge geben („Satz 7 und 8 verbinden“, „Semikolon in Satz 12 ersetzen“, „Begriff aus Satz 3 wieder aufgreifen“), der Nutzer formuliert selbst, dann erneut messen, bis der Text so unauffällig ist wie echte Hochschularbeiten. Nur auf ausdrücklichen Wunsch überarbeitet Claude den Text selbst. Verwende diesen Skill, wenn ein Text „menschlicher“, „natürlicher“, „weniger nach KI“ klingen soll, wenn jemand Feedback zum Stil oder einen Schreib-Coach möchte, oder einen Text „durch die Schleife schicken“ will.
 ---
 
 # Humanisieren – Stil-Coach mit Messschleife
@@ -23,7 +23,7 @@ Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder 
 ## Coach-Modus
 
 1. **Text als Datei.** Liegt der Text nur im Chat vor, als `.md` speichern (Arbeitsordner oder `/tmp/coach/`). Bei mehr als ~2.500 Wörtern kapitelweise coachen.
-2. **Messen und coachen:**
+2. **Messen und coachen** (lange Texte misst der Coach automatisch abschnittsweise zu ~800 Wörtern und zeigt, welcher Abschnitt am KI-nächsten ist – dort anfangen):
    ```bash
    python3 ".../coach.py" text.md --verlauf text.coach.json
    ```
@@ -36,7 +36,7 @@ Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder 
    - Meldet der Bericht **„Mechanisch verlängert“** (Ø-Satzlänge um mehr als 10 % gestiegen, Wörter pro Teilsatz und Satzklammer aber nicht), zählt die Runde nicht als Fortschritt: Der Nutzer hat vermutlich Teilsätze angehängt. Dann auf Bündeln und nominales Verdichten verweisen (`references/techniken.md`, Abschnitt Satzlänge).
    - Wird eine Kennzahl besser, während andere schlechter werden, das offen benennen. Ziel ist der Gesamtstil, nicht eine einzelne Zahl.
 5. **Inhalt sichern:** Nach jeder Runde `inhalt_check.py` gegen die Ausgangsfassung laufen lassen und fehlende Zahlen, Quellen oder Zitate melden.
-6. **Fertig**, wenn der Coach „Ziel erreicht“ meldet (keine bewertete Kennzahl rot, Score über der Schwelle, Modell-Wahrscheinlichkeit „menschlich“ über der kalibrierten Schwelle) oder der Nutzer zufrieden ist.
+6. **Fertig**, wenn der Coach „Ziel erreicht“ meldet (Modell-Wahrscheinlichkeit „menschlich“ und Score über den Schwellen, die 90 % bzw. 75 % echter Hochschulabschnitte erreichen) oder der Nutzer zufrieden ist. Einzelne rote Kennzahlen sind kein Grund weiterzumachen: Auch echte Arbeiten haben bei 800 Wörtern im Mittel etwa sechs rote Kennzahlen, weil einzelne Kennzahlen auf kurzen Texten stark streuen. Nicht jede rote Zahl „reparieren“ lassen.
 
 Fragen des Nutzers („Wie mache ich einen Satz länger, ohne Inhalt zu erfinden?“) mit den Techniken aus `references/techniken.md` beantworten, gern mit eigenen neutralen Beispielsätzen.
 

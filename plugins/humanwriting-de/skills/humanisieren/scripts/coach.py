@@ -34,7 +34,7 @@ DATA = analyse.DATA
 HEBEL_VON = {
     **dict.fromkeys(["satzlaenge_cv", "satzlaenge_sd", "satzlaenge_dispersion", "satzlaenge_schiefe", "anteil_mittlere_saetze",
                      "anteil_lange_saetze", "anteil_sehr_lange_saetze", "anteil_kurze_saetze", "anteil_sehr_kurze_saetze",
-                     "rhythmus_r1_log", "rhythmus_autokorrelation", "satzlaenge_mittel"], "satzlaenge"),
+                     "rhythmus_r1_log", "satzlaenge_mittel"], "satzlaenge"),
     **dict.fromkeys(["satzklammer_mittel", "nominalketten_pro_100"], "satzklammer"),
     "konnektoren_pro_1000": "konnektoren",
     "fw_profil_llr_pro_1000": "funktionswoerter",
@@ -48,8 +48,8 @@ HEBEL_VON = {
     **dict.fromkeys(["ki_muster_pro_1000", "sondern_pro_1000", "nicht_nur_sondern_pro_1000", "sowohl_als_auch_pro_1000", "dreierlisten_pro_1000"], "floskeln"),
     **dict.fromkeys(["anteil_funktionswoerter", "anteil_kurze_woerter", "anteil_einsilbig", "wortlaenge_cv", "anteil_lange_woerter",
                      "silben_mittel", "silben_q21", "anteil_mehrsilbig_3plus", "wortlaenge_mittel", "nominalstil_pro_100"], "wortwahl"),
-    **dict.fromkeys(["anfuehrungen_pro_1000", "ich_wir_pro_1000", "man_pro_1000", "klammern_pro_1000", "fragen_pro_1000",
-                     "abkuerzungen_pro_1000"], "stimme"),
+    **dict.fromkeys(["anfuehrungen_pro_1000", "ich_wir_pro_1000", "man_pro_1000", "klammern_pro_1000", "fragen_pro_1000"], "stimme"),
+    "abkuerzungen_pro_1000": "abkuerzungen",
 }
 
 HEBEL_TEXT = {
@@ -64,6 +64,7 @@ HEBEL_TEXT = {
     "doppelpunkt": ("Doppelpunkte reduzieren", "Doppelpunkte mitten im Satz sind bei Claude häufiger als bei Menschen."),
     "floskeln": ("KI-Floskeln und -Konstruktionen ersetzen", "Diese Wendungen kommen in Claude-Texten mehrfach häufiger vor als in echten Hochschularbeiten."),
     "wortwahl": ("Wortwahl einfacher und natürlicher", "Menschen nutzen mehr kurze Allerweltswörter („es gibt“, „so“, „auch“, „aber“, „man“) und gängige Abkürzungen (z. B., bzw.)."),
+    "abkuerzungen": ("Übliche Abkürzungen stehen lassen", "Menschliche Hochschultexte nutzen gängige Abkürzungen (z. B., d. h., bzw., vgl., u. a.). Claude schreibt sie fast immer aus."),
     "stimme": ("Eigene Stimme zeigen", "Menschliche Arbeiten zitieren öfter wörtlich, verwenden Klammern und manchmal „ich/wir“ oder „man“."),
 }
 
@@ -79,6 +80,9 @@ HILFSVERBEN = set("""ist sind war waren sei seien wäre wären hat haben hatte h
 kann können konnte konnten könnte könnten muss müssen musste mussten müsste müssten soll sollen sollte sollten will wollen wollte
 wollten darf dürfen durfte durften dürfte dürften""".split())
 KLAMMER_ENDE_HILFS = {"werden", "worden", "sein", "haben", "können", "müssen", "sollen", "dürfen", "wollen", "lassen", "gewesen", "geworden"}
+AUSGESCHRIEBEN = {"zum beispiel": "z. B.", "das heißt": "d. h.", "beziehungsweise": "bzw.", "unter anderem": "u. a.",
+                  "in der regel": "i. d. R.", "zum teil": "z. T.", "vergleiche": "vgl."}
+AUSGESCHRIEBEN_RE = re.compile(r"\b(" + "|".join(AUSGESCHRIEBEN) + r")\b", re.IGNORECASE)
 ANKNUEPF_RE = re.compile(r"^(dies|diese[rsmn]?|sie|er|hierbei|hierdurch|dabei|dadurch)\b", re.IGNORECASE)  # rein anaphorische Anschlüsse
 # In den Korpora bei Menschen deutlich häufiger als bei Claude (Kalibrierung, log-odds): einfache Stil- und Funktionswörter
 MENSCHLICHE_STILWOERTER = ["es gibt", "so", "auch", "aber", "man", "sehr", "doch", "schon", "denn", "außerdem", "viele", "aufgrund"]
@@ -173,9 +177,12 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
     muster = analyse.lade_muster()
     baselines = analyse.lade_baselines()
     ts = (baselines or {}).get("textsorten", {}).get("hochschule", {})
-    fw_profil = ts.get("fw_profil")
-    erg = analyse.analysiere_text(text, muster, fw_profil=fw_profil) if fw_profil else analyse.analysiere_text(text, muster)
-    bew = analyse.bewerte(erg, baselines)
+    if hasattr(analyse, "analysiere_und_bewerte"):
+        erg, bew = analyse.analysiere_und_bewerte(text, muster, baselines)
+    else:
+        fw_profil = ts.get("fw_profil")
+        erg = analyse.analysiere_text(text, muster, fw_profil=fw_profil) if fw_profil else analyse.analysiere_text(text, muster)
+        bew = analyse.bewerte(erg, baselines)
     saetze = erg["saetze"]
     m = erg["metriken"]
     absaetze: dict[int, list[dict]] = {}
@@ -185,6 +192,16 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
     # --- Hebel priorisieren ------------------------------------------------
     hebel: dict[str, dict] = {}
     if bew.get("verfuegbar"):
+        # Modellbeitrag (koef · Abstand zum menschlichen Median, negativ = zieht Richtung KI): Was das Modell
+        # tatsächlich als KI-typisch wertet, rückt nach vorn – auch Modellmerkmale ohne Ampel (Funktionswörter).
+        for z in bew["kennzahlen"]:
+            b = z.get("beitrag")
+            h = HEBEL_VON.get(z["id"])
+            if h and b is not None and b < -0.25:
+                eintrag = hebel.setdefault(h, {"prioritaet": 0.0, "kennzahlen": []})
+                eintrag["prioritaet"] += 0.5 * -b
+                if z["status"] != "gruen" or z.get("nur_modell"):
+                    eintrag["kennzahlen"].append(z)
         for z in bew["kennzahlen"]:
             if not z["bewertet"] or z["status"] == "gruen":
                 continue
@@ -201,7 +218,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                 continue
             eintrag = hebel.setdefault(h, {"prioritaet": 0.0, "kennzahlen": []})
             eintrag["prioritaet"] += (z["gewicht"] or 0.1) * (0.5 + abstand(z))
-            eintrag["kennzahlen"].append(z)
+            if z not in eintrag["kennzahlen"]:
+                eintrag["kennzahlen"].append(z)
     reihenfolge = sorted(hebel, key=lambda h: -hebel[h]["prioritaet"])
 
     hinweise: list[dict] = []  # {hebel, absatz, satz, text, gewicht}
@@ -310,7 +328,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                         hinweis("begriffe", nr_abs, b["nr"], f"{zitat(b)} teilt kein Inhaltswort mit Satz {a['nr']}. Prüfen, ob ein Synonym für „{begriff}“ o. Ä. steht – dann den gleichen Begriff verwenden.", 0.6)
                         gezaehlt += 1
         kern = erg["info"].get("kernbegriffe") or []
-        top = [k.get("form") or k.get("wortform") or k.get("stamm") for k in kern if isinstance(k, dict)][:6]
+        formen = [k.get("form") or k.get("stamm") for k in kern if isinstance(k, dict)]
+        top = ([f for f in formen if f and f[:1].isupper()] or formen)[:6]
         if not top:
             haeufig = Counter(t for s in saetze for t in analyse.tokens(s["text"])
                               if t[:1].isupper() and analyse.ist_wort(t) and t.lower() not in analyse.FUNKTIONSWOERTER and len(t) > 4)
@@ -365,6 +384,19 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
     if "wortwahl" in hebel:
         beispiele = ", ".join(f"„{w}“" for w in MENSCHLICHE_STILWOERTER)
         hinweis("wortwahl", None, None, f"Einfachere Allerweltswörter zulassen. In echten Arbeiten deutlich häufiger als bei Claude: {beispiele}.", 0.7)
+    if "abkuerzungen" in hebel:
+        n = 0
+        for s in saetze:
+            treffer = AUSGESCHRIEBEN_RE.search(s["text"])
+            if treffer:
+                kurz = AUSGESCHRIEBEN[treffer.group(1).lower()]
+                hinweis("abkuerzungen", s["absatz"], s["nr"], f"{zitat(s)}: „{treffer.group(1)}“ darf als „{kurz}“ stehen – in Hochschultexten üblich.", 0.5)
+                n += 1
+                if n >= 3:
+                    break
+        if not n:
+            hinweis("abkuerzungen", None, None, "Wo es sich ergibt, gängige Abkürzungen verwenden statt auszuschreiben (z. B., d. h., bzw., vgl., u. a.). Nicht künstlich einstreuen.", 0.4)
+
     if "stimme" in hebel:
         hinweis("stimme", None, None, "Wo es passt: eine Quelle wörtlich zitieren, eine Präzisierung in Klammern setzen, und bei eigenen Entscheidungen „ich“ (bzw. „in dieser Arbeit“) verwenden.", 0.4)
 
@@ -398,7 +430,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
 
     stand = {"score": bew.get("score"), "p_mensch": bew.get("p_mensch"),
              "kennzahlen": {z["id"]: {"wert": z["wert"], "status": z["status"]} for z in bew.get("kennzahlen", []) if z["bewertet"]},
-             "roh": {k: m.get(k) for k in ("satzlaenge_mittel", "woerter_pro_teilsatz", "satzklammer_mittel")}}
+             "roh": {k: m.get(k) for k in ("satzlaenge_mittel", "woerter_pro_teilsatz", "satzklammer_mittel")},
+             "bloecke": [{k: b.get(k) for k in ("nr", "satz_von", "satz_bis", "p_mensch", "score")} for b in (bew.get("bloecke") or [])]}
     fortschritt = None
     if verlauf and verlauf.get("messungen"):
         vorher = verlauf["messungen"][-1]
@@ -411,18 +444,22 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
         fortschritt["mechanisch_verlaengert"] = mechanisch_verlaengert(vorher.get("roh", {}), stand["roh"])
 
     rot = [z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "rot"]
-    ziel_p = ts.get("ziel_p_mensch", 0.5)
-    ziel_score = ts.get("score_schwelle", 80)
+    ziel_p = bew.get("ziel_p_mensch") or ts.get("ziel_p_mensch") or 0.5
+    ziel_score = bew.get("score_schwelle") or ts.get("score_schwelle") or 65
+    # Rote Kennzahlen sind auch bei Menschen normal (Median ~6 von 35 bei 800 Wörtern) – nur als Obergrenze, falls kalibriert
+    ziel_rot = ts.get("ziel_rot_max")
     gruen = sorted([z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "gruen"], key=lambda z: -(z["gewicht"] or 0))
     return {"info": erg["info"], "bewertung": {k: bew.get(k) for k in ("score", "p_mensch", "verfuegbar")},
             "hebel": [{"id": h, "name": HEBEL_TEXT[h][0], "warum": HEBEL_TEXT[h][1], "prioritaet": round(hebel[h]["prioritaet"], 2),
-                       "kennzahlen": [{k: z[k] for k in ("id", "name", "wert", "mensch_p25", "mensch_p75", "ki_p50", "status", "richtung")} for z in hebel[h]["kennzahlen"]]}
+                       "kennzahlen": [{k: z.get(k) for k in ("id", "name", "wert", "mensch_p25", "mensch_p75", "ki_p50", "status", "richtung", "nur_modell", "beitrag")} for z in hebel[h]["kennzahlen"]]}
                       for h in reihenfolge],
             "hinweise": auswahl, "anzahl_hinweise_gesamt": len(eindeutig),
             "rot": len(rot), "gut": [z["name"] for z in gruen[:4]], "stand": stand, "fortschritt": fortschritt,
-            "ziel_p_mensch": ziel_p, "ziel_score": ziel_score,
-            "ziel_erreicht": bool(bew.get("verfuegbar") and not rot and (bew.get("score") or 0) >= ziel_score
-                                  and (bew.get("p_mensch") is None or bew["p_mensch"] >= ziel_p))}
+            "ziel_p_mensch": ziel_p, "ziel_score": ziel_score, "ziel_rot_max": ziel_rot,
+            "bloecke": bew.get("bloecke") or [], "blockmodus": bool(bew.get("blockmodus")),
+            "ziel_erreicht": bool(bew.get("verfuegbar") and (bew.get("score") or 0) >= ziel_score
+                                  and (bew.get("p_mensch") is None or bew["p_mensch"] >= ziel_p)
+                                  and (ziel_rot is None or len(rot) <= ziel_rot))}
 
 
 def fmt(x):
@@ -446,12 +483,24 @@ def bericht(c: dict) -> str:
                    + (f" · schlechter: {', '.join(analyse.NAMEN.get(k, k) for k in f['schlechter'])}" if f["schlechter"] else ""))
     if c["fortschritt"] and c["fortschritt"].get("mechanisch_verlaengert"):
         out.append("\n> ⚠️ **Mechanisch verlängert:** Die Sätze sind länger geworden, aber Teilsätze und Satzklammern nicht – vermutlich angehängte Teilsätze. Das zählt nicht als Fortschritt; stattdessen nominal verdichten.")
+    if c["blockmodus"] and c["bloecke"]:
+        out.append("\n**Abschnitte** (lange Texte werden in Abschnitten zu ~800 Wörtern gemessen, wie die Referenz):\n")
+        out.append("| Abschnitt | Sätze | Score | Modell |\n|---|---|---|---|")
+        schwach = min(c["bloecke"], key=lambda b: b.get("p_mensch") if b.get("p_mensch") is not None else 1)
+        for bl in c["bloecke"]:
+            marke = " ← am KI-nächsten" if bl is schwach and len(c["bloecke"]) > 1 else ""
+            p = bl.get("p_mensch")
+            out.append(f"| {bl['nr']} | {bl['satz_von']}–{bl['satz_bis']} | {bl.get('score')} | {round(100 * p) if p is not None else '–'} %{marke} |")
     if c["ziel_erreicht"]:
-        out.append(f"\n✅ **Ziel erreicht:** keine bewertete Kennzahl rot, Score ≥ {c['ziel_score']}, Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich. Die Hinweise unten sind optionaler Feinschliff.")
+        rot_teil = f", höchstens {c['ziel_rot_max']} Kennzahlen rot" if c.get("ziel_rot_max") is not None else ""
+        out.append(f"\n✅ **Ziel erreicht:** Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich, Score ≥ {round(c['ziel_score'])}{rot_teil} – so unauffällig wie die meisten echten Hochschularbeiten. Die Hinweise unten sind optionaler Feinschliff.")
+    elif c["bewertung"].get("verfuegbar"):
+        out.append(f"\n_Ziel: Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich und Score ≥ {round(c['ziel_score'])}. Einzelne rote Kennzahlen sind normal – auch echte Arbeiten haben im Mittel mehrere._")
     if c["hebel"]:
         out.append("\n### Die wichtigsten Hebel\n")
         for i, h in enumerate(c["hebel"][:4], 1):
-            werte = "; ".join(f"{k['name']}: {fmt(k['wert'])} (Ziel {fmt(k['mensch_p25'])}–{fmt(k['mensch_p75'])})" for k in h["kennzahlen"][:3])
+            werte = "; ".join(f"{k['name']}: {fmt(k['wert'])}" + (" (Tendenz, fließt ins Modell)" if k.get("nur_modell") else f" (Ziel {fmt(k['mensch_p25'])}–{fmt(k['mensch_p75'])})")
+                              for k in h["kennzahlen"][:3])
             out.append(f"{i}. **{h['name']}** – {h['warum']}  \n   _{werte}_")
     if c["hinweise"]:
         out.append("\n### Konkrete Stellen\n")
