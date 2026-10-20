@@ -201,11 +201,14 @@ def ngramme(text: str, n_max=3) -> tuple[Counter, int]:
     return c, gesamt
 
 
-def log_odds(c_a: Counter, c_b: Counter, prior: Counter, alpha0: float):
+def log_odds(c_a: Counter, c_b: Counter, prior: Counter, alpha0: float, min_gesamt: int = 6):
     n_a, n_b = sum(c_a.values()), sum(c_b.values())
+    prior_summe = max(1, sum(prior.values()))
     out = {}
-    for w in set(c_a) | set(c_b):
-        a_w = prior[w] * alpha0 / max(1, sum(prior.values())) + 0.01
+    for w, gesamt in prior.items():
+        if gesamt < min_gesamt:
+            continue  # seltene N-Gramme können ohnehin nicht die Dokument-Mindestzahl erreichen
+        a_w = gesamt * alpha0 / prior_summe + 0.01
         ya, yb = c_a[w], c_b[w]
         la = math.log((ya + a_w) / (n_a + alpha0 - ya - a_w))
         lb = math.log((yb + a_w) / (n_b + alpha0 - yb - a_w))
