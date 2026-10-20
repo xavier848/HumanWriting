@@ -1,0 +1,344 @@
+{
+ "beschreibung": "Sprachmuster, die in KI-generierten deutschen Texten überdurchschnittlich oft vorkommen. 'gewicht' und 'verhaeltnis_ki_mensch' werden von kalibrierung/scripts/kalibriere.py aus den Korpora berechnet; Startwerte stammen aus der Recherche (t3n/Graphite 2025, GIGA-Floskelliste, Kobak et al. 2025).",
+ "version": "0.1-recherche",
+ "muster": [
+  {
+   "id": "rolle_spielen",
+   "label": "„spielt eine zentrale/entscheidende Rolle“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(spielt|spielen|spielte|spielten)\\s+(dabei\\s+|hierbei\\s+|somit\\s+|auch\\s+|ebenfalls\\s+)?eine\\s+(entscheidende|zentrale|wichtige|wesentliche|bedeutende|maßgebliche|tragende|große|immer\\s+größere|zunehmend\\s+wichtige|bedeutsame|elementare|essenzielle|essentielle|herausragende|immer\\s+wichtigere)\\s+Rolle\\b",
+   "ersatz": "Sagen, was genau passiert: „beeinflusst X“, „ist Voraussetzung für X“, „erklärt einen Teil von X“, „wirkt sich auf X aus“ – oder die Wichtigkeit belegen (Zahl, Quelle)."
+  },
+  {
+   "id": "rolle_zukommen",
+   "label": "„kommt eine zentrale Rolle/Bedeutung zu“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bkommt\\s+(\\w+\\s+){0,3}eine\\s+(entscheidende|zentrale|wichtige|wesentliche|besondere|bedeutende|tragende|große)\\s+(Rolle|Bedeutung)\\s+zu\\b",
+   "ersatz": "Wie oben: konkrete Wirkung oder Funktion benennen („X steuert …“, „X entscheidet über …“)."
+  },
+  {
+   "id": "von_bedeutung",
+   "label": "„von entscheidender/zentraler Bedeutung“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bvon\\s+(entscheidender|zentraler|großer|besonderer|wesentlicher|herausragender|essenzieller|essentieller|elementarer|grundlegender|immenser)\\s+Bedeutung\\b",
+   "ersatz": "„ist wichtig für …“ mit Begründung, oder die Bedeutung durch Fakten zeigen statt behaupten."
+  },
+  {
+   "id": "darueber_hinaus",
+   "label": "„Darüber hinaus“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\bdarüber\\s+hinaus\\b",
+   "ersatz": "Meist ersatzlos streichen; sonst „außerdem“/„auch“ ins Satzinnere stellen oder inhaltlich anschließen."
+  },
+  {
+   "id": "des_weiteren",
+   "label": "„Des Weiteren“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\bdes\\s+weiteren\\b",
+   "ersatz": "Streichen oder „außerdem“ im Satzinneren."
+  },
+  {
+   "id": "zusammenfassend",
+   "label": "„Zusammenfassend lässt sich …“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(zusammenfassend|abschließend|insgesamt|resümierend)\\s+(lässt|kann|können)\\s+(sich\\s+)?(\\w+\\s+){0,2}(sagen|festhalten|feststellen|konstatieren|festgehalten|festgestellt)\\b",
+   "ersatz": "Den Satz mit dem Ergebnis selbst beginnen („Für KMU ist eine klare EVP daher …“)."
+  },
+  {
+   "id": "insgesamt_zeigt",
+   "label": "„Insgesamt zeigt sich / wird deutlich“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\binsgesamt\\s+(zeigt\\s+sich|wird\\s+deutlich|lässt\\s+sich|verdeutlicht|unterstreicht|ergibt\\s+sich)\\b",
+   "ersatz": "Ergebnis direkt nennen, ohne Ankündigung."
+  },
+  {
+   "id": "dies_verdeutlicht",
+   "label": "„Dies zeigt/verdeutlicht/unterstreicht, dass …“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\b(dies|das|diese[rs]?\\s+\\w+)\\s+(zeigt|verdeutlicht|unterstreicht|macht\\s+deutlich|illustriert|belegt|veranschaulicht|betont|zeigt\\s+deutlich|verdeutlicht\\s+eindrucksvoll),?\\s+(dass|wie)\\b",
+   "ersatz": "Kommentarsatz streichen oder konkretes Subjekt: „Der Befund spricht dafür, dass …“, „Daraus folgt …“."
+  },
+  {
+   "id": "unterstreicht",
+   "label": "„unterstreicht“ (übertragen)",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\b(unterstreicht|unterstreichen|unterstrich|unterstrichen)\\b",
+   "ersatz": "„zeigt“, „belegt“, „bestätigt“ – oder streichen, wenn nur wiederholt wird."
+  },
+  {
+   "id": "verdeutlicht",
+   "label": "„verdeutlicht“",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\b(verdeutlicht|verdeutlichen|verdeutlichte)\\b",
+   "ersatz": "„zeigt“ oder direkt die Aussage."
+  },
+  {
+   "id": "zusammenhang_hintergrund",
+   "label": "„In diesem Zusammenhang / Vor diesem Hintergrund“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\b(in\\s+diesem\\s+zusammenhang|vor\\s+diesem\\s+hintergrund|in\\s+diesem\\s+kontext)\\b",
+   "ersatz": "Meist streichen; der Bezug ergibt sich aus dem Absatz. Sonst „Deshalb …“, „Dafür …“."
+  },
+  {
+   "id": "nicht_zuletzt",
+   "label": "„nicht zuletzt“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\bnicht\\s+zuletzt\\b",
+   "ersatz": "Streichen oder „auch“."
+  },
+  {
+   "id": "modewort_adjektiv",
+   "label": "KI-Modeadjektive (ganzheitlich, vielschichtig, facettenreich …)",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\b(ganzheitlich\\w*|vielschichtig\\w*|facettenreich\\w*|essenziell\\w*|essentiell\\w*|nahtlos\\w*|zielgerichtet\\w*|tiefgreifend\\w*|wegweisend\\w*|bahnbrechend\\w*|maßgeschneidert\\w*|praxisnah\\w*|zukunftsfähig\\w*|zukunftsorientiert\\w*)\\b",
+   "ersatz": "Durch präzises Adjektiv oder Fakt ersetzen (ganzheitlich → „der alle Abteilungen einbezieht“), oft ersatzlos streichen."
+  },
+  {
+   "id": "massgeblich",
+   "label": "„maßgeblich“",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\bmaßgeblich\\w*\\b",
+   "ersatz": "„stark“, „deutlich“, Größenangabe aus der Quelle – oder streichen."
+  },
+  {
+   "id": "chancen_herausforderungen",
+   "label": "„Chancen und Herausforderungen“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(chancen\\s+und\\s+herausforderungen|herausforderungen\\s+und\\s+chancen|chancen\\s+und\\s+risiken|potenziale\\s+und\\s+herausforderungen|herausforderungen\\s+und\\s+potenziale)\\b",
+   "ersatz": "Konkret benennen, welche Vorteile/Probleme (z. B. „Kosten und fehlende Bekanntheit“)."
+  },
+  {
+   "id": "vielzahl",
+   "label": "„eine Vielzahl von/an“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\beine[rn]?\\s+vielzahl\\s+(von|an)\\b",
+   "ersatz": "„viele“ oder konkrete Anzahl."
+  },
+  {
+   "id": "beitrag_leisten",
+   "label": "„trägt maßgeblich/entscheidend dazu bei“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(trägt|tragen|trug|trugen)\\s+(\\w+\\s+){0,2}(maßgeblich|entscheidend|wesentlich|erheblich|zusätzlich|ebenfalls)\\s+(dazu\\s+)?bei\\b",
+   "ersatz": "„erhöht“, „senkt“, „verbessert“ mit Objekt."
+  },
+  {
+   "id": "fokus_mittelpunkt",
+   "label": "„rückt in den Fokus / steht im Mittelpunkt“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(rückt|rücken|rückte)\\s+(\\w+\\s+){0,3}in\\s+den\\s+(fokus|mittelpunkt|vordergrund)\\b|\\bsteht\\s+(\\w+\\s+){0,2}im\\s+(fokus|mittelpunkt|zentrum)\\b",
+   "ersatz": "„behandelt“, „untersucht“, „geht es um“."
+  },
+  {
+   "id": "bedeutung_gewinnen",
+   "label": "„gewinnt zunehmend an Bedeutung“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(gewinnt|gewinnen|gewann)\\s+(\\w+\\s+){0,2}(zunehmend\\s+|immer\\s+mehr\\s+|stetig\\s+)?an\\s+(bedeutung|relevanz|stellenwert)\\b",
+   "ersatz": "Entwicklung belegen („Seit 2015 nennen mehr Unternehmen …“) oder „wird wichtiger“."
+  },
+  {
+   "id": "heutige_zeit",
+   "label": "„in der heutigen Zeit/Welt“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bin\\s+der\\s+heutigen\\s+(zeit|welt|gesellschaft|arbeitswelt|wirtschaft|geschäftswelt)\\b|\\bin\\s+zeiten\\s+(von|der|des|zunehmender|wachsender)\\b|\\bin\\s+einer\\s+zunehmend\\s+\\w+en\\s+(welt|gesellschaft|arbeitswelt)\\b",
+   "ersatz": "Streichen oder konkrete Zeitangabe/Entwicklung nennen."
+  },
+  {
+   "id": "es_ist_wichtig",
+   "label": "„Es ist wichtig/entscheidend, …“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bes\\s+ist\\s+(daher\\s+|somit\\s+|jedoch\\s+|dabei\\s+)?(wichtig|entscheidend|essenziell|essentiell|unerlässlich|zentral|von\\s+bedeutung|hervorzuheben|zu\\s+betonen|anzumerken),?\\s+(dass|zu|die|den|das)\\b",
+   "ersatz": "Direkt die Forderung/Aussage: „KMU sollten …“, „Entscheidend ist …“ nur einmal im Text."
+  },
+  {
+   "id": "gilt_es",
+   "label": "„gilt es / es gilt, …“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(gilt\\s+es|es\\s+gilt,)\\b",
+   "ersatz": "„muss“, „sollte“ mit Subjekt."
+  },
+  {
+   "id": "schluessel",
+   "label": "„Schlüsselfaktor/-rolle/-element“",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\bschlüssel(faktor|rolle|element|kompetenz|komponente|aspekt|frage|bereich|instrument)\\w*\\b",
+   "ersatz": "„wichtiger Faktor“ nur mit Beleg; besser konkrete Funktion beschreiben."
+  },
+  {
+   "id": "kern_zentral",
+   "label": "„im Kern / Kernaspekt / zentraler Aspekt“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bim\\s+kern\\b|\\b(zentrale[rn]?|wesentliche[rn]?|entscheidende[rn]?)\\s+(aspekt|faktor|baustein|bestandteil|hebel|erfolgsfaktor|treiber)\\w*\\b",
+   "ersatz": "Streichen oder „Hauptpunkt“/„wichtigster Grund“ nur mit Begründung."
+  },
+  {
+   "id": "weitere_dimension",
+   "label": "„eine weitere Dimension/Ebene“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\beine\\s+weitere\\s+(dimension|ebene|facette|perspektive)\\b",
+   "ersatz": "„Außerdem betrifft das …“ oder neuen Aspekt direkt benennen."
+  },
+  {
+   "id": "nicht_x_sondern",
+   "label": "Korrektur-Konstruktion „nicht X, sondern Y“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\b(nicht|kein|keine|keinen|keinem)\\s+(\\w+\\s+){0,4}\\w+,\\s+sondern\\b",
+   "ersatz": "Gegenfolie streichen, wenn niemand X behauptet hat: nur „Y“ sagen."
+  },
+  {
+   "id": "nicht_nur_sondern",
+   "label": "„nicht nur …, sondern auch“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\bnicht\\s+nur\\b[^.!?]{1,150}?\\bsondern\\s+(auch|vor\\s+allem|zugleich|ebenso)\\b",
+   "ersatz": "„A und B“ oder zwei Sätze."
+  },
+  {
+   "id": "mehr_als_nur",
+   "label": "„mehr als nur / nicht einfach nur“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\bmehr\\s+als\\s+nur\\b|\\bnicht\\s+(einfach|bloß|lediglich)\\s+(nur\\s+)?(ein|eine|einen|um)\\b|\\bweit\\s+mehr\\s+als\\b",
+   "ersatz": "Direkt sagen, was es ist."
+  },
+  {
+   "id": "mit_anderen_worten",
+   "label": "„Mit anderen Worten / Kurz gesagt“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\b(mit\\s+anderen\\s+worten|kurz\\s+gesagt|anders\\s+ausgedrückt|einfach\\s+gesagt|vereinfacht\\s+gesagt|kurzum)\\b",
+   "ersatz": "Streichen; den vorigen Satz so schreiben, dass er keiner Umformulierung bedarf."
+  },
+  {
+   "id": "letztlich",
+   "label": "„letztlich/letztendlich“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\b(letztlich|letztendlich|im\\s+endeffekt)\\b",
+   "ersatz": "Streichen."
+  },
+  {
+   "id": "hierbei_dabei",
+   "label": "„Hierbei / Hierdurch“",
+   "kategorie": "konnektor",
+   "gewicht": 1.0,
+   "regex": "\\b(hierbei|hierdurch|hiermit|hierfür)\\b",
+   "ersatz": "„dabei“ sparsam, oft streichen oder konkreten Bezug („bei der Befragung“)."
+  },
+  {
+   "id": "zunehmend",
+   "label": "„zunehmend / immer mehr“",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\b(zunehmend\\w*|immer\\s+mehr|immer\\s+stärker|immer\\s+wichtiger)\\b",
+   "ersatz": "Zeitraum und Ausmaß nennen, wenn belegt; sonst „mehr“/„häufiger“."
+  },
+  {
+   "id": "sicherstellen",
+   "label": "„sicherstellen / gewährleisten“",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\b(sicherzustellen|sicherstellen|stellt\\s+sicher|stellen\\s+sicher|gewährleisten|gewährleistet|zu\\s+gewährleisten)\\b",
+   "ersatz": "„dafür sorgen“, „damit … “, oder konkret: „prüfen“, „festlegen“."
+  },
+  {
+   "id": "ermoeglicht",
+   "label": "„ermöglicht es …, zu …“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\b(ermöglicht|ermöglichen|ermöglichte)\\s+es\\b",
+   "ersatz": "„X kann so …“, „dadurch können …“."
+  },
+  {
+   "id": "sowohl_als_auch",
+   "label": "„sowohl … als auch“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\bsowohl\\b[^.!?]{1,150}?\\bals\\s+auch\\b",
+   "ersatz": "„A und B“."
+  },
+  {
+   "id": "auf_der_einen_seite",
+   "label": "„einerseits … andererseits / auf der einen Seite“",
+   "kategorie": "konstruktion",
+   "gewicht": 1.0,
+   "regex": "\\bauf\\s+der\\s+einen\\s+seite\\b|\\beinerseits\\b",
+   "ersatz": "Abwägung ohne Formel: zwei Sätze, der zweite mit „aber“/„allerdings“ im Satzinneren."
+  },
+  {
+   "id": "spannungsfeld",
+   "label": "„im Spannungsfeld / Balance / Gleichgewicht finden“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bspannungsfeld\\w*\\b|\\b(die\\s+)?(richtige\\s+)?balance\\s+(zu\\s+)?(finden|halten|zwischen)\\b|\\bgleichgewicht\\s+zwischen\\b",
+   "ersatz": "Konflikt konkret benennen („X und Y lassen sich nicht gleichzeitig maximieren, weil …“)."
+  },
+  {
+   "id": "wertvoll_beitrag",
+   "label": "„wertvolle Erkenntnisse / wertvoller Beitrag“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\bwertvolle[nrs]?\\s+(erkenntnis\\w*|beitrag|einblick\\w*|impuls\\w*|hinweis\\w*|ansatzpunkt\\w*|ressource\\w*|instrument\\w*)\\b",
+   "ersatz": "„nützlich“, „liefert Hinweise auf …“, oder den Beitrag konkret nennen."
+  },
+  {
+   "id": "praegt_gestaltet",
+   "label": "„prägt/gestaltet maßgeblich“",
+   "kategorie": "floskel",
+   "gewicht": 1.0,
+   "regex": "\\b(prägt|prägen|gestaltet|gestalten)\\s+(\\w+\\s+){0,2}(maßgeblich|entscheidend|nachhaltig|wesentlich)\\b",
+   "ersatz": "„beeinflusst“ mit Richtung/Ausmaß."
+  },
+  {
+   "id": "nachhaltig_wort",
+   "label": "„nachhaltig“ (übertragen: nachhaltig stärken/prägen)",
+   "kategorie": "wort",
+   "gewicht": 1.0,
+   "regex": "\\bnachhaltig\\s+(stärk|präg|verbesser|beeinfluss|sicher|veränder|förder|steiger)\\w*\\b",
+   "ersatz": "„dauerhaft“, „langfristig“ oder streichen."
+  },
+  {
+   "id": "fazit_doppelpunkt",
+   "label": "Satzinterne Pointe mit Doppelpunkt („Das Ergebnis: …“)",
+   "kategorie": "typografie",
+   "gewicht": 1.0,
+   "gross_klein": true,
+   "regex": "\\b(Das|Die|Der)\\s+(Ergebnis|Fazit|Ziel|Problem|Lösung|Folge|Konsequenz|Antwort|Ergebnis|Kernaussage|Botschaft)\\s*:\\s",
+   "ersatz": "Ganzen Satz bilden: „Im Ergebnis sinkt die Fluktuation.“"
+  },
+  {
+   "id": "gedankenstrich",
+   "label": "Gedankenstrich als Einschub (–/—)",
+   "kategorie": "typografie",
+   "gewicht": 1.0,
+   "gross_klein": true,
+   "regex": "(?<=\\s)[–—](?=\\s)|(?<=\\w)—(?=\\w)",
+   "ersatz": "Komma, Klammer, Doppelpunkt oder neuer Satz."
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+# Rohtexte der Kalibrierungskorpora werden nicht versioniert (Urheberrecht der Quellen);
+# reproduzierbar über die meta.jsonl-Dateien (URLs) und kalibrierung/scripts.
+kalibrierung/korpus/mensch/*/*.txt
+__pycache__/
+*.pyc
+.venv/
