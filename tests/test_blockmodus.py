@@ -472,9 +472,12 @@ class Blockmodus(unittest.TestCase):
                 f.write(t)
             with open(bp, "w", encoding="utf-8") as f:
                 json.dump(REF, f)
+            mp = os.path.join(d, "m.json")  # main() soll wie oben ohne KI-Muster messen (sonst hängt der Test an ki_muster.json)
+            with open(mp, "w", encoding="utf-8") as f:
+                json.dump({"muster": []}, f)
             puffer = io.StringIO()
             with contextlib.redirect_stdout(puffer):
-                analyse.main([tp, "--baselines", bp, "--format", "json", "--ohne-saetze"])
+                analyse.main([tp, "--baselines", bp, "--muster", mp, "--format", "json", "--ohne-saetze"])
             aus = json.loads(puffer.getvalue())
             self.assertTrue(aus["bewertung"]["blockmodus"])
             self.assertEqual(aus["bewertung"]["bloecke"], bew["bloecke"])

@@ -967,6 +967,21 @@ def ece(ps: list[float], ys: list[int], klassen: int = ECE_KLASSEN, balanciert: 
     return summe
 
 
+def ziel_score_von(scores_mensch: list[float]) -> float:
+    """Score-Untergrenze für 'Ziel erreicht' im Coach: P10 der menschlichen Out-of-fold-Scores (90 % erreichen sie).
+    Der Score trennt schwächer als das Modell; als Ziel dient er nur als Untergrenze gegen Ausreißer."""
+    return round(analyse.perzentil(sorted(scores_mensch), ZIEL_P_PERZENTIL), 1) if scores_mensch else 0.0
+
+
+def ziel_erreicht_anteil(gruppen, oof_p, oof_s, ziel_p, ziel_s) -> dict:
+    """Anteil der Abschnitte je Gruppe, die beide Ziele (p ≥ ziel_p_mensch und Score ≥ ziel_score) out-of-fold erreichen."""
+    erg = {}
+    for g in ("mensch", "ki"):
+        paare = [(p, s) for gg, p, s in zip(gruppen, oof_p, oof_s) if gg == g and p is not None and s is not None]
+        erg[g] = round(sum(1 for p, s in paare if p >= ziel_p and s >= ziel_s) / len(paare), 3) if paare else None
+    return erg
+
+
 def ziel_p_mensch_von(p_menschlich: list[float]) -> float:
     """ziel_p_mensch = P10 der menschlichen Out-of-fold-Wahrscheinlichkeiten, auf [0,5; 0,95] begrenzt, 2 Stellen:
     90 % der echten menschlichen Abschnitte erreichen das Ziel (vorher P25: zu streng für den Coach)."""
@@ -1180,7 +1195,13 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
           "(Score je Abschnitt gemittelt über die Wiederholungen).",
           f"- **ziel_p_mensch = {t['ziel_p_mensch']}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-"
           f"Wahrscheinlichkeiten, begrenzt auf [{ZIEL_P_MIN}; {ZIEL_P_MAX}], auf 2 Stellen gerundet "
-          f"({100 - round(100 * ZIEL_P_PERZENTIL)} % der menschlichen Abschnitte erreichen es)."]
+          f"({100 - round(100 * ZIEL_P_PERZENTIL)} % der menschlichen Abschnitte erreichen es).",
+          f"- **ziel_score = {t.get('ziel_score')}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Scores; "
+          "Untergrenze für „Ziel erreicht“ im Coach (der Score trennt schwächer als das Modell)."]
+    za = ev.get("ziel_erreicht_anteil_oof")
+    if za and za.get("mensch") is not None and za.get("ki") is not None:
+        pz = lambda x: f"{100 * x:.1f}".replace(".", ",")
+        z.append(f"- **Beide Ziele erreicht (out-of-fold):** Mensch {pz(za['mensch'])} %, KI {pz(za['ki'])} %.")
     gh = t.get("goodhart")
     if gh:
         name = analyse.NAMEN.get
@@ -1397,6 +1418,8 @@ def main(argv=None) -> int:
     oof_s = [analyse.mittel(cv["oof_score"][i]) if cv["oof_score"][i] else None for i in range(len(zeilen))]
     ziel_p = ziel_p_mensch_von([p for p, g in zip(oof_p, gruppen) if g == "mensch" and p is not None])
     schwelle = round(score_schwelle_von([g for g, s in zip(gruppen, oof_s) if s is not None], [s for s in oof_s if s is not None]), 1)
+    ziel_s = ziel_score_von([s for s, g in zip(oof_s, gruppen) if g == "mensch" and s is not None])
+    ziel_anteil = ziel_erreicht_anteil(gruppen, oof_p, oof_s, ziel_p, ziel_s)
 
     # --- Finale Kalibrierung auf allen Daten --------------------------------------
     paket = kalibriere_daten(zeilen, keys, muster_json["muster"], fw_woerter, boot_n=args.bootstrap, mit_se=True)
@@ -1450,6 +1473,9 @@ def main(argv=None) -> int:
         "ziel_p_mensch_methode": f"P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Wahrscheinlichkeiten, "
                                  f"begrenzt auf [{ZIEL_P_MIN:g}; {ZIEL_P_MAX:g}]".replace(".", ","),
         "score_schwelle_methode": "Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI",
+        "ziel_score": ziel_s,
+        "ziel_score_methode": f"P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Scores",
+        "ziel_erreicht_anteil_oof": ziel_anteil,
     }
 
     n_m = sum(g == "mensch" for g in gruppen)
@@ -1481,6 +1507,7 @@ def main(argv=None) -> int:
                 "fw_profil": paket["profil"],
                 "score_schwelle": schwelle,
                 "ziel_p_mensch": ziel_p,
+                "ziel_score": ziel_s,
                 "goodhart": goodhart,
                 "satzlaengen_verteilung_mensch": analyse.verteilung(satzlaengen["mensch"]),
                 "satzlaengen_verteilung_ki": analyse.verteilung(satzlaengen["ki"]),

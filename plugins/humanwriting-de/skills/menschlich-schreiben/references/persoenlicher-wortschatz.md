@@ -14,125 +14,125 @@ Seltene Wörter (unter 0,05 pro 1000 in beiden Korpora) sind statistisch unsiche
 
 | | Wort | Mensch | Claude |
 |---|---|---|---|
-| ⚠️ | verstehen | 0,27 | 0,57 |
-| ⚪ | erklären | 0,24 | 0,24 |
-| ⚠️ | beschreiben | 0,29 | 0,46 |
-| ⚪ | vergleichen | 0,09 | 0,06 |
-| ⚪ | entwickeln | 0,21 | 0,16 |
-| ⚪ | beeinflussen | 0,32 | 0,27 |
-| ⚪ | verstärken | 0,18 | 0,19 |
+| ⚠️ | verstehen | 0,25 | 0,48 |
+| ⚪ | erklären | 0,27 | 0,26 |
+| ⚠️ | beschreiben | 0,30 | 0,51 |
+| ⚪ | vergleichen | 0,08 | 0,12 |
+| ⚪ | entwickeln | 0,21 | 0,15 |
+| ⚪ | beeinflussen | 0,32 | 0,29 |
+| ⚪ | verstärken | 0,18 | 0,16 |
 | ⚪ | mildern | 0,00 | 0,00 |
-| ⚪ | ermöglichen | 0,43 | 0,63 |
-| ⚪ | abdecken | 0,02 | 0,05 |
-| ⚪ | aufbauen | 0,08 | 0,09 |
-| ⚪ | gründen | 0,23 | 0,15 |
-| ⚠️ | übernehmen | 0,08 | 0,19 |
-| ⚪ | vorschlagen | 0,01 | 0,00 |
-| ⚪ | festlegen | 0,03 | 0,02 |
-| ⚪ | lösen | 0,06 | 0,05 |
-| ⚪ | verbessern | 0,07 | 0,08 |
-| ⚪ | ändern | 0,05 | 0,04 |
-| ⚪ | entsprechen | 0,27 | 0,39 |
-| ⚪ | herausfinden | 0,01 | 0,01 |
+| ⚪ | ermöglichen | 0,41 | 0,61 |
+| ⚪ | abdecken | 0,01 | 0,03 |
+| ⚪ | aufbauen | 0,08 | 0,10 |
+| ⚪ | gründen | 0,23 | 0,17 |
+| ⚠️ | übernehmen | 0,08 | 0,14 |
+| ⚪ | vorschlagen | 0,00 | 0,00 |
+| ⚪ | festlegen | 0,03 | 0,04 |
+| ⚪ | lösen | 0,06 | 0,07 |
+| ⚪ | verbessern | 0,07 | 0,06 |
+| ⚪ | ändern | 0,04 | 0,02 |
+| ⚪ | entsprechen | 0,27 | 0,32 |
+| ⚪ | herausfinden | 0,01 | 0,00 |
 | ⚠️ | vorgehen | 0,10 | 0,25 |
-| ⚪ | wiederholen | 0,05 | 0,07 |
-| ✅ | zitieren | 0,07 | 0,00 |
-| ⚠️ | wahrnehmen | 0,04 | 0,10 |
-| ⚪ | sich konzentrieren | 0,10 | 0,15 |
-| ⚪ | (eine These) aufstellen | 0,01 | 0,01 |
+| ⚠️ | wiederholen | 0,05 | 0,11 |
+| ✅ | zitieren | 0,07 | 0,01 |
+| ⚪ | wahrnehmen | 0,04 | 0,06 |
+| ⚪ | sich konzentrieren | 0,10 | 0,12 |
+| ⚪ | (eine These) aufstellen | 0,01 | 0,00 |
 | ⚪ | vorgeben | 0,01 | 0,00 |
-| ⚠️ | sich lohnen | 0,03 | 0,06 |
+| ⚪ | sich lohnen | 0,03 | 0,04 |
 
 ## Nomen: Denken und Argumentieren
 
 | | Wort | Mensch | Claude |
 |---|---|---|---|
-| ⚪ | Konzept | 0,40 | 0,37 |
+| ⚪ | Konzept | 0,47 | 0,41 |
 | ✅ | Konstrukt | 0,09 | 0,04 |
-| ⚪ | System | 0,39 | 0,50 |
-| ⚪ | These | 0,08 | 0,05 |
-| ✅ | Theorie | 0,28 | 0,06 |
-| ✅ | Methode | 0,41 | 0,23 |
-| ⚪ | Aussage | 0,39 | 0,34 |
-| ⚪ | Quelle | 0,12 | 0,10 |
-| ✅ | Beispiel | 0,65 | 0,41 |
-| ⚠️ | Unterschied | 0,40 | 0,67 |
-| ⚪ | Vergleich | 0,40 | 0,40 |
-| ⚪ | Erklärung | 0,11 | 0,11 |
-| ⚪ | Beschreibung | 0,13 | 0,08 |
-| ⚪ | Lösung | 0,15 | 0,16 |
-| ✅ | Thema | 0,52 | 0,24 |
-| ⚪ | Detail | 0,05 | 0,02 |
-| ⚪ | Kontext | 0,27 | 0,28 |
-| ⚪ | Ablauf | 0,07 | 0,09 |
-| ⚠️ | Anforderung | 0,31 | 0,58 |
-| ✅ | Meinung | 0,28 | 0,09 |
+| ⚪ | System | 0,42 | 0,41 |
+| ⚪ | These | 0,10 | 0,10 |
+| ⚪ | Theorie | 0,28 | 0,21 |
+| ✅ | Methode | 0,35 | 0,17 |
+| ⚪ | Aussage | 0,37 | 0,33 |
+| ⚪ | Quelle | 0,10 | 0,10 |
+| ⚪ | Beispiel | 0,63 | 0,61 |
+| ⚠️ | Unterschied | 0,45 | 0,71 |
+| ⚪ | Vergleich | 0,42 | 0,48 |
+| ⚪ | Erklärung | 0,14 | 0,14 |
+| ✅ | Beschreibung | 0,12 | 0,03 |
+| ⚪ | Lösung | 0,14 | 0,16 |
+| ✅ | Thema | 0,48 | 0,25 |
+| ⚪ | Detail | 0,04 | 0,02 |
+| ⚪ | Kontext | 0,30 | 0,25 |
+| ⚪ | Ablauf | 0,06 | 0,09 |
+| ⚪ | Anforderung | 0,29 | 0,42 |
+| ✅ | Meinung | 0,24 | 0,08 |
 
 ## Nomen: Wirtschaft und Gesellschaft
 
 | | Wort | Mensch | Claude |
 |---|---|---|---|
-| ⚪ | Ziel | 0,93 | 0,93 |
-| ⚪ | Wert | 0,56 | 0,57 |
-| ⚪ | Risiko | 0,11 | 0,15 |
-| ✅ | Chance | 0,21 | 0,13 |
-| ⚠️ | Variable | 0,17 | 0,28 |
-| ⚪ | Wahrnehmung | 0,17 | 0,15 |
+| ⚪ | Ziel | 0,89 | 1,07 |
+| ⚪ | Wert | 0,54 | 0,53 |
+| ⚠️ | Risiko | 0,11 | 0,22 |
+| ⚪ | Chance | 0,21 | 0,17 |
+| ⚪ | Variable | 0,20 | 0,24 |
+| ⚪ | Wahrnehmung | 0,16 | 0,20 |
 | ⚪ | Gegenbewegung | 0,00 | 0,00 |
-| ⚪ | Kultur | 0,27 | 0,21 |
-| ⚠️ | Markt | 0,20 | 0,38 |
+| ⚪ | Kultur | 0,25 | 0,18 |
+| ⚪ | Markt | 0,19 | 0,25 |
 | ⚪ | Zielmarkt | 0,00 | 0,00 |
-| ⚪ | Unternehmen | 1,55 | 1,35 |
-| ⚪ | Strategie | 0,35 | 0,25 |
-| ⚪ | Transformation | 0,02 | 0,01 |
-| ⚪ | Partner | 0,16 | 0,24 |
+| ⚪ | Unternehmen | 1,48 | 1,41 |
+| ⚪ | Strategie | 0,33 | 0,36 |
+| ⚪ | Transformation | 0,04 | 0,02 |
+| ⚠️ | Partner | 0,19 | 0,30 |
 | ⚪ | Investor | 0,02 | 0,03 |
-| ⚠️ | Fonds | 0,01 | 0,06 |
-| ⚪ | Anteile | 0,04 | 0,04 |
-| ⚪ | Rendite | 0,00 | 0,02 |
+| ⚪ | Fonds | 0,01 | 0,03 |
+| ⚪ | Anteile | 0,05 | 0,05 |
+| ⚪ | Rendite | 0,01 | 0,02 |
 | ⚪ | Liquidität | 0,00 | 0,01 |
-| ⚪ | Preisgestaltung | 0,01 | 0,01 |
-| ⚪ | Expansion | 0,01 | 0,00 |
-| ⚪ | Erweiterung | 0,06 | 0,07 |
-| ⚪ | Ausbau | 0,06 | 0,10 |
-| ✅ | Kampagne | 0,10 | 0,06 |
+| ⚪ | Preisgestaltung | 0,00 | 0,01 |
+| ⚪ | Expansion | 0,01 | 0,01 |
+| ⚪ | Erweiterung | 0,06 | 0,04 |
+| ⚪ | Ausbau | 0,06 | 0,08 |
+| ⚪ | Kampagne | 0,08 | 0,12 |
 | ⚪ | Individualismus | 0,01 | 0,01 |
-| ⚪ | Lebensstil | 0,01 | 0,00 |
-| ⚪ | Werkzeug | 0,03 | 0,06 |
-| ⚪ | Werdegang | 0,01 | 0,00 |
+| ⚪ | Lebensstil | 0,03 | 0,02 |
+| ⚪ | Werkzeug | 0,03 | 0,03 |
+| ⚪ | Werdegang | 0,01 | 0,01 |
 | ⚪ | Kaufverhalten | 0,01 | 0,01 |
-| ⚪ | Macht | 0,37 | 0,41 |
+| ⚪ | Macht | 0,39 | 0,38 |
 
 ## Adjektive und Adverbien
 
 | | Wort | Mensch | Claude |
 |---|---|---|---|
-| ⚠️ | strukturell | 0,10 | 0,19 |
-| ⚪ | kulturell | 0,21 | 0,16 |
-| ⚪ | kontrollierbar | 0,01 | 0,02 |
-| ⚪ | kollektivistisch | 0,01 | 0,00 |
-| ⚪ | dynamisch | 0,05 | 0,05 |
-| ⚪ | finanziell | 0,26 | 0,25 |
-| ⚪ | endgültig | 0,02 | 0,02 |
-| ⚠️ | vollständig | 0,11 | 0,36 |
-| ⚪ | persönlich | 0,48 | 0,52 |
-| ✅ | wahrscheinlich | 0,07 | 0,02 |
-| ⚠️ | realistisch | 0,04 | 0,07 |
-| ⚪ | unrealistisch | 0,00 | 0,02 |
+| ⚪ | strukturell | 0,12 | 0,18 |
+| ⚪ | kulturell | 0,25 | 0,22 |
+| ⚪ | kontrollierbar | 0,01 | 0,01 |
+| ⚪ | kollektivistisch | 0,00 | 0,00 |
+| ⚪ | dynamisch | 0,06 | 0,07 |
+| ⚪ | finanziell | 0,29 | 0,26 |
+| ⚪ | endgültig | 0,03 | 0,02 |
+| ⚠️ | vollständig | 0,12 | 0,32 |
+| ⚪ | persönlich | 0,44 | 0,38 |
+| ✅ | wahrscheinlich | 0,08 | 0,02 |
+| ⚠️ | realistisch | 0,04 | 0,06 |
+| ⚪ | unrealistisch | 0,01 | 0,01 |
 | ⚪ | wertbeständig | 0,00 | 0,00 |
-| ⚪ | international | 0,31 | 0,22 |
-| ✅ | national | 0,16 | 0,09 |
-| ✅ | generell | 0,14 | 0,02 |
-| ⚪ | einzeln | 0,73 | 1,09 |
+| ⚪ | international | 0,35 | 0,32 |
+| ⚪ | national | 0,20 | 0,18 |
+| ✅ | generell | 0,16 | 0,03 |
+| ⚪ | einzeln | 0,73 | 1,07 |
 
 ## Wendungen
 
 | | Wort | Mensch | Claude |
 |---|---|---|---|
-| ✅ | im Vergleich zu | 0,10 | 0,03 |
-| ⚪ | basierend auf | 0,03 | 0,00 |
-| ⚪ | anhand von | 0,06 | 0,03 |
+| ✅ | im Vergleich zu | 0,11 | 0,06 |
+| ⚪ | basierend auf | 0,02 | 0,00 |
+| ⚪ | anhand von | 0,06 | 0,05 |
 | ⚪ | an sich | 0,07 | 0,04 |
-| ⚪ | im Detail | 0,02 | 0,02 |
+| ⚪ | im Detail | 0,02 | 0,01 |
 | ⚪ | Schritt für Schritt | 0,00 | 0,00 |
 

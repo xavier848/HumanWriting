@@ -445,7 +445,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
 
     rot = [z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "rot"]
     ziel_p = bew.get("ziel_p_mensch") or ts.get("ziel_p_mensch") or 0.5
-    ziel_score = bew.get("score_schwelle") or ts.get("score_schwelle") or 65
+    # Score-Untergrenze = P10 menschlicher Abschnitte (kalibriert); score_schwelle (Mitte Mensch/KI) nur als Rückfall
+    ziel_score = ts.get("ziel_score") or bew.get("score_schwelle") or ts.get("score_schwelle") or 60
     # Rote Kennzahlen sind auch bei Menschen normal (Median ~6 von 35 bei 800 Wörtern) – nur als Obergrenze, falls kalibriert
     ziel_rot = ts.get("ziel_rot_max")
     gruen = sorted([z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "gruen"], key=lambda z: -(z["gewicht"] or 0))

@@ -1,92 +1,314 @@
 {
- "version": "1",
- "beschreibung": "Referenzwerte für analyse.py, berechnet von kalibrierung/scripts/kalibriere.py. Zielbereich = mittlere 50 % der menschlichen Abschnitte (P25–P75).",
+ "version": "3",
+ "beschreibung": "Referenzwerte für analyse.py, berechnet von kalibrierung/scripts/kalibriere.py. Abschnitte à 800 bereinigte Wörter; Zielbereich = mittlere 50 % der menschlichen Abschnitte (P25–P75, dokumentgewichtet).",
  "korpus": {
+  "abschnittslaenge": 800,
+  "paare": 396,
   "mensch": {
-   "dokumente": 319,
-   "abschnitte": 933,
+   "dokumente": 412,
+   "abschnitte": 1116,
+   "verworfen": 93,
    "quellen": {
     "haw-hamburg": 54,
     "hs-mittweida": 49,
     "opus-fh": 120,
-    "ssoar": 44,
+    "ssoar": 137,
     "uni-hausarbeiten": 52
    }
   },
   "ki": {
-   "dokumente": 122,
-   "abschnitte": 122,
+   "dokumente": 412,
+   "abschnitte": 404,
+   "verworfen": 8,
    "quellen": {
-    "claude": 122
+    "claude": 412
    }
   }
  },
  "evaluation": {
-  "modell_train": {
-   "auroc": 0.991,
-   "genauigkeit": 0.951,
-   "n_mensch": 663,
-   "n_ki": 89,
-   "median_mensch": 0.995,
-   "median_ki": 0.009
+  "methode": "5×5 gruppierte Kreuzvalidierung (Thema = basis_id bzw. doc_id)",
+  "modell_cv": {
+   "auroc": 0.9959,
+   "auroc_sd": 0.002,
+   "genauigkeit": 0.9696,
+   "genauigkeit_sd": 0.0098,
+   "bal_genauigkeit": 0.9694,
+   "bal_genauigkeit_sd": 0.0113,
+   "median_mensch": 0.9961,
+   "median_mensch_sd": 0.0012,
+   "median_ki": 0.0073,
+   "median_ki_sd": 0.0017,
+   "logloss_bal": 0.0863,
+   "logloss_bal_sd": 0.0171,
+   "folds": 25
   },
-  "modell_test": {
-   "auroc": 0.983,
-   "genauigkeit": 0.95,
-   "n_mensch": 270,
-   "n_ki": 33,
-   "median_mensch": 0.995,
-   "median_ki": 0.01
+  "score_cv": {
+   "auroc": 0.781,
+   "auroc_sd": 0.0303,
+   "genauigkeit": 0.7156,
+   "genauigkeit_sd": 0.0306,
+   "bal_genauigkeit": 0.7146,
+   "bal_genauigkeit_sd": 0.0276,
+   "median_mensch": 69.3995,
+   "median_mensch_sd": 0.9321,
+   "median_ki": 57.696,
+   "median_ki_sd": 1.6375,
+   "folds": 25
   },
-  "score_train": {
-   "auroc": 0.797,
-   "genauigkeit": 0.739,
-   "n_mensch": 663,
-   "n_ki": 89,
-   "median_mensch": 67.785,
-   "median_ki": 51.475
+  "modell_oof_auroc": 0.996,
+  "score_oof_auroc": 0.784,
+  "modell_alle": {
+   "auroc": 0.997,
+   "genauigkeit": 0.972,
+   "bal_genauigkeit": 0.972,
+   "n_mensch": 1116,
+   "n_ki": 404,
+   "median_mensch": 0.996,
+   "median_ki": 0.006
   },
-  "score_test": {
-   "auroc": 0.77,
-   "genauigkeit": 0.729,
-   "n_mensch": 270,
-   "n_ki": 33,
-   "median_mensch": 68.125,
-   "median_ki": 53.127
+  "score_alle": {
+   "auroc": 0.792,
+   "genauigkeit": 0.736,
+   "bal_genauigkeit": 0.723,
+   "n_mensch": 1116,
+   "n_ki": 404,
+   "median_mensch": 70.203,
+   "median_ki": 58.384
   },
-  "score_schwelle": 59.6
+  "modell_oof_kalibrierung": {
+   "brier": 0.0237,
+   "brier_bal": 0.0236,
+   "ece": 0.0257,
+   "ece_bal": 0.0164,
+   "klassen": 10,
+   "perzentile": {
+    "mensch": {
+     "p5": 0.6735,
+     "p10": 0.8594,
+     "p25": 0.9707,
+     "p50": 0.9961,
+     "p75": 0.9995,
+     "p90": 0.9999,
+     "p95": 1.0
+    },
+    "ki": {
+     "p5": 0.0001,
+     "p10": 0.0004,
+     "p25": 0.0014,
+     "p50": 0.007,
+     "p75": 0.0331,
+     "p90": 0.1481,
+     "p95": 0.3575
+    }
+   },
+   "reliabilitaet": [
+    {
+     "von": 0.0,
+     "bis": 0.1,
+     "n_mensch": 6,
+     "n_ki": 354,
+     "gewicht_bal": 0.4408,
+     "p_mittel": 0.0154,
+     "anteil_mensch": 0.0167,
+     "p_mittel_bal": 0.0151,
+     "anteil_mensch_bal": 0.0061
+    },
+    {
+     "von": 0.1,
+     "bis": 0.2,
+     "n_mensch": 6,
+     "n_ki": 21,
+     "gewicht_bal": 0.0287,
+     "p_mittel": 0.1547,
+     "anteil_mensch": 0.2222,
+     "p_mittel_bal": 0.1556,
+     "anteil_mensch_bal": 0.0937
+    },
+    {
+     "von": 0.2,
+     "bis": 0.3,
+     "n_mensch": 6,
+     "n_ki": 7,
+     "gewicht_bal": 0.0114,
+     "p_mittel": 0.2477,
+     "anteil_mensch": 0.4615,
+     "p_mittel_bal": 0.2466,
+     "anteil_mensch_bal": 0.2368
+    },
+    {
+     "von": 0.3,
+     "bis": 0.4,
+     "n_mensch": 7,
+     "n_ki": 4,
+     "gewicht_bal": 0.0081,
+     "p_mittel": 0.3532,
+     "anteil_mensch": 0.6364,
+     "p_mittel_bal": 0.3565,
+     "anteil_mensch_bal": 0.3878
+    },
+    {
+     "von": 0.4,
+     "bis": 0.5,
+     "n_mensch": 7,
+     "n_ki": 6,
+     "gewicht_bal": 0.0106,
+     "p_mittel": 0.4326,
+     "anteil_mensch": 0.5385,
+     "p_mittel_bal": 0.4296,
+     "anteil_mensch_bal": 0.2969
+    },
+    {
+     "von": 0.5,
+     "bis": 0.6,
+     "n_mensch": 14,
+     "n_ki": 1,
+     "gewicht_bal": 0.0075,
+     "p_mittel": 0.5516,
+     "anteil_mensch": 0.9333,
+     "p_mittel_bal": 0.5511,
+     "anteil_mensch_bal": 0.8352
+    },
+    {
+     "von": 0.6,
+     "bis": 0.7,
+     "n_mensch": 16,
+     "n_ki": 4,
+     "gewicht_bal": 0.0121,
+     "p_mittel": 0.6511,
+     "anteil_mensch": 0.8,
+     "p_mittel_bal": 0.6494,
+     "anteil_mensch_bal": 0.5915
+    },
+    {
+     "von": 0.7,
+     "bis": 0.8,
+     "n_mensch": 27,
+     "n_ki": 4,
+     "gewicht_bal": 0.017,
+     "p_mittel": 0.7497,
+     "anteil_mensch": 0.871,
+     "p_mittel_bal": 0.7452,
+     "anteil_mensch_bal": 0.7096
+    },
+    {
+     "von": 0.8,
+     "bis": 0.9,
+     "n_mensch": 60,
+     "n_ki": 1,
+     "gewicht_bal": 0.0281,
+     "p_mittel": 0.8622,
+     "anteil_mensch": 0.9836,
+     "p_mittel_bal": 0.8622,
+     "anteil_mensch_bal": 0.956
+    },
+    {
+     "von": 0.9,
+     "bis": 1.0,
+     "n_mensch": 967,
+     "n_ki": 2,
+     "gewicht_bal": 0.4357,
+     "p_mittel": 0.988,
+     "anteil_mensch": 0.9979,
+     "p_mittel_bal": 0.9879,
+     "anteil_mensch_bal": 0.9943
+    }
+   ]
+  },
+  "hyperparameter": {
+   "k": 12,
+   "lambda": 0.003162,
+   "z_clip": 3.0,
+   "auswahl": {
+    "bestes": {
+     "k": 20,
+     "lambda": 0.001,
+     "logloss": 0.0811,
+     "se": 0.004269
+    },
+    "grenze_k": 0.08537,
+    "k": 12,
+    "bestes_k": {
+     "lambda": 0.001,
+     "logloss": 0.08443,
+     "se": 0.004191
+    },
+    "grenze_lambda": 0.08862,
+    "lambda": 0.003162,
+    "logloss": 0.08633,
+    "lambda_am_rand": false,
+    "bestes_am_rand": false,
+    "lambda_gitter": [
+     0.0003162,
+     0.001,
+     0.003162,
+     0.01,
+     0.03162,
+     0.1,
+     0.3162,
+     1.0,
+     3.162,
+     10.0,
+     31.62
+    ]
+   }
+  },
+  "score_schwelle": 63.8,
+  "ziel_p_mensch": 0.86,
+  "ziel_p_mensch_methode": "P10 der menschlichen Out-of-fold-Wahrscheinlichkeiten, begrenzt auf [0,5; 0,95]",
+  "score_schwelle_methode": "Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI",
+  "ziel_score": 56.9,
+  "ziel_score_methode": "P10 der menschlichen Out-of-fold-Scores",
+  "ziel_erreicht_anteil_oof": {
+   "mensch": 0.809,
+   "ki": 0.007
+  }
  },
  "textsorten": {
   "hochschule": {
    "beschreibung": "Formelle Hochschularbeiten: Hausarbeit, Bachelor-/Masterarbeit, Seminar- und Aufgabenbearbeitungen.",
+   "abschnittslaenge": 800,
    "metriken": {
     "satzlaenge_mittel": {
      "mensch": {
-      "p10": 16.2382,
-      "p25": 18.0556,
-      "p50": 20.5,
-      "p75": 23.5536,
-      "p90": 26.1758,
-      "mittel": 20.9509,
-      "sd": 3.9641,
-      "n": 663
+      "p10": 16.3265,
+      "p25": 18.1111,
+      "p50": 20.5126,
+      "p75": 23.4706,
+      "p90": 26.0981,
+      "mittel": 20.9931,
+      "sd": 4.0175,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 16.9618,
-      "p25": 17.8723,
-      "p50": 18.7391,
-      "p75": 19.8182,
-      "p90": 21.1077,
-      "mittel": 18.9493,
-      "sd": 1.6356,
-      "n": 89
+      "p10": 16.7386,
+      "p25": 17.6667,
+      "p50": 18.6667,
+      "p75": 19.5204,
+      "p90": 20.8947,
+      "mittel": 18.7289,
+      "sd": 1.5359,
+      "n": 404
      },
-     "auroc": 0.654,
+     "auroc": 0.676,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.307,
-     "gewicht": 0.307,
-     "bewertet": true,
-     "hinweis": ""
+     "trennschaerfe": 0.353,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.644,
+     "vorzeichen_paare": 0.658,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.608,
+      0.679
+     ],
+     "vorzeichen_paare_ci": [
+      0.614,
+      0.712
+     ],
+     "se_typ": 2.3052
     },
     "satzlaenge_median": {
      "mensch": {
@@ -95,1045 +317,1556 @@
       "p50": 19.0,
       "p75": 22.0,
       "p90": 25.0,
-      "mittel": 19.4827,
-      "sd": 3.876,
-      "n": 663
+      "mittel": 19.6444,
+      "sd": 3.9795,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 16.0,
       "p25": 17.0,
       "p50": 18.0,
-      "p75": 19,
-      "p90": 20.6,
-      "mittel": 18.2921,
-      "sd": 1.7138,
-      "n": 89
+      "p75": 19.0,
+      "p90": 20.0714,
+      "mittel": 18.1391,
+      "sd": 1.6872,
+      "n": 404
      },
-     "auroc": 0.581,
+     "auroc": 0.606,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.163,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.211,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.578,
+     "vorzeichen_paare": 0.6,
+     "n_paare": 396,
+     "se_typ": 2.4955
     },
     "satzlaenge_sd": {
      "mensch": {
-      "p10": 6.5196,
-      "p25": 7.5137,
-      "p50": 8.9296,
-      "p75": 10.6729,
-      "p90": 12.6718,
-      "mittel": 9.3525,
-      "sd": 2.6432,
-      "n": 663
+      "p10": 6.4388,
+      "p25": 7.4526,
+      "p50": 8.8179,
+      "p75": 10.4915,
+      "p90": 12.259,
+      "mittel": 9.1749,
+      "sd": 2.4547,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 5.705,
-      "p25": 6.2789,
-      "p50": 7.0475,
-      "p75": 7.7527,
-      "p90": 8.7526,
-      "mittel": 7.1067,
-      "sd": 1.1725,
-      "n": 89
+      "p10": 5.7321,
+      "p25": 6.1991,
+      "p50": 6.8002,
+      "p75": 7.6728,
+      "p90": 8.5312,
+      "mittel": 6.9981,
+      "sd": 1.0916,
+      "n": 404
      },
-     "auroc": 0.792,
+     "auroc": 0.797,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.585,
-     "gewicht": 0.585,
+     "trennschaerfe": 0.594,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.207,
+     "hinweis": "",
+     "auroc_paare": 0.785,
+     "vorzeichen_paare": 0.803,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.758,
+      0.812
+     ],
+     "vorzeichen_paare_ci": [
+      0.765,
+      0.841
+     ],
+     "se_typ": 1.7247,
+     "gewicht_roh": 0.594,
+     "cluster": "satzlaenge_dispersion"
     },
     "satzlaenge_cv": {
      "mensch": {
-      "p10": 0.3524,
-      "p25": 0.3931,
-      "p50": 0.4357,
-      "p75": 0.4904,
-      "p90": 0.5385,
-      "mittel": 0.4454,
-      "sd": 0.081,
-      "n": 663
+      "p10": 0.3464,
+      "p25": 0.3846,
+      "p50": 0.4279,
+      "p75": 0.4797,
+      "p90": 0.5324,
+      "mittel": 0.4368,
+      "sd": 0.075,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.3177,
-      "p25": 0.343,
-      "p50": 0.366,
-      "p75": 0.3986,
-      "p90": 0.4323,
-      "mittel": 0.3743,
-      "sd": 0.047,
-      "n": 89
+      "p10": 0.3168,
+      "p25": 0.3427,
+      "p50": 0.3731,
+      "p75": 0.4011,
+      "p90": 0.4335,
+      "mittel": 0.3731,
+      "sd": 0.0443,
+      "n": 404
      },
-     "auroc": 0.788,
+     "auroc": 0.766,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.577,
-     "gewicht": 0.577,
+     "trennschaerfe": 0.533,
+     "gate": true,
      "bewertet": true,
-     "hinweis": "Wie stark die Satzlängen schwanken. Menschen mischen kurze und lange Sätze stärker."
+     "gewicht": 0.186,
+     "hinweis": "Wie stark die Satzlängen schwanken. Menschen mischen kurze und lange Sätze stärker.",
+     "auroc_paare": 0.774,
+     "vorzeichen_paare": 0.798,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.744,
+      0.804
+     ],
+     "vorzeichen_paare_ci": [
+      0.754,
+      0.833
+     ],
+     "se_typ": 0.0659,
+     "gewicht_roh": 0.533,
+     "cluster": "satzlaenge_dispersion"
     },
     "satzlaenge_p10": {
      "mensch": {
       "p10": 8.0,
       "p25": 9.0,
-      "p50": 10.4,
-      "p75": 12.0,
-      "p90": 13.9,
-      "mittel": 10.6546,
-      "sd": 2.4917,
-      "n": 663
+      "p50": 10.8,
+      "p75": 12.1,
+      "p90": 14.2,
+      "mittel": 10.825,
+      "sd": 2.6507,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 8.62,
-      "p25": 9.1,
+      "p10": 9.0,
+      "p25": 9.2,
       "p50": 10.1,
-      "p75": 11.4,
+      "p75": 11.0,
       "p90": 12.0,
-      "mittel": 10.2921,
-      "sd": 1.4087,
-      "n": 89
+      "mittel": 10.3305,
+      "sd": 1.3387,
+      "n": 404
      },
-     "auroc": 0.533,
+     "auroc": 0.544,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.067,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.087,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.519,
+     "vorzeichen_paare": 0.515,
+     "n_paare": 396,
+     "se_typ": 2.1363
     },
     "satzlaenge_p90": {
      "mensch": {
       "p10": 25.0,
-      "p25": 27.65,
+      "p25": 28.0,
       "p50": 32.0,
-      "p75": 37.0,
-      "p90": 41.58,
-      "mittel": 32.7935,
-      "sd": 6.7679,
-      "n": 663
+      "p75": 36.6,
+      "p90": 41.2629,
+      "mittel": 32.7337,
+      "sd": 6.8171,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 25.0,
-      "p25": 26.0,
-      "p50": 27.5,
-      "p75": 29.8,
-      "p90": 31.92,
-      "mittel": 28.091,
-      "sd": 3.0147,
-      "n": 89
+      "p10": 24.2,
+      "p25": 25.8,
+      "p50": 27.2,
+      "p75": 29.3429,
+      "p90": 32.1,
+      "mittel": 27.7517,
+      "sd": 3.0033,
+      "n": 404
      },
-     "auroc": 0.722,
+     "auroc": 0.743,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.445,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.485,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.723,
+     "vorzeichen_paare": 0.744,
+     "n_paare": 396,
+     "se_typ": 4.3133
     },
     "satzlaenge_max": {
      "mensch": {
       "p10": 34.0,
-      "p25": 39.5,
-      "p50": 46.0,
-      "p75": 54.0,
-      "p90": 65.0,
-      "mittel": 48.5943,
-      "sd": 13.8328,
-      "n": 663
+      "p25": 38.0,
+      "p50": 44.0,
+      "p75": 52.0,
+      "p90": 61.0,
+      "mittel": 46.3786,
+      "sd": 11.8387,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 30.8,
+      "p10": 30.0,
       "p25": 33.0,
-      "p50": 37.0,
-      "p75": 42.0,
-      "p90": 46.2,
-      "mittel": 37.7079,
-      "sd": 6.7661,
-      "n": 89
+      "p50": 36.0,
+      "p75": 40.0,
+      "p90": 46.0,
+      "mittel": 36.867,
+      "sd": 5.8935,
+      "n": 404
      },
-     "auroc": 0.779,
+     "auroc": 0.768,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.559,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.536,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.754,
+     "vorzeichen_paare": 0.763,
+     "n_paare": 396,
+     "se_typ": 9.3262
     },
     "satzlaenge_schiefe": {
      "mensch": {
-      "p10": 0.2561,
-      "p25": 0.4641,
-      "p50": 0.7426,
-      "p75": 1.1148,
-      "p90": 1.5279,
-      "mittel": 0.8521,
-      "sd": 0.6018,
-      "n": 663
+      "p10": 0.1941,
+      "p25": 0.4184,
+      "p50": 0.6836,
+      "p75": 1.0407,
+      "p90": 1.3852,
+      "mittel": 0.7645,
+      "sd": 0.5352,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0611,
-      "p25": 0.2159,
-      "p50": 0.4484,
-      "p75": 0.7149,
-      "p90": 1.044,
-      "mittel": 0.5045,
-      "sd": 0.4165,
-      "n": 89
+      "p10": 0.0531,
+      "p25": 0.2424,
+      "p50": 0.4632,
+      "p75": 0.7355,
+      "p90": 0.9908,
+      "mittel": 0.5072,
+      "sd": 0.4053,
+      "n": 404
      },
-     "auroc": 0.697,
+     "auroc": 0.651,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.395,
-     "gewicht": 0.395,
+     "trennschaerfe": 0.302,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.302,
+     "hinweis": "",
+     "auroc_paare": 0.661,
+     "vorzeichen_paare": 0.664,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.63,
+      0.693
+     ],
+     "vorzeichen_paare_ci": [
+      0.622,
+      0.71
+     ],
+     "se_typ": 0.5134,
+     "gewicht_roh": 0.302,
+     "cluster": "satzlaenge_schiefe"
     },
     "satzlaenge_dispersion": {
      "mensch": {
-      "p10": 2.4298,
-      "p25": 3.0003,
-      "p50": 3.8235,
-      "p75": 4.9956,
-      "p90": 6.7132,
-      "mittel": 4.3185,
-      "sd": 2.0571,
-      "n": 663
+      "p10": 2.371,
+      "p25": 2.9342,
+      "p50": 3.7291,
+      "p75": 4.9451,
+      "p90": 6.2302,
+      "mittel": 4.131,
+      "sd": 1.7653,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.776,
-      "p25": 2.1614,
-      "p50": 2.5823,
-      "p75": 2.983,
-      "p90": 3.6049,
-      "mittel": 2.7072,
-      "sd": 0.7817,
-      "n": 89
+      "p10": 1.8338,
+      "p25": 2.1243,
+      "p50": 2.5233,
+      "p75": 3.0999,
+      "p90": 3.5714,
+      "mittel": 2.6522,
+      "sd": 0.7132,
+      "n": 404
      },
-     "auroc": 0.807,
+     "auroc": 0.801,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.613,
-     "gewicht": 0.613,
+     "trennschaerfe": 0.602,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.21,
+     "hinweis": "",
+     "auroc_paare": 0.798,
+     "vorzeichen_paare": 0.823,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.771,
+      0.824
+     ],
+     "vorzeichen_paare_ci": [
+      0.793,
+      0.859
+     ],
+     "se_typ": 1.4191,
+     "gewicht_roh": 0.602,
+     "cluster": "satzlaenge_dispersion"
     },
     "anteil_kurze_saetze": {
      "mensch": {
       "p10": 0.0286,
-      "p25": 0.0667,
-      "p50": 0.1111,
-      "p75": 0.1759,
-      "p90": 0.2364,
-      "mittel": 0.1263,
-      "sd": 0.0835,
-      "n": 663
+      "p25": 0.0606,
+      "p50": 0.1053,
+      "p75": 0.1707,
+      "p90": 0.24,
+      "mittel": 0.1229,
+      "sd": 0.0859,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0489,
-      "p25": 0.0732,
+      "p10": 0.0476,
+      "p25": 0.0814,
       "p50": 0.119,
-      "p75": 0.1556,
-      "p90": 0.2,
-      "mittel": 0.1169,
-      "sd": 0.0543,
-      "n": 89
+      "p75": 0.1591,
+      "p90": 0.1957,
+      "mittel": 0.1217,
+      "sd": 0.0565,
+      "n": 404
      },
-     "auroc": 0.506,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.013,
-     "gewicht": 0.0,
+     "auroc": 0.473,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.054,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.498,
+     "vorzeichen_paare": 0.527,
+     "n_paare": 396,
+     "se_typ": 0.0632
     },
     "anteil_sehr_kurze_saetze": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 0.0208,
-      "p75": 0.0367,
-      "p90": 0.0612,
-      "mittel": 0.0255,
-      "sd": 0.0327,
-      "n": 663
+      "p50": 0.0213,
+      "p75": 0.0417,
+      "p90": 0.0667,
+      "mittel": 0.0257,
+      "sd": 0.0336,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 0.0208,
-      "p90": 0.0402,
-      "mittel": 0.0124,
-      "sd": 0.0172,
-      "n": 89
+      "p75": 0.0238,
+      "p90": 0.0426,
+      "mittel": 0.0144,
+      "sd": 0.0174,
+      "n": 404
      },
-     "auroc": 0.628,
+     "auroc": 0.589,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.256,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.177,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.585,
+     "vorzeichen_paare": 0.605,
+     "n_paare": 396,
+     "se_typ": 0.0307
     },
     "anteil_lange_saetze": {
      "mensch": {
-      "p10": 0.0352,
-      "p25": 0.0762,
-      "p50": 0.1556,
-      "p75": 0.25,
-      "p90": 0.3421,
-      "mittel": 0.1752,
-      "sd": 0.1215,
-      "n": 663
+      "p10": 0.0399,
+      "p25": 0.0789,
+      "p50": 0.1516,
+      "p75": 0.2424,
+      "p90": 0.3548,
+      "mittel": 0.1753,
+      "sd": 0.1233,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0189,
-      "p25": 0.04,
-      "p50": 0.0638,
-      "p75": 0.1087,
-      "p90": 0.1491,
-      "mittel": 0.0787,
-      "sd": 0.0554,
-      "n": 89
+      "p10": 0.0213,
+      "p25": 0.0427,
+      "p50": 0.0682,
+      "p75": 0.1082,
+      "p90": 0.1538,
+      "mittel": 0.0775,
+      "sd": 0.0531,
+      "n": 404
      },
-     "auroc": 0.747,
+     "auroc": 0.748,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.495,
-     "gewicht": 0.495,
+     "trennschaerfe": 0.496,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.254,
+     "hinweis": "",
+     "auroc_paare": 0.732,
+     "vorzeichen_paare": 0.736,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.704,
+      0.765
+     ],
+     "vorzeichen_paare_ci": [
+      0.69,
+      0.779
+     ],
+     "se_typ": 0.075,
+     "gewicht_roh": 0.496,
+     "cluster": "anteil_sehr_lange_saetze"
     },
     "anteil_sehr_lange_saetze": {
      "mensch": {
       "p10": 0.0,
-      "p25": 0.0067,
-      "p50": 0.0364,
-      "p75": 0.0794,
-      "p90": 0.1314,
-      "mittel": 0.0543,
-      "sd": 0.0613,
-      "n": 663
+      "p25": 0.0,
+      "p50": 0.0278,
+      "p75": 0.0812,
+      "p90": 0.1379,
+      "mittel": 0.0542,
+      "sd": 0.0653,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 0.0213,
-      "p90": 0.0391,
-      "mittel": 0.0107,
-      "sd": 0.0197,
-      "n": 89
+      "p75": 0.0224,
+      "p90": 0.0263,
+      "mittel": 0.0094,
+      "sd": 0.0181,
+      "n": 404
      },
-     "auroc": 0.766,
+     "auroc": 0.76,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.533,
-     "gewicht": 0.533,
+     "trennschaerfe": 0.52,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.266,
+     "hinweis": "",
+     "auroc_paare": 0.742,
+     "vorzeichen_paare": 0.768,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.716,
+      0.77
+     ],
+     "vorzeichen_paare_ci": [
+      0.737,
+      0.8
+     ],
+     "se_typ": 0.0459,
+     "gewicht_roh": 0.52,
+     "cluster": "anteil_sehr_lange_saetze"
     },
     "anteil_mittlere_saetze": {
      "mensch": {
-      "p10": 0.3849,
-      "p25": 0.4468,
-      "p50": 0.5122,
-      "p75": 0.5741,
-      "p90": 0.6302,
+      "p10": 0.3793,
+      "p25": 0.444,
+      "p50": 0.5152,
+      "p75": 0.5778,
+      "p90": 0.6328,
       "mittel": 0.5088,
-      "sd": 0.0971,
-      "n": 663
+      "sd": 0.1003,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.5189,
-      "p25": 0.5532,
+      "p10": 0.511,
+      "p25": 0.5507,
       "p50": 0.6,
-      "p75": 0.6531,
-      "p90": 0.6985,
-      "mittel": 0.6018,
-      "sd": 0.0693,
-      "n": 89
+      "p75": 0.6522,
+      "p90": 0.7073,
+      "mittel": 0.603,
+      "sd": 0.0786,
+      "n": 404
      },
-     "auroc": 0.22,
+     "auroc": 0.233,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.559,
-     "gewicht": 0.559,
+     "trennschaerfe": 0.533,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.533,
+     "hinweis": "",
+     "auroc_paare": 0.234,
+     "vorzeichen_paare": 0.213,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.201,
+      0.264
+     ],
+     "vorzeichen_paare_ci": [
+      0.174,
+      0.255
+     ],
+     "se_typ": 0.0877,
+     "gewicht_roh": 0.533,
+     "cluster": "anteil_mittlere_saetze"
     },
     "rhythmus_sprung_rel": {
      "mensch": {
-      "p10": 0.3817,
-      "p25": 0.4255,
-      "p50": 0.4779,
-      "p75": 0.5263,
-      "p90": 0.5822,
-      "mittel": 0.4818,
-      "sd": 0.0817,
-      "n": 663
+      "p10": 0.3773,
+      "p25": 0.4258,
+      "p50": 0.4738,
+      "p75": 0.5274,
+      "p90": 0.583,
+      "mittel": 0.4793,
+      "sd": 0.0833,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.3646,
-      "p25": 0.3837,
-      "p50": 0.4284,
-      "p75": 0.4754,
-      "p90": 0.5255,
-      "mittel": 0.4361,
-      "sd": 0.0664,
-      "n": 89
+      "p10": 0.3608,
+      "p25": 0.3977,
+      "p50": 0.442,
+      "p75": 0.4911,
+      "p90": 0.5349,
+      "mittel": 0.4465,
+      "sd": 0.067,
+      "n": 404
      },
-     "auroc": 0.668,
+     "auroc": 0.616,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.337,
-     "gewicht": 0.337,
-     "bewertet": true,
-     "hinweis": "Wie stark sich aufeinanderfolgende Sätze in der Länge unterscheiden."
-    },
-    "rhythmus_autokorrelation": {
-     "mensch": {
-      "p10": -0.1835,
-      "p25": -0.1015,
-      "p50": 0.0067,
-      "p75": 0.1106,
-      "p90": 0.1968,
-      "mittel": 0.01,
-      "sd": 0.1506,
-      "n": 663
-     },
-     "ki": {
-      "p10": -0.2357,
-      "p25": -0.1749,
-      "p50": -0.0712,
-      "p75": 0.0222,
-      "p90": 0.115,
-      "mittel": -0.0656,
-      "sd": 0.1409,
-      "n": 89
-     },
-     "auroc": 0.649,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.298,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.232,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "Mittlerer Längenunterschied zwischen Nachbarsätzen relativ zur Ø-Satzlänge (nicht bewertet: Duplikat der Satzlängen-Variation).",
+     "auroc_paare": 0.623,
+     "vorzeichen_paare": 0.634,
+     "n_paare": 396,
+     "se_typ": 0.0777
+    },
+    "rhythmus_r1_log": {
+     "mensch": {
+      "p10": -0.1834,
+      "p25": -0.0888,
+      "p50": 0.0264,
+      "p75": 0.1372,
+      "p90": 0.2366,
+      "mittel": 0.0243,
+      "sd": 0.1643,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": -0.2724,
+      "p25": -0.2037,
+      "p50": -0.1017,
+      "p75": 0.0026,
+      "p90": 0.0847,
+      "mittel": -0.0976,
+      "sd": 0.1428,
+      "n": 404
+     },
+     "auroc": 0.713,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.425,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.425,
+     "hinweis": "Ob lange und kurze Sätze eher in Phasen kommen (Mensch) oder sich streng abwechseln (KI).",
+     "auroc_paare": 0.695,
+     "vorzeichen_paare": 0.694,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.657,
+      0.729
+     ],
+     "vorzeichen_paare_ci": [
+      0.65,
+      0.736
+     ],
+     "se_typ": 0.1662,
+     "gewicht_roh": 0.425,
+     "cluster": "rhythmus_r1_log"
     },
     "anteil_gleichfoermige_laeufe": {
      "mensch": {
-      "p10": 0.1667,
-      "p25": 0.2442,
+      "p10": 0.1583,
+      "p25": 0.2424,
       "p50": 0.3333,
-      "p75": 0.4286,
-      "p90": 0.5113,
-      "mittel": 0.3364,
-      "sd": 0.133,
-      "n": 663
+      "p75": 0.4348,
+      "p90": 0.5227,
+      "mittel": 0.3368,
+      "sd": 0.1404,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.2655,
-      "p25": 0.3091,
-      "p50": 0.3654,
-      "p75": 0.4727,
-      "p90": 0.5537,
-      "mittel": 0.3882,
-      "sd": 0.1186,
-      "n": 89
+      "p10": 0.1905,
+      "p25": 0.2667,
+      "p50": 0.3617,
+      "p75": 0.4773,
+      "p90": 0.5548,
+      "mittel": 0.3704,
+      "sd": 0.14,
+      "n": 404
      },
-     "auroc": 0.39,
+     "auroc": 0.434,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.221,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.132,
+     "gate": false,
      "bewertet": false,
-     "hinweis": "Anteil der Sätze in Dreierfolgen fast gleich langer Sätze."
+     "gewicht": 0.0,
+     "hinweis": "Anteil der Sätze in Dreierfolgen fast gleich langer Sätze.",
+     "auroc_paare": 0.427,
+     "vorzeichen_paare": 0.433,
+     "n_paare": 396,
+     "se_typ": 0.1341
     },
     "wortlaenge_mittel": {
      "mensch": {
-      "p10": 6.0537,
-      "p25": 6.3157,
-      "p50": 6.6188,
-      "p75": 6.9165,
-      "p90": 7.1566,
-      "mittel": 6.6096,
-      "sd": 0.4345,
-      "n": 663
+      "p10": 6.1168,
+      "p25": 6.3738,
+      "p50": 6.697,
+      "p75": 7.0,
+      "p90": 7.2449,
+      "mittel": 6.686,
+      "sd": 0.4567,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 6.3235,
-      "p25": 6.5081,
-      "p50": 6.738,
-      "p75": 6.8932,
-      "p90": 7.0827,
-      "mittel": 6.7107,
-      "sd": 0.2881,
-      "n": 89
+      "p10": 6.2134,
+      "p25": 6.4282,
+      "p50": 6.6257,
+      "p75": 6.8187,
+      "p90": 6.9947,
+      "mittel": 6.6175,
+      "sd": 0.3035,
+      "n": 404
      },
-     "auroc": 0.423,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.154,
-     "gewicht": 0.0,
+     "auroc": 0.549,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.099,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.504,
+     "vorzeichen_paare": 0.487,
+     "n_paare": 396,
+     "se_typ": 0.265
     },
     "wortlaenge_sd": {
      "mensch": {
-      "p10": 3.6495,
-      "p25": 3.9121,
-      "p50": 4.2273,
-      "p75": 4.5394,
-      "p90": 4.8344,
-      "mittel": 4.2376,
-      "sd": 0.4692,
-      "n": 663
+      "p10": 3.6462,
+      "p25": 3.9264,
+      "p50": 4.2559,
+      "p75": 4.5808,
+      "p90": 4.8854,
+      "mittel": 4.259,
+      "sd": 0.4897,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 3.7458,
-      "p25": 3.946,
-      "p50": 4.1193,
-      "p75": 4.371,
-      "p90": 4.5944,
-      "mittel": 4.1591,
-      "sd": 0.3435,
-      "n": 89
+      "p10": 3.5802,
+      "p25": 3.7862,
+      "p50": 4.0269,
+      "p75": 4.2471,
+      "p90": 4.4389,
+      "mittel": 4.0179,
+      "sd": 0.3476,
+      "n": 404
      },
-     "auroc": 0.55,
+     "auroc": 0.651,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.1,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.301,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.618,
+     "vorzeichen_paare": 0.768,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.598,
+      0.637
+     ],
+     "vorzeichen_paare_ci": [
+      0.718,
+      0.809
+     ],
+     "se_typ": 0.2743
     },
     "wortlaenge_cv": {
      "mensch": {
-      "p10": 0.5941,
-      "p25": 0.6139,
-      "p50": 0.6373,
-      "p75": 0.6605,
-      "p90": 0.6873,
-      "mittel": 0.6397,
-      "sd": 0.0376,
-      "n": 663
+      "p10": 0.5895,
+      "p25": 0.6112,
+      "p50": 0.6336,
+      "p75": 0.6579,
+      "p90": 0.6843,
+      "mittel": 0.6354,
+      "sd": 0.0375,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.581,
-      "p25": 0.597,
-      "p50": 0.6148,
-      "p75": 0.6416,
-      "p90": 0.6541,
-      "mittel": 0.6191,
-      "sd": 0.0326,
-      "n": 89
+      "p10": 0.5664,
+      "p25": 0.5843,
+      "p50": 0.6061,
+      "p75": 0.6255,
+      "p90": 0.6458,
+      "mittel": 0.6063,
+      "sd": 0.0308,
+      "n": 404
      },
-     "auroc": 0.664,
+     "auroc": 0.725,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.329,
-     "gewicht": 0.329,
+     "trennschaerfe": 0.45,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.45,
+     "hinweis": "",
+     "auroc_paare": 0.711,
+     "vorzeichen_paare": 0.878,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.689,
+      0.736
+     ],
+     "vorzeichen_paare_ci": [
+      0.846,
+      0.909
+     ],
+     "se_typ": 0.0238,
+     "gewicht_roh": 0.45,
+     "cluster": "wortlaenge_cv"
     },
     "anteil_lange_woerter": {
      "mensch": {
-      "p10": 0.3468,
-      "p25": 0.3743,
-      "p50": 0.402,
-      "p75": 0.4258,
-      "p90": 0.4466,
-      "mittel": 0.3991,
-      "sd": 0.0399,
-      "n": 663
+      "p10": 0.3526,
+      "p25": 0.381,
+      "p50": 0.4087,
+      "p75": 0.4337,
+      "p90": 0.4534,
+      "mittel": 0.4051,
+      "sd": 0.0411,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.3825,
-      "p25": 0.3984,
-      "p50": 0.4168,
-      "p75": 0.435,
-      "p90": 0.4497,
-      "mittel": 0.4163,
-      "sd": 0.0273,
-      "n": 89
+      "p10": 0.377,
+      "p25": 0.3933,
+      "p50": 0.4114,
+      "p75": 0.4311,
+      "p90": 0.4457,
+      "mittel": 0.411,
+      "sd": 0.0288,
+      "n": 404
      },
-     "auroc": 0.367,
+     "auroc": 0.466,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.265,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.068,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.432,
+     "vorzeichen_paare": 0.355,
+     "n_paare": 396,
+     "se_typ": 0.0257
     },
     "anteil_sehr_lange_woerter": {
      "mensch": {
-      "p10": 0.0636,
-      "p25": 0.0771,
-      "p50": 0.0981,
-      "p75": 0.1184,
-      "p90": 0.1354,
-      "mittel": 0.0988,
-      "sd": 0.0294,
-      "n": 663
+      "p10": 0.0628,
+      "p25": 0.0788,
+      "p50": 0.1012,
+      "p75": 0.1225,
+      "p90": 0.1407,
+      "mittel": 0.1016,
+      "sd": 0.0314,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0722,
-      "p25": 0.0807,
-      "p50": 0.0976,
-      "p75": 0.1107,
-      "p90": 0.1291,
-      "mittel": 0.0982,
-      "sd": 0.0224,
-      "n": 89
+      "p10": 0.0608,
+      "p25": 0.0759,
+      "p50": 0.0895,
+      "p75": 0.1049,
+      "p90": 0.1188,
+      "mittel": 0.0899,
+      "sd": 0.0227,
+      "n": 404
      },
-     "auroc": 0.501,
+     "auroc": 0.611,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.001,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.222,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.584,
+     "vorzeichen_paare": 0.677,
+     "n_paare": 396,
+     "se_typ": 0.0183
     },
     "anteil_kurze_woerter": {
      "mensch": {
-      "p10": 0.2945,
-      "p25": 0.308,
-      "p50": 0.3225,
-      "p75": 0.3389,
-      "p90": 0.357,
-      "mittel": 0.3243,
-      "sd": 0.0244,
-      "n": 663
+      "p10": 0.2884,
+      "p25": 0.3018,
+      "p50": 0.3157,
+      "p75": 0.3321,
+      "p90": 0.3456,
+      "mittel": 0.3168,
+      "sd": 0.0231,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.2779,
-      "p25": 0.2856,
-      "p50": 0.3021,
-      "p75": 0.316,
-      "p90": 0.332,
-      "mittel": 0.3029,
-      "sd": 0.0227,
-      "n": 89
+      "p10": 0.2727,
+      "p25": 0.2862,
+      "p50": 0.2999,
+      "p75": 0.3143,
+      "p90": 0.3308,
+      "mittel": 0.3011,
+      "sd": 0.0217,
+      "n": 404
      },
-     "auroc": 0.743,
+     "auroc": 0.689,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.485,
-     "gewicht": 0.485,
+     "trennschaerfe": 0.378,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.378,
+     "hinweis": "",
+     "auroc_paare": 0.699,
+     "vorzeichen_paare": 0.788,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.673,
+      0.725
+     ],
+     "vorzeichen_paare_ci": [
+      0.746,
+      0.828
+     ],
+     "se_typ": 0.0185,
+     "gewicht_roh": 0.378,
+     "cluster": "anteil_kurze_woerter"
     },
     "silben_mittel": {
      "mensch": {
-      "p10": 2.0063,
-      "p25": 2.0995,
-      "p50": 2.1974,
-      "p75": 2.2988,
-      "p90": 2.3895,
-      "mittel": 2.2001,
-      "sd": 0.1498,
-      "n": 663
+      "p10": 2.0671,
+      "p25": 2.1596,
+      "p50": 2.2745,
+      "p75": 2.3782,
+      "p90": 2.4837,
+      "mittel": 2.2694,
+      "sd": 0.1664,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 2.0794,
-      "p25": 2.1631,
-      "p50": 2.2362,
-      "p75": 2.2869,
-      "p90": 2.3383,
-      "mittel": 2.2235,
-      "sd": 0.1036,
-      "n": 89
+      "p10": 2.0885,
+      "p25": 2.1589,
+      "p50": 2.2408,
+      "p75": 2.3122,
+      "p90": 2.3771,
+      "mittel": 2.2336,
+      "sd": 0.1158,
+      "n": 404
      },
-     "auroc": 0.446,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.109,
-     "gewicht": 0.0,
+     "auroc": 0.568,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.136,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.522,
+     "vorzeichen_paare": 0.537,
+     "n_paare": 396,
+     "se_typ": 0.0987
     },
     "silben_sd": {
      "mensch": {
-      "p10": 1.2057,
-      "p25": 1.3001,
-      "p50": 1.3871,
-      "p75": 1.4864,
-      "p90": 1.5908,
-      "mittel": 1.395,
-      "sd": 0.1509,
-      "n": 663
+      "p10": 1.2666,
+      "p25": 1.3694,
+      "p50": 1.4781,
+      "p75": 1.5941,
+      "p90": 1.7149,
+      "mittel": 1.4834,
+      "sd": 0.1755,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.2305,
-      "p25": 1.2937,
-      "p50": 1.3751,
-      "p75": 1.4318,
-      "p90": 1.4998,
-      "mittel": 1.3722,
-      "sd": 0.1145,
-      "n": 89
+      "p10": 1.248,
+      "p25": 1.3142,
+      "p50": 1.3956,
+      "p75": 1.4806,
+      "p90": 1.5653,
+      "mittel": 1.4004,
+      "sd": 0.1299,
+      "n": 404
      },
-     "auroc": 0.547,
+     "auroc": 0.646,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.094,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.292,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.614,
+     "vorzeichen_paare": 0.77,
+     "n_paare": 396,
+     "se_typ": 0.1034
     },
     "anteil_einsilbig": {
      "mensch": {
-      "p10": 0.3887,
-      "p25": 0.4045,
-      "p50": 0.4243,
-      "p75": 0.4443,
-      "p90": 0.4624,
-      "mittel": 0.4256,
-      "sd": 0.0313,
-      "n": 663
+      "p10": 0.3786,
+      "p25": 0.3947,
+      "p50": 0.4125,
+      "p75": 0.4347,
+      "p90": 0.4525,
+      "mittel": 0.4154,
+      "sd": 0.0314,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.3784,
-      "p25": 0.3855,
-      "p50": 0.4028,
-      "p75": 0.4179,
-      "p90": 0.4326,
-      "mittel": 0.403,
-      "sd": 0.0233,
-      "n": 89
+      "p10": 0.3719,
+      "p25": 0.3858,
+      "p50": 0.401,
+      "p75": 0.4158,
+      "p90": 0.4348,
+      "mittel": 0.402,
+      "sd": 0.0248,
+      "n": 404
      },
-     "auroc": 0.722,
+     "auroc": 0.634,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.444,
-     "gewicht": 0.444,
-     "bewertet": true,
-     "hinweis": ""
+     "trennschaerfe": 0.268,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.667,
+     "vorzeichen_paare": 0.745,
+     "n_paare": 396,
+     "se_typ": 0.0233
     },
     "anteil_mehrsilbig_3plus": {
      "mensch": {
-      "p10": 0.2736,
-      "p25": 0.3033,
-      "p50": 0.3316,
-      "p75": 0.3604,
-      "p90": 0.3814,
-      "mittel": 0.33,
-      "sd": 0.0433,
-      "n": 663
+      "p10": 0.2825,
+      "p25": 0.3145,
+      "p50": 0.3447,
+      "p75": 0.3712,
+      "p90": 0.3929,
+      "mittel": 0.3406,
+      "sd": 0.0442,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.2974,
-      "p25": 0.3218,
-      "p50": 0.3437,
-      "p75": 0.3622,
-      "p90": 0.3752,
-      "mittel": 0.3402,
-      "sd": 0.0311,
-      "n": 89
+      "p10": 0.2981,
+      "p25": 0.3193,
+      "p50": 0.3399,
+      "p75": 0.3576,
+      "p90": 0.3758,
+      "mittel": 0.3375,
+      "sd": 0.0321,
+      "n": 404
      },
-     "auroc": 0.43,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.141,
-     "gewicht": 0.0,
+     "auroc": 0.533,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.065,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.49,
+     "vorzeichen_paare": 0.465,
+     "n_paare": 396,
+     "se_typ": 0.0271
     },
     "anteil_mehrsilbig_5plus": {
      "mensch": {
-      "p10": 0.0418,
-      "p25": 0.0557,
-      "p50": 0.0708,
-      "p75": 0.0895,
-      "p90": 0.1054,
-      "mittel": 0.0733,
-      "sd": 0.0253,
-      "n": 663
+      "p10": 0.0497,
+      "p25": 0.0656,
+      "p50": 0.0845,
+      "p75": 0.1041,
+      "p90": 0.1242,
+      "mittel": 0.0855,
+      "sd": 0.0288,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.045,
-      "p25": 0.0551,
-      "p50": 0.0705,
-      "p75": 0.0784,
-      "p90": 0.0904,
-      "mittel": 0.0693,
-      "sd": 0.0183,
-      "n": 89
+      "p10": 0.0471,
+      "p25": 0.0568,
+      "p50": 0.0729,
+      "p75": 0.0859,
+      "p90": 0.0988,
+      "mittel": 0.0723,
+      "sd": 0.0206,
+      "n": 404
      },
-     "auroc": 0.541,
+     "auroc": 0.634,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.082,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.269,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.595,
+     "vorzeichen_paare": 0.716,
+     "n_paare": 396,
+     "se_typ": 0.018
+    },
+    "silben_q21": {
+     "mensch": {
+      "p10": 0.4891,
+      "p25": 0.5357,
+      "p50": 0.5888,
+      "p75": 0.6441,
+      "p90": 0.6955,
+      "mittel": 0.5911,
+      "sd": 0.0807,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.561,
+      "p25": 0.6,
+      "p50": 0.6511,
+      "p75": 0.697,
+      "p90": 0.7494,
+      "mittel": 0.6515,
+      "sd": 0.0738,
+      "n": 404
+     },
+     "auroc": 0.287,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.426,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.426,
+     "hinweis": "Zweisilber im Verhältnis zu Einsilbern; KI-Text hat etwas mehr Zweisilber.",
+     "auroc_paare": 0.274,
+     "vorzeichen_paare": 0.217,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.247,
+      0.3
+     ],
+     "vorzeichen_paare_ci": [
+      0.178,
+      0.258
+     ],
+     "se_typ": 0.0656,
+     "gewicht_roh": 0.426,
+     "cluster": "silben_q21"
     },
     "mattr_100": {
      "mensch": {
-      "p10": 0.7329,
-      "p25": 0.7512,
-      "p50": 0.7723,
-      "p75": 0.7913,
-      "p90": 0.8045,
-      "mittel": 0.7698,
-      "sd": 0.0301,
-      "n": 663
+      "p10": 0.732,
+      "p25": 0.753,
+      "p50": 0.7736,
+      "p75": 0.791,
+      "p90": 0.8068,
+      "mittel": 0.7708,
+      "sd": 0.0297,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.7662,
-      "p25": 0.7905,
-      "p50": 0.7994,
-      "p75": 0.8127,
+      "p10": 0.7734,
+      "p25": 0.7865,
+      "p50": 0.8001,
+      "p75": 0.8137,
       "p90": 0.8237,
-      "mittel": 0.7986,
-      "sd": 0.0213,
-      "n": 89
+      "mittel": 0.7994,
+      "sd": 0.0205,
+      "n": 404
      },
-     "auroc": 0.214,
+     "auroc": 0.209,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.572,
-     "gewicht": 0.572,
+     "trennschaerfe": 0.582,
+     "gate": true,
      "bewertet": true,
-     "hinweis": "Wortschatzvielfalt. KI-Text ist oft 'zu abwechslungsreich' (Synonym-Karussell)."
+     "gewicht": 0.296,
+     "hinweis": "Lexikalische Variation (Informationsfluss). KI-Text wechselt oft zu stark die Wörter (Synonym-Karussell): Kernbegriffe wörtlich wiederaufnehmen statt umschreiben.",
+     "auroc_paare": 0.2,
+     "vorzeichen_paare": 0.105,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.175,
+      0.226
+     ],
+     "vorzeichen_paare_ci": [
+      0.074,
+      0.133
+     ],
+     "se_typ": 0.021,
+     "gewicht_roh": 0.582,
+     "cluster": "mattr_100"
     },
     "mattr_50": {
      "mensch": {
-      "p10": 0.8255,
-      "p25": 0.8397,
-      "p50": 0.8543,
-      "p75": 0.8689,
-      "p90": 0.8801,
-      "mittel": 0.8528,
+      "p10": 0.8238,
+      "p25": 0.8402,
+      "p50": 0.856,
+      "p75": 0.869,
+      "p90": 0.8816,
+      "mittel": 0.8537,
       "sd": 0.0229,
-      "n": 663
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.8501,
-      "p25": 0.8627,
+      "p10": 0.8513,
+      "p25": 0.8635,
       "p50": 0.8748,
-      "p75": 0.8822,
-      "p90": 0.8935,
-      "mittel": 0.8726,
-      "sd": 0.017,
-      "n": 89
+      "p75": 0.8851,
+      "p90": 0.8932,
+      "mittel": 0.8735,
+      "sd": 0.0165,
+      "n": 404
      },
-     "auroc": 0.241,
+     "auroc": 0.238,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.517,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.524,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.229,
+     "vorzeichen_paare": 0.139,
+     "n_paare": 396,
+     "se_typ": 0.0163
+    },
+    "mattr_klumpung_100": {
+     "mensch": {
+      "p10": 0.951,
+      "p25": 0.9631,
+      "p50": 0.9745,
+      "p75": 0.9856,
+      "p90": 0.9953,
+      "mittel": 0.9736,
+      "sd": 0.017,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.9725,
+      "p25": 0.9808,
+      "p50": 0.9882,
+      "p75": 0.9969,
+      "p90": 1.0039,
+      "mittel": 0.9883,
+      "sd": 0.0129,
+      "n": 404
+     },
+     "auroc": 0.247,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.505,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.505,
+     "hinweis": "Ob Begriffe lokal gebündelt wiederkehren (Mensch) oder die Wortwahl gleichmäßig gestreut variiert (KI). Kernbegriffe im Absatz ruhig mehrfach verwenden.",
+     "auroc_paare": 0.21,
+     "vorzeichen_paare": 0.143,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.187,
+      0.24
+     ],
+     "vorzeichen_paare_ci": [
+      0.108,
+      0.179
+     ],
+     "se_typ": 0.0141,
+     "gewicht_roh": 0.505,
+     "cluster": "mattr_klumpung_100"
     },
     "mtld": {
      "mensch": {
-      "p10": 101.3597,
-      "p25": 117.9503,
-      "p50": 142.6676,
-      "p75": 165.1069,
-      "p90": 189.204,
-      "mittel": 143.7634,
-      "sd": 35.9844,
-      "n": 663
+      "p10": 101.357,
+      "p25": 119.8581,
+      "p50": 142.2352,
+      "p75": 166.3389,
+      "p90": 196.25,
+      "mittel": 145.1821,
+      "sd": 35.8148,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 139.9845,
-      "p25": 162.3506,
-      "p50": 183.4486,
-      "p75": 206.577,
-      "p90": 233.5006,
-      "mittel": 185.8394,
-      "sd": 38.0018,
-      "n": 89
+      "p10": 137.2738,
+      "p25": 159.6505,
+      "p50": 180.7001,
+      "p75": 206.1012,
+      "p90": 230.4525,
+      "mittel": 182.6047,
+      "sd": 35.2791,
+      "n": 404
      },
-     "auroc": 0.202,
+     "auroc": 0.22,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.597,
-     "gewicht": 0.597,
+     "trennschaerfe": 0.561,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.286,
+     "hinweis": "",
+     "auroc_paare": 0.211,
+     "vorzeichen_paare": 0.119,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.188,
+      0.237
+     ],
+     "vorzeichen_paare_ci": [
+      0.091,
+      0.146
+     ],
+     "se_typ": 25.1364,
+     "gewicht_roh": 0.561,
+     "cluster": "mattr_100"
     },
     "yule_k": {
      "mensch": {
-      "p10": 60.507,
-      "p25": 67.8988,
-      "p50": 75.9093,
-      "p75": 86.8784,
-      "p90": 97.5577,
-      "mittel": 78.5351,
-      "sd": 15.88,
-      "n": 663
+      "p10": 60.4253,
+      "p25": 67.9689,
+      "p50": 76.2135,
+      "p75": 87.3751,
+      "p90": 99.5102,
+      "mittel": 78.7421,
+      "sd": 16.1293,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 57.0915,
-      "p25": 62.9907,
-      "p50": 71.3735,
-      "p75": 81.021,
-      "p90": 89.6914,
-      "mittel": 72.1629,
-      "sd": 11.8998,
-      "n": 89
+      "p10": 57.7763,
+      "p25": 62.8537,
+      "p50": 71.2399,
+      "p75": 79.3832,
+      "p90": 86.6823,
+      "mittel": 71.7342,
+      "sd": 11.6318,
+      "n": 404
      },
-     "auroc": 0.61,
+     "auroc": 0.628,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.22,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.256,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.608,
+     "vorzeichen_paare": 0.664,
+     "n_paare": 396,
+     "se_typ": 12.2833
     },
     "anteil_funktionswoerter": {
      "mensch": {
-      "p10": 0.4343,
-      "p25": 0.4484,
-      "p50": 0.4674,
-      "p75": 0.4857,
-      "p90": 0.5028,
-      "mittel": 0.4675,
-      "sd": 0.0277,
-      "n": 663
+      "p10": 0.4327,
+      "p25": 0.4482,
+      "p50": 0.4652,
+      "p75": 0.4836,
+      "p90": 0.501,
+      "mittel": 0.466,
+      "sd": 0.0275,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.4249,
-      "p25": 0.4381,
-      "p50": 0.4511,
-      "p75": 0.463,
-      "p90": 0.4712,
-      "mittel": 0.4498,
-      "sd": 0.0181,
-      "n": 89
+      "p10": 0.4293,
+      "p25": 0.4414,
+      "p50": 0.4532,
+      "p75": 0.4627,
+      "p90": 0.4773,
+      "mittel": 0.4527,
+      "sd": 0.0191,
+      "n": 404
      },
-     "auroc": 0.701,
+     "auroc": 0.66,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.402,
-     "gewicht": 0.402,
-     "bewertet": true,
-     "hinweis": ""
+     "trennschaerfe": 0.319,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.676,
+     "vorzeichen_paare": 0.755,
+     "n_paare": 396,
+     "se_typ": 0.0199
     },
     "inhaltswort_mattr_50": {
      "mensch": {
-      "p10": 0.8204,
-      "p25": 0.8469,
-      "p50": 0.8761,
-      "p75": 0.9006,
-      "p90": 0.9204,
-      "mittel": 0.8712,
-      "sd": 0.0424,
-      "n": 663
+      "p10": 0.819,
+      "p25": 0.8478,
+      "p50": 0.8762,
+      "p75": 0.9001,
+      "p90": 0.9206,
+      "mittel": 0.872,
+      "sd": 0.041,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.8817,
-      "p25": 0.896,
-      "p50": 0.9139,
-      "p75": 0.9302,
-      "p90": 0.945,
-      "mittel": 0.9112,
-      "sd": 0.0279,
-      "n": 89
+      "p10": 0.8743,
+      "p25": 0.8979,
+      "p50": 0.915,
+      "p75": 0.9324,
+      "p90": 0.9451,
+      "mittel": 0.9126,
+      "sd": 0.0272,
+      "n": 404
      },
-     "auroc": 0.207,
+     "auroc": 0.196,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.587,
-     "gewicht": 0.587,
+     "trennschaerfe": 0.608,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.206,
+     "hinweis": "",
+     "auroc_paare": 0.181,
+     "vorzeichen_paare": 0.053,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.16,
+      0.201
+     ],
+     "vorzeichen_paare_ci": [
+      0.035,
+      0.076
+     ],
+     "se_typ": 0.0282,
+     "gewicht_roh": 0.608,
+     "cluster": "nachbarsatz_ueberlappung"
     },
     "nachbarsatz_ueberlappung": {
      "mensch": {
-      "p10": 0.0229,
-      "p25": 0.0302,
-      "p50": 0.0399,
-      "p75": 0.0523,
-      "p90": 0.0643,
-      "mittel": 0.0428,
-      "sd": 0.019,
-      "n": 663
+      "p10": 0.0221,
+      "p25": 0.0294,
+      "p50": 0.0398,
+      "p75": 0.0511,
+      "p90": 0.0648,
+      "mittel": 0.0423,
+      "sd": 0.018,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0136,
-      "p25": 0.0177,
-      "p50": 0.025,
-      "p75": 0.0303,
-      "p90": 0.0384,
-      "mittel": 0.0257,
-      "sd": 0.01,
-      "n": 89
+      "p10": 0.0126,
+      "p25": 0.0171,
+      "p50": 0.0236,
+      "p75": 0.0305,
+      "p90": 0.0386,
+      "mittel": 0.0249,
+      "sd": 0.0105,
+      "n": 404
      },
-     "auroc": 0.803,
+     "auroc": 0.811,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.607,
-     "gewicht": 0.607,
+     "trennschaerfe": 0.622,
+     "gate": true,
      "bewertet": true,
-     "hinweis": "Menschen greifen Begriffe des Vorsatzes wieder auf, statt ständig Synonyme zu suchen."
+     "gewicht": 0.211,
+     "hinweis": "Menschen greifen Begriffe des Vorsatzes wieder auf, statt ständig Synonyme zu suchen.",
+     "auroc_paare": 0.816,
+     "vorzeichen_paare": 0.92,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.795,
+      0.841
+     ],
+     "vorzeichen_paare_ci": [
+      0.9,
+      0.944
+     ],
+     "se_typ": 0.0131,
+     "gewicht_roh": 0.622,
+     "cluster": "nachbarsatz_ueberlappung"
     },
     "anteil_saetze_mit_wortaufnahme": {
      "mensch": {
-      "p10": 0.3166,
-      "p25": 0.4051,
-      "p50": 0.5122,
-      "p75": 0.6145,
-      "p90": 0.696,
-      "mittel": 0.5098,
-      "sd": 0.1504,
-      "n": 663
+      "p10": 0.309,
+      "p25": 0.4062,
+      "p50": 0.5,
+      "p75": 0.6256,
+      "p90": 0.7143,
+      "mittel": 0.5118,
+      "sd": 0.1532,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.2437,
-      "p25": 0.2766,
-      "p50": 0.3617,
-      "p75": 0.4259,
-      "p90": 0.5,
-      "mittel": 0.3599,
-      "sd": 0.1063,
-      "n": 89
+      "p10": 0.2077,
+      "p25": 0.2619,
+      "p50": 0.3488,
+      "p75": 0.4222,
+      "p90": 0.4878,
+      "mittel": 0.348,
+      "sd": 0.1153,
+      "n": 404
      },
-     "auroc": 0.79,
+     "auroc": 0.801,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.58,
-     "gewicht": 0.58,
+     "trennschaerfe": 0.603,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.205,
+     "hinweis": "",
+     "auroc_paare": 0.796,
+     "vorzeichen_paare": 0.886,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.774,
+      0.821
+     ],
+     "vorzeichen_paare_ci": [
+      0.86,
+      0.919
+     ],
+     "se_typ": 0.109,
+     "gewicht_roh": 0.603,
+     "cluster": "nachbarsatz_ueberlappung"
     },
     "nominalstil_pro_100": {
      "mensch": {
-      "p10": 4.3236,
-      "p25": 5.4737,
-      "p50": 6.7612,
-      "p75": 8.2402,
-      "p90": 9.2664,
-      "mittel": 6.8768,
-      "sd": 1.9661,
-      "n": 663
+      "p10": 4.2741,
+      "p25": 5.434,
+      "p50": 6.7188,
+      "p75": 8.2487,
+      "p90": 9.4231,
+      "mittel": 6.864,
+      "sd": 2.0637,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 5.4618,
-      "p25": 5.9429,
-      "p50": 6.6452,
-      "p75": 7.8704,
-      "p90": 9.0888,
-      "mittel": 6.9687,
-      "sd": 1.5173,
-      "n": 89
+      "p10": 4.5208,
+      "p25": 5.4046,
+      "p50": 6.4049,
+      "p75": 7.7097,
+      "p90": 8.9642,
+      "mittel": 6.5636,
+      "sd": 1.7181,
+      "n": 404
      },
-     "auroc": 0.48,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.04,
-     "gewicht": 0.0,
+     "auroc": 0.548,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.096,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.511,
+     "vorzeichen_paare": 0.527,
+     "n_paare": 396,
+     "se_typ": 1.4078
+    },
+    "nominalketten_pro_100": {
+     "mensch": {
+      "p10": 1.9056,
+      "p25": 2.4448,
+      "p50": 3.1526,
+      "p75": 3.8793,
+      "p90": 4.5455,
+      "mittel": 3.1923,
+      "sd": 1.0295,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 1.6581,
+      "p25": 2.14,
+      "p50": 2.5705,
+      "p75": 3.0602,
+      "p90": 3.5427,
+      "mittel": 2.6039,
+      "sd": 0.7013,
+      "n": 404
+     },
+     "auroc": 0.682,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.364,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "Genitiv- und von-Ketten; in menschlichen Fachtexten eher häufiger als bei KI.",
+     "auroc_paare": 0.626,
+     "vorzeichen_paare": 0.662,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.597,
+      0.659
+     ],
+     "vorzeichen_paare_ci": [
+      0.617,
+      0.715
+     ],
+     "se_typ": 0.8203
     },
     "hedging_pro_1000": {
      "mensch": {
-      "p10": 4.1278,
-      "p25": 6.0393,
-      "p50": 8.658,
-      "p75": 12.5751,
-      "p90": 16.6695,
-      "mittel": 9.6929,
-      "sd": 5.3749,
-      "n": 663
+      "p10": 3.7159,
+      "p25": 6.1035,
+      "p50": 8.6957,
+      "p75": 12.4844,
+      "p90": 16.409,
+      "mittel": 9.509,
+      "sd": 5.4386,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 3.9487,
-      "p25": 5.994,
-      "p50": 8.4656,
-      "p75": 12.318,
-      "p90": 15.7838,
-      "mittel": 9.2774,
-      "sd": 4.5101,
-      "n": 89
+      "p10": 3.7313,
+      "p25": 6.105,
+      "p50": 8.7977,
+      "p75": 11.3493,
+      "p90": 14.7758,
+      "mittel": 8.9307,
+      "sd": 4.4637,
+      "n": 404
      },
-     "auroc": 0.507,
+     "auroc": 0.521,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.014,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.043,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.529,
+     "vorzeichen_paare": 0.566,
+     "n_paare": 396,
+     "se_typ": 5.053
     },
     "ich_wir_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 2.2051,
-      "p90": 8.527,
-      "mittel": 2.9413,
-      "sd": 7.0003,
-      "n": 663
+      "p75": 2.5063,
+      "p90": 8.9731,
+      "mittel": 3.0005,
+      "sd": 7.3175,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
@@ -1141,240 +1874,465 @@
       "p50": 0.0,
       "p75": 0.0,
       "p90": 0.0,
-      "mittel": 0.0778,
-      "sd": 0.3323,
-      "n": 89
+      "mittel": 0.3045,
+      "sd": 3.2007,
+      "n": 404
      },
-     "auroc": 0.68,
+     "auroc": 0.664,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.359,
-     "gewicht": 0.359,
+     "trennschaerfe": 0.329,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.329,
+     "hinweis": "",
+     "auroc_paare": 0.653,
+     "vorzeichen_paare": 0.673,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.63,
+      0.675
+     ],
+     "vorzeichen_paare_ci": [
+      0.648,
+      0.697
+     ],
+     "se_typ": 5.9419,
+     "gewicht_roh": 0.329,
+     "cluster": "ich_wir_pro_1000"
     },
     "man_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.9665,
-      "p90": 4.0255,
-      "mittel": 1.2679,
-      "sd": 2.1996,
-      "n": 663
+      "p75": 1.2804,
+      "p90": 3.7736,
+      "mittel": 1.2282,
+      "sd": 2.2032,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
       "p75": 0.0,
-      "p90": 1.1211,
-      "mittel": 0.2198,
-      "sd": 0.5999,
-      "n": 89
+      "p90": 1.2626,
+      "mittel": 0.3539,
+      "sd": 0.7488,
+      "n": 404
      },
-     "auroc": 0.649,
+     "auroc": 0.612,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.298,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.225,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.618,
+     "vorzeichen_paare": 0.638,
+     "n_paare": 396,
+     "se_typ": 1.7444
     },
     "teilsaetze_pro_satz": {
      "mensch": {
-      "p10": 1.3974,
-      "p25": 1.5,
-      "p50": 1.6296,
-      "p75": 1.7949,
-      "p90": 2.0,
-      "mittel": 1.673,
-      "sd": 0.2541,
-      "n": 663
+      "p10": 1.2857,
+      "p25": 1.3807,
+      "p50": 1.5,
+      "p75": 1.6586,
+      "p90": 1.8636,
+      "mittel": 1.5434,
+      "sd": 0.2339,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.5444,
-      "p25": 1.6596,
-      "p50": 1.7391,
-      "p75": 1.8444,
-      "p90": 1.9272,
-      "mittel": 1.746,
-      "sd": 0.1446,
-      "n": 89
+      "p10": 1.4348,
+      "p25": 1.5227,
+      "p50": 1.6047,
+      "p75": 1.6957,
+      "p90": 1.7766,
+      "mittel": 1.6109,
+      "sd": 0.1401,
+      "n": 404
      },
-     "auroc": 0.358,
+     "auroc": 0.356,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.283,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.288,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.376,
+     "vorzeichen_paare": 0.35,
+     "n_paare": 396,
+     "se_typ": 0.1662
+    },
+    "teilsatz_verhaeltnis_21": {
+     "mensch": {
+      "p10": 0.2944,
+      "p25": 0.3924,
+      "p50": 0.5439,
+      "p75": 0.7576,
+      "p90": 1.0593,
+      "mittel": 0.6256,
+      "sd": 0.3586,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.4884,
+      "p25": 0.617,
+      "p50": 0.8049,
+      "p75": 1.0,
+      "p90": 1.2162,
+      "mittel": 0.8417,
+      "sd": 0.3159,
+      "n": 404
+     },
+     "auroc": 0.278,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.444,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.254,
+     "hinweis": "Sätze mit genau zwei Teilsätzen im Verhältnis zu Sätzen mit einem: KI baut auffällig oft dasselbe Zweier-Gefüge; Menschen mischen einfache Sätze und längere Gefüge.",
+     "auroc_paare": 0.29,
+     "vorzeichen_paare": 0.263,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.261,
+      0.32
+     ],
+     "vorzeichen_paare_ci": [
+      0.22,
+      0.304
+     ],
+     "se_typ": 0.2874,
+     "gewicht_roh": 0.444,
+     "cluster": "teilsatz_verhaeltnis_21"
     },
     "anteil_saetze_mit_nebensatz": {
      "mensch": {
-      "p10": 0.3117,
-      "p25": 0.3721,
-      "p50": 0.4545,
-      "p75": 0.5393,
-      "p90": 0.6154,
-      "mittel": 0.4587,
-      "sd": 0.1223,
-      "n": 663
+      "p10": 0.2439,
+      "p25": 0.3077,
+      "p50": 0.3863,
+      "p75": 0.4848,
+      "p90": 0.5806,
+      "mittel": 0.3987,
+      "sd": 0.1322,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.3992,
-      "p25": 0.4872,
-      "p50": 0.54,
-      "p75": 0.5833,
-      "p90": 0.6386,
-      "mittel": 0.5305,
-      "sd": 0.0904,
-      "n": 89
+      "p10": 0.3412,
+      "p25": 0.4,
+      "p50": 0.4667,
+      "p75": 0.5263,
+      "p90": 0.577,
+      "mittel": 0.4621,
+      "sd": 0.0953,
+      "n": 404
      },
-     "auroc": 0.313,
+     "auroc": 0.334,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.373,
-     "gewicht": 0.373,
+     "trennschaerfe": 0.332,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.19,
+     "hinweis": "",
+     "auroc_paare": 0.347,
+     "vorzeichen_paare": 0.282,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.315,
+      0.374
+     ],
+     "vorzeichen_paare_ci": [
+      0.236,
+      0.327
+     ],
+     "se_typ": 0.0996,
+     "gewicht_roh": 0.332,
+     "cluster": "teilsatz_verhaeltnis_21"
     },
     "anteil_einfache_saetze": {
      "mensch": {
-      "p10": 0.2143,
-      "p25": 0.2843,
-      "p50": 0.3714,
-      "p75": 0.4464,
-      "p90": 0.5131,
-      "mittel": 0.3679,
-      "sd": 0.1166,
-      "n": 663
+      "p10": 0.2121,
+      "p25": 0.2903,
+      "p50": 0.3784,
+      "p75": 0.4644,
+      "p90": 0.5349,
+      "mittel": 0.3775,
+      "sd": 0.1261,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.2063,
-      "p25": 0.2449,
-      "p50": 0.2917,
-      "p75": 0.34,
-      "p90": 0.3955,
-      "mittel": 0.2933,
-      "sd": 0.0719,
-      "n": 89
-     },
-     "auroc": 0.704,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.408,
-     "gewicht": 0.408,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "woerter_pro_teilsatz": {
-     "mensch": {
-      "p10": 10.5055,
-      "p25": 11.2967,
-      "p50": 12.4058,
-      "p75": 13.5912,
-      "p90": 14.9165,
-      "mittel": 12.558,
-      "sd": 1.7401,
-      "n": 663
-     },
-     "ki": {
-      "p10": 9.7609,
-      "p25": 10.2907,
-      "p50": 10.8551,
-      "p75": 11.3333,
-      "p90": 12.0189,
-      "mittel": 10.8861,
-      "sd": 0.88,
-      "n": 89
-     },
-     "auroc": 0.806,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.613,
-     "gewicht": 0.613,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "menzerath_korrelation": {
-     "mensch": {
-      "p10": -0.5579,
-      "p25": -0.4806,
-      "p50": -0.4101,
-      "p75": -0.3353,
-      "p90": -0.2642,
-      "mittel": -0.4087,
-      "sd": 0.1143,
-      "n": 663
-     },
-     "ki": {
-      "p10": -0.581,
-      "p25": -0.5482,
-      "p50": -0.4789,
-      "p75": -0.4249,
-      "p90": -0.3766,
-      "mittel": -0.4859,
-      "sd": 0.0907,
-      "n": 89
+      "p10": 0.2093,
+      "p25": 0.25,
+      "p50": 0.2955,
+      "p75": 0.3478,
+      "p90": 0.393,
+      "mittel": 0.2992,
+      "sd": 0.0718,
+      "n": 404
      },
      "auroc": 0.705,
      "richtung": "mensch_hoeher",
      "trennschaerfe": 0.41,
-     "gewicht": 0.41,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.41,
+     "hinweis": "",
+     "auroc_paare": 0.702,
+     "vorzeichen_paare": 0.723,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.669,
+      0.733
+     ],
+     "vorzeichen_paare_ci": [
+      0.679,
+      0.766
+     ],
+     "se_typ": 0.0932,
+     "gewicht_roh": 0.41,
+     "cluster": "anteil_einfache_saetze"
+    },
+    "woerter_pro_teilsatz": {
+     "mensch": {
+      "p10": 11.1643,
+      "p25": 12.2207,
+      "p50": 13.5116,
+      "p75": 14.8148,
+      "p90": 16.4792,
+      "mittel": 13.6616,
+      "sd": 2.0687,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 10.3691,
+      "p25": 10.8904,
+      "p50": 11.5942,
+      "p75": 12.3692,
+      "p90": 13.1452,
+      "mittel": 11.6801,
+      "sd": 1.072,
+      "n": 404
+     },
+     "auroc": 0.799,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.597,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.597,
+     "hinweis": "",
+     "auroc_paare": 0.762,
+     "vorzeichen_paare": 0.824,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.736,
+      0.787
+     ],
+     "vorzeichen_paare_ci": [
+      0.79,
+      0.86
+     ],
+     "se_typ": 1.4342,
+     "gewicht_roh": 0.597,
+     "cluster": "woerter_pro_teilsatz"
+    },
+    "menzerath_korrelation": {
+     "mensch": {
+      "p10": -0.5444,
+      "p25": -0.4716,
+      "p50": -0.3953,
+      "p75": -0.3092,
+      "p90": -0.2252,
+      "mittel": -0.3897,
+      "sd": 0.1238,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": -0.5928,
+      "p25": -0.5365,
+      "p50": -0.4806,
+      "p75": -0.4282,
+      "p90": -0.3574,
+      "mittel": -0.48,
+      "sd": 0.0866,
+      "n": 404
+     },
+     "auroc": 0.725,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.449,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.731,
+     "vorzeichen_paare": 0.753,
+     "n_paare": 396,
+     "se_typ": 0.1152
     },
     "anteil_passiv": {
      "mensch": {
-      "p10": 0.1744,
-      "p25": 0.2381,
-      "p50": 0.3208,
-      "p75": 0.4,
-      "p90": 0.49,
-      "mittel": 0.3259,
-      "sd": 0.1226,
-      "n": 663
+      "p10": 0.1408,
+      "p25": 0.2047,
+      "p50": 0.2979,
+      "p75": 0.3943,
+      "p90": 0.4865,
+      "mittel": 0.3068,
+      "sd": 0.1318,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.1677,
-      "p25": 0.2041,
-      "p50": 0.2593,
-      "p75": 0.36,
-      "p90": 0.4586,
-      "mittel": 0.2899,
-      "sd": 0.1165,
-      "n": 89
+      "p10": 0.1314,
+      "p25": 0.186,
+      "p50": 0.25,
+      "p75": 0.3333,
+      "p90": 0.4157,
+      "mittel": 0.2659,
+      "sd": 0.1146,
+      "n": 404
      },
-     "auroc": 0.601,
+     "auroc": 0.595,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.201,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.19,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.589,
+     "vorzeichen_paare": 0.634,
+     "n_paare": 396,
+     "se_typ": 0.1041
+    },
+    "satzklammer_mittel": {
+     "mensch": {
+      "p10": 4.8744,
+      "p25": 5.7032,
+      "p50": 6.7596,
+      "p75": 7.875,
+      "p90": 9.0082,
+      "mittel": 6.9083,
+      "sd": 1.7205,
+      "n": 1100,
+      "n_dokumente": 411
+     },
+     "ki": {
+      "p10": 4.2669,
+      "p25": 4.7489,
+      "p50": 5.2881,
+      "p75": 6.0714,
+      "p90": 6.7692,
+      "mittel": 5.4332,
+      "sd": 0.992,
+      "n": 401
+     },
+     "auroc": 0.777,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.555,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.555,
+     "hinweis": "Menschen spannen die Satzklammer weiter (mehr Wörter zwischen Hilfsverb und Partizip/Infinitiv).",
+     "auroc_paare": 0.764,
+     "vorzeichen_paare": 0.78,
+     "n_paare": 389,
+     "auroc_paare_ci": [
+      0.731,
+      0.795
+     ],
+     "vorzeichen_paare_ci": [
+      0.736,
+      0.818
+     ],
+     "se_typ": 1.5104,
+     "gewicht_roh": 0.555,
+     "cluster": "satzklammer_mittel"
     },
     "anteil_konnektor_satzanfang": {
      "mensch": {
-      "p10": 0.0257,
-      "p25": 0.0539,
+      "p10": 0.0238,
+      "p25": 0.05,
       "p50": 0.0857,
-      "p75": 0.1304,
-      "p90": 0.1803,
-      "mittel": 0.0957,
-      "sd": 0.0598,
-      "n": 663
+      "p75": 0.125,
+      "p90": 0.1716,
+      "mittel": 0.0924,
+      "sd": 0.0596,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0398,
-      "p25": 0.0625,
-      "p50": 0.0851,
-      "p75": 0.1087,
-      "p90": 0.1361,
-      "mittel": 0.0856,
-      "sd": 0.0371,
-      "n": 89
+      "p10": 0.0238,
+      "p25": 0.0465,
+      "p50": 0.0714,
+      "p75": 0.1004,
+      "p90": 0.1304,
+      "mittel": 0.0748,
+      "sd": 0.0412,
+      "n": 404
      },
-     "auroc": 0.53,
+     "auroc": 0.578,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.059,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.157,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.571,
+     "vorzeichen_paare": 0.573,
+     "n_paare": 396,
+     "se_typ": 0.051
+    },
+    "konnektoren_pro_1000": {
+     "mensch": {
+      "p10": 2.457,
+      "p25": 3.7736,
+      "p50": 6.25,
+      "p75": 8.794,
+      "p90": 11.3891,
+      "mittel": 6.5888,
+      "sd": 3.8396,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 5.0063,
+      "p25": 7.2728,
+      "p50": 9.828,
+      "p75": 12.0,
+      "p90": 14.9706,
+      "mittel": 9.6709,
+      "sd": 3.7281,
+      "n": 404
+     },
+     "auroc": 0.276,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.448,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.448,
+     "hinweis": "Dichte von Konnektoren (zudem, somit, folglich …) in allen Satzstellungen.",
+     "auroc_paare": 0.266,
+     "vorzeichen_paare": 0.22,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.237,
+      0.295
+     ],
+     "vorzeichen_paare_ci": [
+      0.187,
+      0.256
+     ],
+     "se_typ": 3.2573,
+     "gewicht_roh": 0.448,
+     "cluster": "konnektoren_pro_1000"
     },
     "anteil_dies_satzanfang": {
      "mensch": {
@@ -1382,139 +2340,169 @@
       "p25": 0.0,
       "p50": 0.0,
       "p75": 0.0,
-      "p90": 0.0255,
-      "mittel": 0.007,
-      "sd": 0.0138,
-      "n": 663
+      "p90": 0.0274,
+      "mittel": 0.0068,
+      "sd": 0.0147,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
       "p75": 0.0,
-      "p90": 0.0209,
-      "mittel": 0.0044,
-      "sd": 0.0099,
-      "n": 89
+      "p90": 0.0222,
+      "mittel": 0.0036,
+      "sd": 0.0089,
+      "n": 404
      },
      "auroc": 0.538,
      "richtung": "mensch_hoeher",
      "trennschaerfe": 0.076,
-     "gewicht": 0.0,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.558,
+     "vorzeichen_paare": 0.562,
+     "n_paare": 396,
+     "se_typ": 0.014
     },
     "anteil_artikel_satzanfang": {
      "mensch": {
-      "p10": 0.0851,
-      "p25": 0.1216,
-      "p50": 0.1707,
-      "p75": 0.2326,
-      "p90": 0.2888,
-      "mittel": 0.1811,
-      "sd": 0.0809,
-      "n": 663
+      "p10": 0.0811,
+      "p25": 0.125,
+      "p50": 0.1754,
+      "p75": 0.242,
+      "p90": 0.2973,
+      "mittel": 0.1854,
+      "sd": 0.0829,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.0978,
-      "p25": 0.1304,
+      "p10": 0.1064,
+      "p25": 0.1364,
       "p50": 0.1818,
-      "p75": 0.2391,
-      "p90": 0.2765,
-      "mittel": 0.181,
-      "sd": 0.074,
-      "n": 89
+      "p75": 0.2368,
+      "p90": 0.2857,
+      "mittel": 0.1893,
+      "sd": 0.073,
+      "n": 404
      },
-     "auroc": 0.492,
+     "auroc": 0.484,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.015,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.031,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.49,
+     "vorzeichen_paare": 0.518,
+     "n_paare": 396,
+     "se_typ": 0.0701
     },
     "satzanfang_wiederholung": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 0.0244,
-      "p75": 0.0488,
-      "p90": 0.0755,
-      "mittel": 0.0322,
-      "sd": 0.0319,
-      "n": 663
+      "p50": 0.027,
+      "p75": 0.0526,
+      "p90": 0.0811,
+      "mittel": 0.0336,
+      "sd": 0.0346,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 0.0213,
-      "p75": 0.0417,
-      "p90": 0.0533,
-      "mittel": 0.0256,
-      "sd": 0.0247,
-      "n": 89
+      "p50": 0.0238,
+      "p75": 0.0455,
+      "p90": 0.0667,
+      "mittel": 0.028,
+      "sd": 0.0303,
+      "n": 404
      },
-     "auroc": 0.555,
+     "auroc": 0.552,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.11,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.105,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.56,
+     "vorzeichen_paare": 0.566,
+     "n_paare": 396,
+     "se_typ": 0.0315
     },
     "satzanfang_top3_anteil": {
      "mensch": {
-      "p10": 0.1917,
-      "p25": 0.2222,
-      "p50": 0.2667,
-      "p75": 0.3182,
-      "p90": 0.3636,
-      "mittel": 0.274,
-      "sd": 0.0685,
-      "n": 663
+      "p10": 0.1962,
+      "p25": 0.2308,
+      "p50": 0.2727,
+      "p75": 0.3333,
+      "p90": 0.3845,
+      "mittel": 0.2846,
+      "sd": 0.0734,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.1786,
-      "p25": 0.2075,
-      "p50": 0.25,
-      "p75": 0.2955,
-      "p90": 0.3416,
-      "mittel": 0.2537,
-      "sd": 0.0616,
-      "n": 89
+      "p10": 0.1915,
+      "p25": 0.2238,
+      "p50": 0.2632,
+      "p75": 0.3041,
+      "p90": 0.3498,
+      "mittel": 0.2685,
+      "sd": 0.0618,
+      "n": 404
      },
-     "auroc": 0.582,
+     "auroc": 0.561,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.164,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.121,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.56,
+     "vorzeichen_paare": 0.581,
+     "n_paare": 396,
+     "se_typ": 0.0642
     },
     "kommas_pro_1000": {
      "mensch": {
-      "p10": 39.6996,
-      "p25": 46.9252,
-      "p50": 54.0827,
-      "p75": 62.1356,
-      "p90": 71.0921,
-      "mittel": 55.0372,
-      "sd": 12.3222,
-      "n": 663
+      "p10": 37.0828,
+      "p25": 44.586,
+      "p50": 52.5657,
+      "p75": 61.16,
+      "p90": 70.4403,
+      "mittel": 53.3313,
+      "sd": 13.171,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 48.974,
-      "p25": 55.8036,
-      "p50": 60.8108,
-      "p75": 66.5163,
-      "p90": 70.5645,
-      "mittel": 60.4837,
-      "sd": 8.8378,
-      "n": 89
+      "p10": 45.9546,
+      "p25": 51.718,
+      "p50": 58.2945,
+      "p75": 64.8871,
+      "p90": 71.066,
+      "mittel": 58.3523,
+      "sd": 9.4469,
+      "n": 404
      },
-     "auroc": 0.339,
+     "auroc": 0.364,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.321,
-     "gewicht": 0.321,
-     "bewertet": true,
-     "hinweis": ""
+     "trennschaerfe": 0.272,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.377,
+     "vorzeichen_paare": 0.326,
+     "n_paare": 396,
+     "se_typ": 10.1546
     },
     "semikolon_pro_1000": {
      "mensch": {
@@ -1522,150 +2510,211 @@
       "p25": 0.0,
       "p50": 0.0,
       "p75": 0.0,
-      "p90": 1.8681,
-      "mittel": 0.4752,
-      "sd": 1.3855,
-      "n": 663
+      "p90": 2.4361,
+      "mittel": 0.5294,
+      "sd": 1.383,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
-      "p25": 1.0846,
-      "p50": 2.2026,
-      "p75": 3.2362,
-      "p90": 3.6886,
-      "mittel": 2.0027,
-      "sd": 1.5051,
-      "n": 89
+      "p25": 0.8088,
+      "p50": 1.2658,
+      "p75": 2.551,
+      "p90": 3.8057,
+      "mittel": 1.9219,
+      "sd": 1.6737,
+      "n": 404
      },
-     "auroc": 0.179,
+     "auroc": 0.224,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.643,
-     "gewicht": 0.643,
+     "trennschaerfe": 0.551,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.551,
+     "hinweis": "",
+     "auroc_paare": 0.238,
+     "vorzeichen_paare": 0.231,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.212,
+      0.271
+     ],
+     "vorzeichen_paare_ci": [
+      0.196,
+      0.269
+     ],
+     "se_typ": 1.2261,
+     "gewicht_roh": 0.551,
+     "cluster": "semikolon_pro_1000"
     },
     "doppelpunkt_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 1.9743,
-      "p75": 3.654,
-      "p90": 6.3737,
-      "mittel": 2.6229,
-      "sd": 3.3472,
-      "n": 663
+      "p50": 2.443,
+      "p75": 3.7879,
+      "p90": 6.283,
+      "mittel": 2.7736,
+      "sd": 3.4506,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.1223,
-      "p25": 2.2701,
-      "p50": 3.3557,
-      "p75": 4.7562,
-      "p90": 6.4684,
-      "mittel": 3.677,
-      "sd": 2.0784,
-      "n": 89
+      "p10": 1.2407,
+      "p25": 2.4331,
+      "p50": 3.7282,
+      "p75": 4.9778,
+      "p90": 6.249,
+      "mittel": 3.5051,
+      "sd": 2.0445,
+      "n": 404
      },
-     "auroc": 0.3,
+     "auroc": 0.355,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.401,
-     "gewicht": 0.401,
-     "bewertet": true,
-     "hinweis": ""
+     "trennschaerfe": 0.289,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.404,
+     "vorzeichen_paare": 0.4,
+     "n_paare": 396,
+     "se_typ": 2.8385
     },
     "gedankenstrich_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 2.3271,
-      "p90": 5.4459,
-      "mittel": 1.7281,
-      "sd": 2.6,
-      "n": 663
+      "p75": 2.5284,
+      "p90": 5.4611,
+      "mittel": 1.8766,
+      "sd": 2.8475,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 1.1198,
-      "p75": 3.0864,
-      "p90": 4.5009,
-      "mittel": 1.6637,
-      "sd": 1.9636,
-      "n": 89
+      "p50": 0.0,
+      "p75": 2.4982,
+      "p90": 3.8462,
+      "mittel": 1.4392,
+      "sd": 2.1634,
+      "n": 404
      },
-     "auroc": 0.459,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.082,
-     "gewicht": 0.0,
+     "auroc": 0.525,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.049,
+     "gate": false,
      "bewertet": false,
-     "hinweis": "Gedankenstriche (–) sind ein starkes KI-Signal."
+     "gewicht": 0.0,
+     "hinweis": "Gedankenstriche (–, —) für Einschübe; trennt im Hochschulkorpus kaum zwischen Mensch und KI.",
+     "auroc_paare": 0.521,
+     "vorzeichen_paare": 0.513,
+     "n_paare": 396,
+     "se_typ": 2.0614
     },
     "klammern_pro_1000": {
      "mensch": {
       "p10": 0.0,
-      "p25": 1.0995,
-      "p50": 3.8647,
-      "p75": 7.7008,
-      "p90": 13.2891,
-      "mittel": 5.4976,
-      "sd": 5.9866,
-      "n": 663
+      "p25": 1.2626,
+      "p50": 3.8119,
+      "p75": 8.6101,
+      "p90": 13.712,
+      "mittel": 5.7193,
+      "sd": 5.8539,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 2.2447,
-      "p75": 4.5455,
-      "p90": 7.2524,
-      "mittel": 3.2845,
-      "sd": 3.9415,
-      "n": 89
+      "p50": 1.2706,
+      "p75": 3.7969,
+      "p90": 8.5249,
+      "mittel": 3.0033,
+      "sd": 4.2048,
+      "n": 404
      },
-     "auroc": 0.612,
+     "auroc": 0.669,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.223,
-     "gewicht": 0.0,
-     "bewertet": false,
-     "hinweis": ""
+     "trennschaerfe": 0.338,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.338,
+     "hinweis": "",
+     "auroc_paare": 0.693,
+     "vorzeichen_paare": 0.74,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.669,
+      0.719
+     ],
+     "vorzeichen_paare_ci": [
+      0.704,
+      0.773
+     ],
+     "se_typ": 4.6593,
+     "gewicht_roh": 0.338,
+     "cluster": "klammern_pro_1000"
     },
     "anfuehrungen_pro_1000": {
      "mensch": {
       "p10": 0.0,
-      "p25": 1.0917,
-      "p50": 3.386,
-      "p75": 7.6385,
-      "p90": 12.4976,
-      "mittel": 5.4974,
-      "sd": 6.556,
-      "n": 663
+      "p25": 1.2277,
+      "p50": 3.75,
+      "p75": 7.6433,
+      "p90": 13.1395,
+      "mittel": 5.4309,
+      "sd": 6.3652,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 1.1655,
-      "p75": 3.3822,
-      "p90": 5.4395,
-      "mittel": 2.1368,
-      "sd": 2.4874,
-      "n": 89
+      "p50": 1.2563,
+      "p75": 2.5543,
+      "p90": 5.0505,
+      "mittel": 2.0446,
+      "sd": 2.6789,
+      "n": 404
      },
-     "auroc": 0.676,
+     "auroc": 0.677,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.352,
-     "gewicht": 0.352,
+     "trennschaerfe": 0.354,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.354,
+     "hinweis": "",
+     "auroc_paare": 0.675,
+     "vorzeichen_paare": 0.744,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.647,
+      0.702
+     ],
+     "vorzeichen_paare_ci": [
+      0.706,
+      0.781
+     ],
+     "se_typ": 4.7393,
+     "gewicht_roh": 0.354,
+     "cluster": "anfuehrungen_pro_1000"
     },
     "fragen_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.0091,
-      "p90": 2.9045,
-      "mittel": 0.7665,
-      "sd": 1.7888,
-      "n": 663
+      "p75": 1.227,
+      "p90": 2.5447,
+      "mittel": 0.8448,
+      "sd": 2.0877,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
@@ -1673,16 +2722,21 @@
       "p50": 0.0,
       "p75": 0.0,
       "p90": 0.0,
-      "mittel": 0.0,
-      "sd": 0.0,
-      "n": 89
+      "mittel": 0.1144,
+      "sd": 0.6662,
+      "n": 404
      },
-     "auroc": 0.633,
+     "auroc": 0.606,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.265,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.211,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.574,
+     "vorzeichen_paare": 0.582,
+     "n_paare": 396,
+     "se_typ": 2.0062
     },
     "ausrufe_pro_1000": {
      "mensch": {
@@ -1691,9 +2745,10 @@
       "p50": 0.0,
       "p75": 0.0,
       "p90": 0.0,
-      "mittel": 0.0405,
-      "sd": 0.2878,
-      "n": 663
+      "mittel": 0.0501,
+      "sd": 0.2986,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
@@ -1701,352 +2756,543 @@
       "p50": 0.0,
       "p75": 0.0,
       "p90": 0.0,
-      "mittel": 0.0,
-      "sd": 0.0,
-      "n": 89
+      "mittel": 0.0028,
+      "sd": 0.0592,
+      "n": 404
      },
      "auroc": 0.514,
      "richtung": "mensch_hoeher",
      "trennschaerfe": 0.029,
-     "gewicht": 0.0,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.518,
+     "vorzeichen_paare": 0.516,
+     "n_paare": 396,
+     "se_typ": 0.277
     },
     "kommas_pro_satz": {
      "mensch": {
-      "p10": 0.7323,
-      "p25": 0.8879,
-      "p50": 1.1111,
-      "p75": 1.3784,
-      "p90": 1.649,
-      "mittel": 1.1642,
-      "sd": 0.3855,
-      "n": 663
+      "p10": 0.6945,
+      "p25": 0.85,
+      "p50": 1.0609,
+      "p75": 1.3611,
+      "p90": 1.6337,
+      "mittel": 1.1298,
+      "sd": 0.3901,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 0.8717,
-      "p25": 1.0189,
-      "p50": 1.1667,
-      "p75": 1.3043,
-      "p90": 1.3864,
-      "mittel": 1.147,
-      "sd": 0.1986,
-      "n": 89
+      "p10": 0.846,
+      "p25": 0.9556,
+      "p50": 1.0714,
+      "p75": 1.2273,
+      "p90": 1.3488,
+      "mittel": 1.0926,
+      "sd": 0.1965,
+      "n": 404
      },
-     "auroc": 0.474,
+     "auroc": 0.493,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.052,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.015,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
-    },
-    "absaetze": {
-     "mensch": {
-      "p10": 6.0,
-      "p25": 8.0,
-      "p50": 11.0,
-      "p75": 14.0,
-      "p90": 17.0,
-      "mittel": 11.537,
-      "sd": 4.1388,
-      "n": 663
-     },
-     "ki": {
-      "p10": 7.0,
-      "p25": 7.0,
-      "p50": 9.0,
-      "p75": 10.0,
-      "p90": 11.2,
-      "mittel": 8.9663,
-      "sd": 1.875,
-      "n": 89
-     },
-     "auroc": 0.696,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.393,
      "gewicht": 0.0,
-     "bewertet": false,
-     "hinweis": ""
+     "hinweis": "",
+     "auroc_paare": 0.498,
+     "vorzeichen_paare": 0.496,
+     "n_paare": 396,
+     "se_typ": 0.2776
     },
-    "absatzlaenge_mittel": {
-     "mensch": {
-      "p10": 53.4901,
-      "p25": 63.4956,
-      "p50": 81.3,
-      "p75": 109.425,
-      "p90": 144.3381,
-      "mittel": 94.5157,
-      "sd": 61.6391,
-      "n": 663
-     },
-     "ki": {
-      "p10": 78.9106,
-      "p25": 88.8,
-      "p50": 99.4444,
-      "p75": 121.0,
-      "p90": 129.2,
-      "mittel": 102.5774,
-      "sd": 19.9113,
-      "n": 89
-     },
-     "auroc": 0.328,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.343,
-     "gewicht": 0.343,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "absatzlaenge_cv": {
-     "mensch": {
-      "p10": 0.3225,
-      "p25": 0.3896,
-      "p50": 0.473,
-      "p75": 0.5765,
-      "p90": 0.6726,
-      "mittel": 0.4905,
-      "sd": 0.154,
-      "n": 663
-     },
-     "ki": {
-      "p10": 0.2058,
-      "p25": 0.2394,
-      "p50": 0.2966,
-      "p75": 0.3463,
-      "p90": 0.4025,
-      "mittel": 0.3011,
-      "sd": 0.0837,
-      "n": 89
-     },
-     "auroc": 0.882,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.764,
-     "gewicht": 0.764,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "saetze_pro_absatz": {
-     "mensch": {
-      "p10": 2.6885,
-      "p25": 3.1667,
-      "p50": 3.9286,
-      "p75": 5.2679,
-      "p90": 6.62,
-      "mittel": 4.5579,
-      "sd": 2.9114,
-      "n": 663
-     },
-     "ki": {
-      "p10": 4.221,
-      "p25": 4.6667,
-      "p50": 5.3333,
-      "p75": 6.0,
-      "p90": 6.7143,
-      "mittel": 5.4081,
-      "sd": 0.9348,
-      "n": 89
-     },
-     "auroc": 0.251,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.497,
-     "gewicht": 0.497,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "saetze_pro_absatz_cv": {
-     "mensch": {
-      "p10": 0.3408,
-      "p25": 0.4196,
-      "p50": 0.5052,
-      "p75": 0.6041,
-      "p90": 0.6953,
-      "mittel": 0.5175,
-      "sd": 0.1533,
-      "n": 663
-     },
-     "ki": {
-      "p10": 0.2061,
-      "p25": 0.2474,
-      "p50": 0.3095,
-      "p75": 0.3674,
-      "p90": 0.4313,
-      "mittel": 0.3115,
-      "sd": 0.0886,
-      "n": 89
-     },
-     "auroc": 0.893,
-     "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.786,
-     "gewicht": 0.786,
-     "bewertet": true,
-     "hinweis": ""
-    },
-    "anteil_einsatz_absaetze": {
+    "abkuerzungen_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 0.0625,
-      "p75": 0.1538,
-      "p90": 0.2353,
-      "mittel": 0.0888,
-      "sd": 0.1075,
-      "n": 663
+      "p50": 1.2917,
+      "p75": 3.8119,
+      "p90": 7.472,
+      "mittel": 2.8379,
+      "sd": 3.2537,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
       "p75": 0.0,
-      "p90": 0.0687,
-      "mittel": 0.0127,
-      "sd": 0.0391,
-      "n": 89
+      "p90": 1.2626,
+      "mittel": 0.4286,
+      "sd": 0.8926,
+      "n": 404
      },
-     "auroc": 0.721,
+     "auroc": 0.776,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.443,
-     "gewicht": 0.443,
+     "trennschaerfe": 0.551,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.551,
+     "hinweis": "Übliche Abkürzungen (z. B., bzw., d. h., u. a.): in menschlichen Hochschultexten normal, bei KI fast nie. Nur dort verwenden, wo sie natürlich passen.",
+     "auroc_paare": 0.796,
+     "vorzeichen_paare": 0.806,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.767,
+      0.824
+     ],
+     "vorzeichen_paare_ci": [
+      0.775,
+      0.835
+     ],
+     "se_typ": 2.2664,
+     "gewicht_roh": 0.551,
+     "cluster": "abkuerzungen_pro_1000"
+    },
+    "absaetze": {
+     "mensch": {
+      "p10": 5.0,
+      "p25": 6.0,
+      "p50": 9.0,
+      "p75": 12.0,
+      "p90": 14.0,
+      "mittel": 9.169,
+      "sd": 3.6068,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 5.0,
+      "p25": 6.0,
+      "p50": 7.0,
+      "p75": 8.0,
+      "p90": 9.0,
+      "mittel": 7.4429,
+      "sd": 1.6271,
+      "n": 404
+     },
+     "auroc": 0.643,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.286,
+     "gate": false,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.665,
+     "vorzeichen_paare": 0.688,
+     "n_paare": 396,
+     "se_typ": 2.4153
+    },
+    "absatzlaenge_mittel": {
+     "mensch": {
+      "p10": 53.1179,
+      "p25": 63.5845,
+      "p50": 82.4444,
+      "p75": 110.4286,
+      "p90": 145.2,
+      "mittel": 92.9467,
+      "sd": 44.5,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 79.0127,
+      "p25": 88.1991,
+      "p50": 99.2857,
+      "p75": 116.2083,
+      "p90": 135.1784,
+      "mittel": 103.3781,
+      "sd": 21.4226,
+      "n": 404
+     },
+     "auroc": 0.337,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.326,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.198,
+     "hinweis": "",
+     "auroc_paare": 0.321,
+     "vorzeichen_paare": 0.28,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.283,
+      0.355
+     ],
+     "vorzeichen_paare_ci": [
+      0.234,
+      0.323
+     ],
+     "se_typ": 31.3646,
+     "gewicht_roh": 0.326,
+     "cluster": "saetze_pro_absatz"
+    },
+    "absatzlaenge_cv": {
+     "mensch": {
+      "p10": 0.285,
+      "p25": 0.3669,
+      "p50": 0.4535,
+      "p75": 0.5591,
+      "p90": 0.6584,
+      "mittel": 0.4674,
+      "sd": 0.1578,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.1767,
+      "p25": 0.2253,
+      "p50": 0.2882,
+      "p75": 0.3512,
+      "p90": 0.411,
+      "mittel": 0.2942,
+      "sd": 0.096,
+      "n": 404
+     },
+     "auroc": 0.838,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.677,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.348,
+     "hinweis": "",
+     "auroc_paare": 0.842,
+     "vorzeichen_paare": 0.838,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.812,
+      0.867
+     ],
+     "vorzeichen_paare_ci": [
+      0.801,
+      0.878
+     ],
+     "se_typ": 0.1476,
+     "gewicht_roh": 0.677,
+     "cluster": "saetze_pro_absatz_cv"
+    },
+    "saetze_pro_absatz": {
+     "mensch": {
+      "p10": 2.6429,
+      "p25": 3.2,
+      "p50": 4.0,
+      "p75": 5.25,
+      "p90": 6.6667,
+      "mittel": 4.4786,
+      "sd": 2.2572,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 4.3333,
+      "p25": 4.7436,
+      "p50": 5.375,
+      "p75": 6.0,
+      "p90": 6.8544,
+      "mittel": 5.4907,
+      "sd": 1.0395,
+      "n": 404
+     },
+     "auroc": 0.247,
+     "richtung": "ki_hoeher",
+     "trennschaerfe": 0.506,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.308,
+     "hinweis": "",
+     "auroc_paare": 0.239,
+     "vorzeichen_paare": 0.21,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.205,
+      0.271
+     ],
+     "vorzeichen_paare_ci": [
+      0.17,
+      0.249
+     ],
+     "se_typ": 1.6679,
+     "gewicht_roh": 0.506,
+     "cluster": "saetze_pro_absatz"
+    },
+    "saetze_pro_absatz_cv": {
+     "mensch": {
+      "p10": 0.3017,
+      "p25": 0.3891,
+      "p50": 0.4804,
+      "p75": 0.5904,
+      "p90": 0.699,
+      "mittel": 0.4951,
+      "sd": 0.165,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.1788,
+      "p25": 0.2315,
+      "p50": 0.2997,
+      "p75": 0.3595,
+      "p90": 0.4296,
+      "mittel": 0.2988,
+      "sd": 0.0958,
+      "n": 404
+     },
+     "auroc": 0.858,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.716,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.368,
+     "hinweis": "",
+     "auroc_paare": 0.859,
+     "vorzeichen_paare": 0.866,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.833,
+      0.885
+     ],
+     "vorzeichen_paare_ci": [
+      0.831,
+      0.9
+     ],
+     "se_typ": 0.1557,
+     "gewicht_roh": 0.716,
+     "cluster": "saetze_pro_absatz_cv"
+    },
+    "anteil_einsatz_absaetze": {
+     "mensch": {
+      "p10": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.1429,
+      "p90": 0.25,
+      "mittel": 0.0856,
+      "sd": 0.1129,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p90": 0.0,
+      "mittel": 0.0065,
+      "sd": 0.0302,
+      "n": 404
+     },
+     "auroc": 0.714,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.427,
+     "gate": true,
+     "bewertet": true,
+     "gewicht": 0.427,
+     "hinweis": "",
+     "auroc_paare": 0.706,
+     "vorzeichen_paare": 0.711,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.684,
+      0.732
+     ],
+     "vorzeichen_paare_ci": [
+      0.686,
+      0.737
+     ],
+     "se_typ": 0.0977,
+     "gewicht_roh": 0.427,
+     "cluster": "anteil_einsatz_absaetze"
     },
     "ki_muster_pro_1000": {
      "mensch": {
       "p10": 0.0,
-      "p25": 1.1737,
-      "p50": 2.38,
-      "p75": 4.0234,
-      "p90": 6.3212,
-      "mittel": 2.8736,
-      "sd": 2.3696,
-      "n": 663
+      "p25": 0.0,
+      "p50": 1.9579,
+      "p75": 3.4574,
+      "p90": 5.0,
+      "mittel": 2.2458,
+      "sd": 2.1232,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 3.1627,
-      "p25": 4.932,
-      "p50": 7.2706,
-      "p75": 9.5067,
-      "p90": 13.407,
-      "mittel": 7.5343,
-      "sd": 3.9835,
-      "n": 89
+      "p10": 1.6646,
+      "p25": 3.4819,
+      "p50": 5.6211,
+      "p75": 7.8509,
+      "p90": 10.3161,
+      "mittel": 5.8927,
+      "sd": 3.4207,
+      "n": 404
      },
-     "auroc": 0.14,
+     "auroc": 0.171,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.719,
-     "gewicht": 0.719,
+     "trennschaerfe": 0.658,
+     "gate": true,
      "bewertet": true,
-     "hinweis": "Typische KI-Floskeln und -Konstruktionen, gewichtet nach Korpus-Häufigkeit."
+     "gewicht": 0.658,
+     "hinweis": "Typische KI-Floskeln und -Konstruktionen, gewichtet nach Korpus-Häufigkeit.",
+     "auroc_paare": 0.16,
+     "vorzeichen_paare": 0.158,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.133,
+      0.185
+     ],
+     "vorzeichen_paare_ci": [
+      0.124,
+      0.193
+     ],
+     "se_typ": 1.992,
+     "gewicht_roh": 0.658,
+     "cluster": "ki_muster_pro_1000"
     },
     "dreierlisten_pro_1000": {
      "mensch": {
-      "p10": 1.0725,
-      "p25": 2.1798,
-      "p50": 4.3243,
-      "p75": 6.6519,
-      "p90": 9.1529,
-      "mittel": 4.7639,
-      "sd": 3.1915,
-      "n": 663
+      "p10": 0.0,
+      "p25": 1.2626,
+      "p50": 3.6232,
+      "p75": 5.114,
+      "p90": 7.6336,
+      "mittel": 3.741,
+      "sd": 3.0347,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.1761,
-      "p25": 3.2293,
-      "p50": 5.6689,
-      "p75": 7.9007,
-      "p90": 11.099,
-      "mittel": 6.0516,
-      "sd": 3.6839,
-      "n": 89
+      "p10": 1.227,
+      "p25": 2.4631,
+      "p50": 3.8478,
+      "p75": 6.3291,
+      "p90": 8.8795,
+      "mittel": 4.7281,
+      "sd": 3.4185,
+      "n": 404
      },
-     "auroc": 0.388,
+     "auroc": 0.417,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.223,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.167,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.406,
+     "vorzeichen_paare": 0.292,
+     "n_paare": 396,
+     "se_typ": 2.6819
     },
     "sowohl_als_auch_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.0272,
-      "p90": 1.32,
-      "mittel": 0.4422,
-      "sd": 0.8015,
-      "n": 663
+      "p75": 1.2225,
+      "p90": 1.2706,
+      "mittel": 0.4516,
+      "sd": 0.8842,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.1351,
-      "p90": 2.1552,
-      "mittel": 0.7171,
-      "sd": 0.8901,
-      "n": 89
+      "p75": 1.2563,
+      "p90": 2.4939,
+      "mittel": 0.8027,
+      "sd": 1.0527,
+      "n": 404
      },
-     "auroc": 0.392,
+     "auroc": 0.405,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.215,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.189,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.396,
+     "vorzeichen_paare": 0.389,
+     "n_paare": 396,
+     "se_typ": 0.8355
     },
     "nicht_nur_sondern_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.0465,
-      "p90": 1.1885,
-      "mittel": 0.4454,
-      "sd": 0.7665,
-      "n": 663
+      "p75": 1.2149,
+      "p90": 1.2739,
+      "mittel": 0.4098,
+      "sd": 0.7846,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
       "p25": 0.0,
       "p50": 0.0,
-      "p75": 1.0881,
-      "p90": 1.1541,
-      "mittel": 0.457,
-      "sd": 0.7222,
-      "n": 89
+      "p75": 1.2469,
+      "p90": 1.2755,
+      "mittel": 0.5135,
+      "sd": 0.8394,
+      "n": 404
      },
-     "auroc": 0.485,
+     "auroc": 0.466,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.031,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.068,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.453,
+     "vorzeichen_paare": 0.461,
+     "n_paare": 396,
+     "se_typ": 0.7314
     },
     "sondern_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 0.9843,
-      "p75": 1.3229,
-      "p90": 2.376,
-      "mittel": 0.9696,
-      "sd": 1.1888,
-      "n": 663
+      "p50": 0.0,
+      "p75": 1.2706,
+      "p90": 2.5316,
+      "mittel": 0.9416,
+      "sd": 1.2569,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
-      "p25": 1.0204,
-      "p50": 1.1587,
-      "p75": 2.2805,
-      "p90": 3.8735,
-      "mittel": 1.8439,
-      "sd": 1.9215,
-      "n": 89
+      "p25": 0.0,
+      "p50": 1.261,
+      "p75": 2.537,
+      "p90": 4.7607,
+      "mittel": 1.9069,
+      "sd": 1.8469,
+      "n": 404
      },
-     "auroc": 0.331,
+     "auroc": 0.344,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.339,
-     "gewicht": 0.339,
+     "trennschaerfe": 0.311,
+     "gate": true,
      "bewertet": true,
-     "hinweis": ""
+     "gewicht": 0.311,
+     "hinweis": "",
+     "auroc_paare": 0.349,
+     "vorzeichen_paare": 0.306,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.321,
+      0.38
+     ],
+     "vorzeichen_paare_ci": [
+      0.266,
+      0.345
+     ],
+     "se_typ": 1.1498,
+     "gewicht_roh": 0.311,
+     "cluster": "sondern_pro_1000"
     },
     "markdown_elemente": {
      "mensch": {
@@ -2057,7 +3303,8 @@
       "p90": 0.0,
       "mittel": 0.0,
       "sd": 0.0,
-      "n": 663
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
@@ -2065,16 +3312,21 @@
       "p50": 0.0,
       "p75": 0.0,
       "p90": 0.0,
-      "mittel": 0.1685,
-      "sd": 0.9147,
-      "n": 89
+      "mittel": 0.0605,
+      "sd": 0.4144,
+      "n": 404
      },
-     "auroc": 0.478,
+     "auroc": 0.485,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.045,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.03,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.485,
+     "vorzeichen_paare": 0.485,
+     "n_paare": 396,
+     "se_typ": 0.0
     },
     "listenpunkte": {
      "mensch": {
@@ -2085,7 +3337,8 @@
       "p90": 0.0,
       "mittel": 0.0,
       "sd": 0.0,
-      "n": 663
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
@@ -2095,14 +3348,19 @@
       "p90": 0.0,
       "mittel": 0.0,
       "sd": 0.0,
-      "n": 89
+      "n": 404
      },
      "auroc": 0.5,
      "richtung": "ki_hoeher",
      "trennschaerfe": 0.0,
-     "gewicht": 0.0,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.5,
+     "vorzeichen_paare": 0.5,
+     "n_paare": 396,
+     "se_typ": 0.0
     },
     "ueberschriften_pro_1000": {
      "mensch": {
@@ -2113,203 +3371,686 @@
       "p90": 0.0,
       "mittel": 0.0,
       "sd": 0.0,
-      "n": 663
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 1.0705,
-      "p25": 1.1074,
-      "p50": 1.3351,
-      "p75": 4.4793,
-      "p90": 4.7136,
-      "mittel": 2.6829,
-      "sd": 1.8493,
-      "n": 89
+      "p10": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p90": 0.0,
+      "mittel": 0.0,
+      "sd": 0.0,
+      "n": 404
      },
-     "auroc": 0.011,
+     "auroc": 0.5,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.978,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.0,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.5,
+     "vorzeichen_paare": 0.5,
+     "n_paare": 396,
+     "se_typ": 0.0
     },
     "zitate_pro_1000": {
      "mensch": {
       "p10": 0.0,
       "p25": 0.0,
-      "p50": 1.105,
-      "p75": 8.1671,
-      "p90": 15.6581,
-      "mittel": 5.0614,
-      "sd": 7.2257,
-      "n": 663
+      "p50": 1.2889,
+      "p75": 7.6142,
+      "p90": 15.1899,
+      "mittel": 5.075,
+      "sd": 6.9807,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
       "p10": 0.0,
-      "p25": 1.1173,
-      "p50": 4.2418,
-      "p75": 8.9686,
-      "p90": 14.6733,
-      "mittel": 5.9786,
-      "sd": 5.9804,
-      "n": 89
+      "p25": 0.0,
+      "p50": 3.7406,
+      "p75": 8.5336,
+      "p90": 12.5628,
+      "mittel": 5.0974,
+      "sd": 5.4054,
+      "n": 404
      },
-     "auroc": 0.403,
+     "auroc": 0.456,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.194,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.088,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.474,
+     "vorzeichen_paare": 0.538,
+     "n_paare": 396,
+     "se_typ": 5.0315
     },
     "lix": {
      "mensch": {
-      "p10": 53.0081,
-      "p25": 56.9918,
-      "p50": 61.2101,
-      "p75": 64.763,
-      "p90": 68.3508,
-      "mittel": 60.856,
-      "sd": 6.0722,
-      "n": 663
+      "p10": 53.3292,
+      "p25": 57.6818,
+      "p50": 61.7239,
+      "p75": 65.5602,
+      "p90": 69.016,
+      "mittel": 61.5055,
+      "sd": 6.3073,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 56.2559,
-      "p25": 58.6558,
-      "p50": 60.8353,
-      "p75": 62.8829,
-      "p90": 64.4853,
-      "mittel": 60.5823,
-      "sd": 3.1555,
-      "n": 89
+      "p10": 55.5681,
+      "p25": 57.8533,
+      "p50": 60.0475,
+      "p75": 62.0013,
+      "p90": 63.8869,
+      "mittel": 59.8292,
+      "sd": 3.3394,
+      "n": 404
      },
-     "auroc": 0.527,
+     "auroc": 0.599,
      "richtung": "mensch_hoeher",
-     "trennschaerfe": 0.054,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.198,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.555,
+     "vorzeichen_paare": 0.54,
+     "n_paare": 396,
+     "se_typ": 3.5847
     },
     "flesch_amstad": {
      "mensch": {
-      "p10": 17.3866,
-      "p25": 23.315,
-      "p50": 30.4005,
-      "p75": 37.3372,
-      "p90": 43.3617,
-      "mittel": 30.3404,
-      "sd": 10.3737,
-      "n": 663
+      "p10": 11.9252,
+      "p25": 18.3538,
+      "p50": 26.1573,
+      "p75": 33.6946,
+      "p90": 40.3548,
+      "mittel": 26.247,
+      "sd": 11.428,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 24.3901,
-      "p25": 26.9775,
-      "p50": 30.8469,
-      "p75": 34.951,
-      "p90": 40.2982,
-      "mittel": 30.9752,
-      "sd": 6.2343,
-      "n": 89
+      "p10": 22.0376,
+      "p25": 25.5939,
+      "p50": 30.1121,
+      "p75": 35.1689,
+      "p90": 39.5023,
+      "mittel": 30.6038,
+      "sd": 7.1438,
+      "n": 404
      },
-     "auroc": 0.477,
+     "auroc": 0.374,
      "richtung": "ki_hoeher",
-     "trennschaerfe": 0.046,
-     "gewicht": 0.0,
+     "trennschaerfe": 0.253,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.42,
+     "vorzeichen_paare": 0.384,
+     "n_paare": 396,
+     "se_typ": 6.3459
     },
     "wiener_sachtextformel": {
      "mensch": {
-      "p10": 10.6204,
-      "p25": 11.8396,
-      "p50": 12.9092,
-      "p75": 13.993,
-      "p90": 14.8038,
-      "mittel": 12.798,
-      "sd": 1.6639,
-      "n": 663
+      "p10": 10.927,
+      "p25": 12.1147,
+      "p50": 13.2135,
+      "p75": 14.2909,
+      "p90": 15.1678,
+      "mittel": 13.1211,
+      "sd": 1.7186,
+      "n": 1116,
+      "n_dokumente": 412
      },
      "ki": {
-      "p10": 11.5244,
-      "p25": 12.3553,
-      "p50": 13.0142,
-      "p75": 13.6436,
-      "p90": 14.1316,
-      "mittel": 12.9582,
-      "sd": 1.0161,
-      "n": 89
+      "p10": 11.4564,
+      "p25": 12.225,
+      "p50": 12.8825,
+      "p75": 13.5595,
+      "p90": 14.0942,
+      "mittel": 12.8024,
+      "sd": 1.0795,
+      "n": 404
      },
-     "auroc": 0.483,
-     "richtung": "ki_hoeher",
-     "trennschaerfe": 0.035,
-     "gewicht": 0.0,
+     "auroc": 0.574,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.149,
+     "gate": false,
      "bewertet": false,
-     "hinweis": ""
+     "gewicht": 0.0,
+     "hinweis": "",
+     "auroc_paare": 0.528,
+     "vorzeichen_paare": 0.505,
+     "n_paare": 396,
+     "se_typ": 1.0002
+    },
+    "fw_profil_llr_pro_1000": {
+     "mensch": {
+      "p10": -0.5616,
+      "p25": 1.5048,
+      "p50": 3.8266,
+      "p75": 5.8279,
+      "p90": 7.7644,
+      "mittel": 3.6889,
+      "sd": 3.2918,
+      "n": 1116,
+      "n_dokumente": 412
+     },
+     "ki": {
+      "p10": -7.4318,
+      "p25": -5.5369,
+      "p50": -3.2627,
+      "p75": -1.6611,
+      "p90": 0.0882,
+      "mittel": -3.6106,
+      "sd": 2.9598,
+      "n": 404
+     },
+     "auroc": 0.952,
+     "richtung": "mensch_hoeher",
+     "trennschaerfe": 0.905,
+     "gate": true,
+     "bewertet": false,
+     "gewicht": 0.0,
+     "hinweis": "Gebrauch der häufigsten Funktionswörter (Menschen: mehr es, wie, auch, durch; KI: mehr als, sich, dass). Nur als Tendenz lesen, keine Einzelwörter einstreuen.",
+     "auroc_paare": 0.944,
+     "vorzeichen_paare": 0.995,
+     "n_paare": 396,
+     "auroc_paare_ci": [
+      0.929,
+      0.958
+     ],
+     "vorzeichen_paare_ci": [
+      0.987,
+      1.0
+     ],
+     "nur_modell": true,
+     "se_typ": 2.7983
     }
+   },
+   "cluster": {
+    "saetze_pro_absatz_cv": [
+     "saetze_pro_absatz_cv",
+     "absatzlaenge_cv"
+    ],
+    "ki_muster_pro_1000": [
+     "ki_muster_pro_1000"
+    ],
+    "nachbarsatz_ueberlappung": [
+     "nachbarsatz_ueberlappung",
+     "inhaltswort_mattr_50",
+     "anteil_saetze_mit_wortaufnahme"
+    ],
+    "satzlaenge_dispersion": [
+     "satzlaenge_dispersion",
+     "satzlaenge_sd",
+     "satzlaenge_cv"
+    ],
+    "woerter_pro_teilsatz": [
+     "woerter_pro_teilsatz"
+    ],
+    "mattr_100": [
+     "mattr_100",
+     "mtld"
+    ],
+    "satzklammer_mittel": [
+     "satzklammer_mittel"
+    ],
+    "abkuerzungen_pro_1000": [
+     "abkuerzungen_pro_1000"
+    ],
+    "semikolon_pro_1000": [
+     "semikolon_pro_1000"
+    ],
+    "anteil_mittlere_saetze": [
+     "anteil_mittlere_saetze"
+    ],
+    "anteil_sehr_lange_saetze": [
+     "anteil_sehr_lange_saetze",
+     "anteil_lange_saetze"
+    ],
+    "saetze_pro_absatz": [
+     "saetze_pro_absatz",
+     "absatzlaenge_mittel"
+    ],
+    "mattr_klumpung_100": [
+     "mattr_klumpung_100"
+    ],
+    "wortlaenge_cv": [
+     "wortlaenge_cv"
+    ],
+    "konnektoren_pro_1000": [
+     "konnektoren_pro_1000"
+    ],
+    "teilsatz_verhaeltnis_21": [
+     "teilsatz_verhaeltnis_21",
+     "anteil_saetze_mit_nebensatz"
+    ],
+    "anteil_einsatz_absaetze": [
+     "anteil_einsatz_absaetze"
+    ],
+    "silben_q21": [
+     "silben_q21"
+    ],
+    "rhythmus_r1_log": [
+     "rhythmus_r1_log"
+    ],
+    "anteil_einfache_saetze": [
+     "anteil_einfache_saetze"
+    ],
+    "anteil_kurze_woerter": [
+     "anteil_kurze_woerter"
+    ],
+    "anfuehrungen_pro_1000": [
+     "anfuehrungen_pro_1000"
+    ],
+    "klammern_pro_1000": [
+     "klammern_pro_1000"
+    ],
+    "ich_wir_pro_1000": [
+     "ich_wir_pro_1000"
+    ],
+    "sondern_pro_1000": [
+     "sondern_pro_1000"
+    ],
+    "satzlaenge_schiefe": [
+     "satzlaenge_schiefe"
+    ]
    },
    "modell": {
     "koeffizienten": {
-     "saetze_pro_absatz_cv": 2.3174,
-     "ki_muster_pro_1000": -1.4688,
-     "semikolon_pro_1000": -0.9599,
-     "satzlaenge_dispersion": 1.2123,
-     "woerter_pro_teilsatz": 0.7677,
-     "nachbarsatz_ueberlappung": 0.7671,
-     "mtld": -0.4179,
-     "anteil_saetze_mit_wortaufnahme": 0.263,
-     "anteil_mittlere_saetze": -0.7262,
-     "anteil_sehr_lange_saetze": 0.8303,
-     "saetze_pro_absatz": 0.296,
-     "anteil_kurze_woerter": -0.0742
+     "fw_profil_llr_pro_1000": 2.2146,
+     "saetze_pro_absatz_cv": 1.3375,
+     "ki_muster_pro_1000": -1.0905,
+     "nachbarsatz_ueberlappung": 0.6867,
+     "satzlaenge_dispersion": 0.7293,
+     "woerter_pro_teilsatz": -0.0383,
+     "mattr_100": -0.3969,
+     "satzklammer_mittel": 0.7414,
+     "abkuerzungen_pro_1000": 0.9955,
+     "semikolon_pro_1000": -0.6495,
+     "anteil_mittlere_saetze": -0.4559,
+     "anteil_sehr_lange_saetze": 0.5309
     },
-    "intercept": 4.5842,
+    "intercept": 2.9306,
     "mittel": {
-     "saetze_pro_absatz_cv": 0.4931,
-     "ki_muster_pro_1000": 3.42517,
-     "semikolon_pro_1000": 0.65601,
-     "satzlaenge_dispersion": 4.12781,
-     "woerter_pro_teilsatz": 12.36011,
-     "nachbarsatz_ueberlappung": 0.04076,
-     "mtld": 148.7431,
-     "anteil_saetze_mit_wortaufnahme": 0.49204,
-     "anteil_mittlere_saetze": 0.51977,
-     "anteil_sehr_lange_saetze": 0.0491,
-     "saetze_pro_absatz": 4.65856,
-     "anteil_kurze_woerter": 0.32177
+     "fw_profil_llr_pro_1000": 1.76067,
+     "saetze_pro_absatz_cv": 0.44217,
+     "ki_muster_pro_1000": 3.1994,
+     "nachbarsatz_ueberlappung": 0.03762,
+     "satzlaenge_dispersion": 3.73584,
+     "woerter_pro_teilsatz": 13.11795,
+     "mattr_100": 0.77829,
+     "satzklammer_mittel": 6.51338,
+     "abkuerzungen_pro_1000": 2.14208,
+     "semikolon_pro_1000": 0.88483,
+     "anteil_mittlere_saetze": 0.53374,
+     "anteil_sehr_lange_saetze": 0.04211
     },
     "sd": {
-     "saetze_pro_absatz_cv": 0.16148,
-     "ki_muster_pro_1000": 3.0158,
-     "semikolon_pro_1000": 1.4846,
-     "satzlaenge_dispersion": 2.01842,
-     "woerter_pro_teilsatz": 1.74727,
-     "nachbarsatz_ueberlappung": 0.01896,
-     "mtld": 38.69458,
-     "anteil_saetze_mit_wortaufnahme": 0.15366,
-     "anteil_mittlere_saetze": 0.09896,
-     "anteil_sehr_lange_saetze": 0.05967,
-     "saetze_pro_absatz": 2.76624,
-     "anteil_kurze_woerter": 0.02517
+     "fw_profil_llr_pro_1000": 4.55196,
+     "saetze_pro_absatz_cv": 0.17184,
+     "ki_muster_pro_1000": 3.00231,
+     "nachbarsatz_ueberlappung": 0.01805,
+     "satzlaenge_dispersion": 1.70758,
+     "woerter_pro_teilsatz": 2.05147,
+     "mattr_100": 0.03032,
+     "satzklammer_mittel": 1.6904,
+     "abkuerzungen_pro_1000": 2.92803,
+     "semikolon_pro_1000": 1.59136,
+     "anteil_mittlere_saetze": 0.10459,
+     "anteil_sehr_lange_saetze": 0.06051
+    },
+    "lambda": 0.003162,
+    "z_clip": 3.0
+   },
+   "fw_profil": {
+    "woerter": [
+     "die",
+     "der",
+     "und",
+     "in",
+     "zu",
+     "von",
+     "den",
+     "das",
+     "werden",
+     "auf",
+     "im",
+     "sich",
+     "eine",
+     "ist",
+     "für",
+     "mit",
+     "des",
+     "auch",
+     "als",
+     "ein",
+     "es",
+     "wird",
+     "nicht",
+     "dass",
+     "dem",
+     "sind",
+     "oder",
+     "an",
+     "einer",
+     "bei",
+     "durch",
+     "wie",
+     "sie",
+     "diese",
+     "um",
+     "aus",
+     "kann",
+     "zur",
+     "einen",
+     "können"
+    ],
+    "rate_mensch": {
+     "die": 0.041281719,
+     "der": 0.038652144,
+     "und": 0.031990704,
+     "in": 0.019247378,
+     "zu": 0.013054126,
+     "von": 0.012373436,
+     "den": 0.011954113,
+     "das": 0.009283628,
+     "werden": 0.009242719,
+     "auf": 0.009048398,
+     "im": 0.009097262,
+     "sich": 0.008962034,
+     "eine": 0.008547256,
+     "ist": 0.008357481,
+     "für": 0.008417709,
+     "mit": 0.008446119,
+     "des": 0.008089296,
+     "auch": 0.006706326,
+     "als": 0.006691553,
+     "ein": 0.006189275,
+     "es": 0.005849498,
+     "wird": 0.00577677,
+     "nicht": 0.005616541,
+     "dass": 0.005682451,
+     "dem": 0.00493017,
+     "sind": 0.004722213,
+     "oder": 0.004411982,
+     "an": 0.004342663,
+     "einer": 0.004297208,
+     "bei": 0.003961977,
+     "durch": 0.003917658,
+     "wie": 0.003956295,
+     "sie": 0.003792657,
+     "diese": 0.003551745,
+     "um": 0.003414243,
+     "aus": 0.003449471,
+     "kann": 0.002943783,
+     "zur": 0.002951738,
+     "einen": 0.0027881,
+     "können": 0.002736963
+    },
+    "rate_ki": {
+     "die": 0.04548203,
+     "der": 0.034388393,
+     "und": 0.029989787,
+     "in": 0.016336562,
+     "zu": 0.010659728,
+     "von": 0.010105203,
+     "den": 0.010280646,
+     "das": 0.01023052,
+     "werden": 0.007501754,
+     "auf": 0.009826374,
+     "im": 0.007815045,
+     "sich": 0.012893494,
+     "eine": 0.010264982,
+     "ist": 0.009553811,
+     "für": 0.008328843,
+     "mit": 0.007592609,
+     "des": 0.005822514,
+     "auch": 0.004469097,
+     "als": 0.010227387,
+     "ein": 0.008093875,
+     "es": 0.00328799,
+     "wird": 0.00580685,
+     "nicht": 0.005640806,
+     "dass": 0.006467894,
+     "dem": 0.004807451,
+     "sind": 0.004509825,
+     "oder": 0.004184002,
+     "an": 0.005058084,
+     "einer": 0.003936502,
+     "bei": 0.004027357,
+     "durch": 0.002774192,
+     "wie": 0.003106281,
+     "sie": 0.00496723,
+     "diese": 0.004140141,
+     "um": 0.002385711,
+     "aus": 0.00407435,
+     "kann": 0.002172674,
+     "zur": 0.002351249,
+     "einen": 0.002915173,
+     "können": 0.002213401
+    },
+    "groesse": {
+     "die": 36.894,
+     "der": 20.311,
+     "und": 16.374,
+     "in": 15.148,
+     "zu": 11.984,
+     "von": 7.978,
+     "den": 13.498,
+     "das": 5.871,
+     "werden": 5.134,
+     "auf": 10.451,
+     "im": 7.455,
+     "sich": 19.279,
+     "eine": 14.598,
+     "ist": 7.176,
+     "für": 7.328,
+     "mit": 10.531,
+     "des": 4.837,
+     "auch": 8.053,
+     "als": 7.377,
+     "ein": 12.155,
+     "es": 4.712,
+     "wird": 3.949,
+     "nicht": 6.322,
+     "dass": 3.716,
+     "dem": 8.227,
+     "sind": 5.429,
+     "oder": 3.116,
+     "an": 5.525,
+     "einer": 4.689,
+     "bei": 2.119,
+     "durch": 3.753,
+     "wie": 6.285,
+     "sie": 1.745,
+     "diese": 9.237,
+     "um": 4.895,
+     "aus": 6.993,
+     "kann": 2.22,
+     "zur": 4.499,
+     "einen": 9.105,
+     "können": 2.322
+    },
+    "woerter_mensch": 879990,
+    "woerter_ki": 319192,
+    "methode": "NegBin-LLR (Mosteller/Wallace): Raten je Klasse mit +0,5-Glättung, Größenparameter per Momentenmethode über alle Abschnitte; 1e6 = Poisson"
+   },
+   "score_schwelle": 63.8,
+   "ziel_p_mensch": 0.86,
+   "ziel_score": 56.9,
+   "goodhart": {
+    "methode": "kontrafaktisch, finales Modell: je Merkmal nur dieses auf den menschlichen Median gesetzt; Median über 404 KI-Abschnitte; z auf ±3 begrenzt (S1)",
+    "ziel_p_mensch": 0.86,
+    "n_ki": 404,
+    "median_p_ki": 0.0064,
+    "merkmale": [
+     {
+      "id": "fw_profil_llr_pro_1000",
+      "koef": 2.2146,
+      "mensch_p50": 3.8266,
+      "median_beitrag_ki": -3.4425,
+      "median_p": 0.1857,
+      "median_delta": 0.1641,
+      "anteil_ueber_ziel": 0.0644,
+      "ueber_ziel": false
+     },
+     {
+      "id": "saetze_pro_absatz_cv",
+      "koef": 1.3375,
+      "mensch_p50": 0.4804,
+      "median_beitrag_ki": -1.4065,
+      "median_p": 0.0293,
+      "median_delta": 0.0148,
+      "anteil_ueber_ziel": 0.0173,
+      "ueber_ziel": false
+     },
+     {
+      "id": "ki_muster_pro_1000",
+      "koef": -1.0905,
+      "mensch_p50": 1.9579,
+      "median_beitrag_ki": -1.3281,
+      "median_p": 0.0288,
+      "median_delta": 0.0139,
+      "anteil_ueber_ziel": 0.0074,
+      "ueber_ziel": false
+     },
+     {
+      "id": "nachbarsatz_ueberlappung",
+      "koef": 0.6867,
+      "mensch_p50": 0.0398,
+      "median_beitrag_ki": -0.6164,
+      "median_p": 0.012,
+      "median_delta": 0.0036,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     },
+     {
+      "id": "satzklammer_mittel",
+      "koef": 0.7414,
+      "mensch_p50": 6.7596,
+      "median_beitrag_ki": -0.6499,
+      "median_p": 0.0126,
+      "median_delta": 0.0033,
+      "anteil_ueber_ziel": 0.0074,
+      "ueber_ziel": false
+     },
+     {
+      "id": "semikolon_pro_1000",
+      "koef": -0.6495,
+      "mensch_p50": 0.0,
+      "median_beitrag_ki": -0.5166,
+      "median_p": 0.0163,
+      "median_delta": 0.0029,
+      "anteil_ueber_ziel": 0.0074,
+      "ueber_ziel": false
+     },
+     {
+      "id": "satzlaenge_dispersion",
+      "koef": 0.7293,
+      "mensch_p50": 3.7291,
+      "median_beitrag_ki": -0.5155,
+      "median_p": 0.0105,
+      "median_delta": 0.0027,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     },
+     {
+      "id": "anteil_mittlere_saetze",
+      "koef": -0.4559,
+      "mensch_p50": 0.5152,
+      "median_beitrag_ki": -0.3697,
+      "median_p": 0.0097,
+      "median_delta": 0.002,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     },
+     {
+      "id": "abkuerzungen_pro_1000",
+      "koef": 0.9955,
+      "mensch_p50": 1.2917,
+      "median_beitrag_ki": -0.4392,
+      "median_p": 0.009,
+      "median_delta": 0.0014,
+      "anteil_ueber_ziel": 0.0025,
+      "ueber_ziel": false
+     },
+     {
+      "id": "mattr_100",
+      "koef": -0.3969,
+      "mensch_p50": 0.7736,
+      "median_beitrag_ki": -0.3463,
+      "median_p": 0.0092,
+      "median_delta": 0.0013,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     },
+     {
+      "id": "anteil_sehr_lange_saetze",
+      "koef": 0.5309,
+      "mensch_p50": 0.0278,
+      "median_beitrag_ki": -0.2439,
+      "median_p": 0.0074,
+      "median_delta": 0.0009,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     },
+     {
+      "id": "woerter_pro_teilsatz",
+      "koef": -0.0383,
+      "mensch_p50": 13.5116,
+      "median_beitrag_ki": 0.0358,
+      "median_p": 0.0062,
+      "median_delta": -0.0002,
+      "anteil_ueber_ziel": 0.005,
+      "ueber_ziel": false
+     }
+    ],
+    "top": {
+     "ids": [
+      "fw_profil_llr_pro_1000",
+      "saetze_pro_absatz_cv",
+      "ki_muster_pro_1000"
+     ],
+     "median_beitrag_ki": [
+      -3.4425,
+      -1.4065,
+      -1.3281
+     ],
+     "median_p": 0.7908,
+     "median_delta": 0.7283,
+     "anteil_ueber_ziel": 0.3564,
+     "ueber_ziel": false
     }
    },
-   "score_schwelle": 59.6,
    "satzlaengen_verteilung_mensch": {
     "1-5": 0.016,
-    "6-10": 0.122,
+    "6-10": 0.12,
     "11-15": 0.224,
-    "16-20": 0.226,
-    "21-25": 0.165,
-    "26-30": 0.11,
-    "31-40": 0.096,
-    "41+": 0.041
+    "16-20": 0.224,
+    "21-25": 0.166,
+    "26-30": 0.113,
+    "31-40": 0.097,
+    "41+": 0.039
    },
    "satzlaengen_verteilung_ki": {
     "1-5": 0.005,
-    "6-10": 0.114,
-    "11-15": 0.238,
-    "16-20": 0.265,
-    "21-25": 0.207,
-    "26-30": 0.111,
-    "31-40": 0.051,
-    "41+": 0.009
+    "6-10": 0.12,
+    "11-15": 0.24,
+    "16-20": 0.273,
+    "21-25": 0.202,
+    "26-30": 0.1,
+    "31-40": 0.053,
+    "41+": 0.007
    }
   }
  }
