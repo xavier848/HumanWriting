@@ -61,7 +61,7 @@ FUND_RE = re.compile(
     r"|\s*,\s*(?!(?:1[5-9]\d{2}|20\d{2})[a-z]?(?!\d))(?P<n>\d{1,4}(?:\s*[-–]\s*\d+)?(?:\s*ff?\.)?)(?=\s*(?:[;)]|$))"
 )
 # führende Hinweiswörter vor dem Autor: vgl., siehe, z. B., zit. n., so auch, u. a. …
-PRAEFIX_RE = re.compile(r"^(?:\s*(?:[a-zäöüß][\wäöüß]*\.?(?:\s?[a-zäöüß]\.)*|z\.\s?B\.|Vgl\.|Siehe|Zit\.\s?n\.|Ebenso|So))+(?=\s|$)")
+PRAEFIX_RE = re.compile(r"^(?:\s*(?:[a-zäöüß][\wäöüß]*\.?(?:\s?[a-zäöüß]\.)*|z\.\s?B\.|Vgl\.|Siehe|Zit\.\s?n\.|Ebenso|So)(?![\wäöüß]))+(?=\s|$)")
 AUTOREN_RE = re.compile(rf"^(?:\s|{NAME}(?![\wÄÖÜäöüß'’-])\.?|{PARTIKEL}(?![\wäöüß])|&|/|,|und|and|{ETAL}|\(Hrsg\.\)|Hrsg\.)+$")
 NARRATIV_RE = re.compile(
     # Komma zwischen Namen nur in Listen, die mit & / und enden (Reid, Stajduhar & Chappel (2010))
@@ -130,7 +130,10 @@ def stamm(w: str) -> str:
     return w[:9]
 
 
-def kontext(t: str, pos: int, laenge: int = 0, breite: int = 70) -> str:
+def kontext(t: str, pos, laenge: int = 0, breite: int = 70) -> str:
+    """Textausschnitt um Position pos (oder, wie früher, um die erste Fundstelle des Strings pos)."""
+    if isinstance(pos, str):
+        pos, laenge = t.find(pos), len(pos)
     if pos < 0:
         return ""
     a, b = max(0, pos - breite), min(len(t), pos + laenge + breite)
@@ -342,7 +345,8 @@ def zahlen_vertauscht(rest_alt: str, rest_neu: str) -> list[dict]:
             s_neu, g = gleich[0]
             meldungen.append({"typ": "Zahlen vertauscht?", "wert": f"{' / '.join(f)} → {' / '.join(g)}",
                               "kontext_original": norm(s_alt)[:220], "kontext_neu": norm(s_neu)[:220],
-                              "hinweis": "Gleiche Werte in anderer Reihenfolge – prüfen, ob die Zuordnung noch stimmt."})
+                              "hinweis": "Gleiche Werte in anderer Reihenfolge – prüfen, ob die Zuordnung noch stimmt: "
+                                         + norm(s_neu)[:160]})
     return meldungen
 
 
@@ -351,7 +355,7 @@ def zahlen_vertauscht(rest_alt: str, rest_neu: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def _zitat_norm(z: str) -> str:
-    z = norm(z.replace("­", "").replace("...", "…")).replace("*", "").replace("_", " ")
+    z = norm(z.replace("\u00ad", "").replace("...", "…")).replace("*", "").replace("_", " ")
     return norm(z).strip(" .,;:!?…")
 
 
@@ -401,7 +405,8 @@ def _erster(funde, schl, wert):
     return next(f for f in funde if f[schl] == wert)
 
 
-def _vergleiche_zahlen(alt, neu, z_alt, z_neu, res):
+def _vergleiche_zahlen(alt, neu, z_alt, z_neu, res, gut_alt=(), gut_neu=()):
+    """gut_alt/gut_neu: Jahre aufgelöster Verweise; sie heben nur bestehende Differenzen auf."""
     t_a, t_n = Counter(z["wert"] for z in z_alt), Counter(z["wert"] for z in z_neu)
     h_a = Counter(z["wert"] for z in z_alt if not z["weich"])
     h_n = Counter(z["wert"] for z in z_neu if not z["weich"])
@@ -416,6 +421,10 @@ def _vergleiche_zahlen(alt, neu, z_alt, z_neu, res):
             n_hart = max(0, h_n[w] - t_a[w])
             hart += [("neu", w)] * min(n_hart, t_n[w] - t_a[w])
             weich += [("neu", w)] * (t_n[w] - t_a[w] - min(n_hart, t_n[w] - t_a[w]))
+    for richtung, jahre in (("neu", gut_alt), ("fehlt", gut_neu)):
+        for j in jahre:
+            if (richtung, j) in hart:
+                hart.remove((richtung, j))
     # Zahlwort ersetzt (drei → vier) ist hart; Zahlwort ohne Gegenstück (zwei → beide) nur Warnung
     if {r for r, _ in weich} == {"fehlt", "neu"}:
         hart, weich = hart + weich, []
@@ -455,37 +464,44 @@ def _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res):
     """Meldet Quellenverluste/-erfindungen. Rückgabe: Jahre aufgelöster Verweise (alt, neu), die auf der
     Gegenseite jetzt als Zahl im Fließtext stehen und beim Zahlenvergleich gutgeschrieben werden."""
     gut_alt, gut_neu = [], []
-    fehlt, dazu = differenz(Counter(q["schluessel"] for q in q_alt), Counter(q["schluessel"] for q in q_neu))
-    fehlt, dazu = list(dict.fromkeys(fehlt)), list(dict.fromkeys(dazu))
+    c_alt, c_neu = Counter(q["schluessel"] for q in q_alt), Counter(q["schluessel"] for q in q_neu)
+    fehlt, dazu = list(c_alt - c_neu), list(c_neu - c_alt)
     # gleiche Jahr/Fundstelle und gemeinsamer Autor → Angabe verändert (Koautor, et al.), keine Erfindung
-    gepaart = set()
-    for f in list(fehlt):
+    def passt(qa, qn):
+        return qa["jahr"] == qn["jahr"] and qa["fund"] == qn["fund"] and \
+            {_nstamm(n) for n in qa["namen"]} & {_nstamm(n) for n in qn["namen"]}
+
+    fehlt0, dazu0 = list(fehlt), list(dazu)
+    for f in fehlt0:
         qa = _erster(q_alt, "schluessel", f)
-        for d in dazu:
-            qn = _erster(q_neu, "schluessel", d)
-            stamm_a = {_nstamm(n) for n in qa["namen"]}
-            if qa["jahr"] == qn["jahr"] and qa["fund"] == qn["fund"] and stamm_a & {_nstamm(n) for n in qn["namen"]}:
-                res["warnungen"].append({"typ": "Quellenangabe verändert", "wert": f"{qa['roh']} → {qn['roh']}",
-                                         "hinweis": "Autorenangabe weicht ab (Koautor, et al.) – prüfen."})
-                fehlt.remove(f)
-                gepaart.add(d)
-                break
-    dazu = [d for d in dazu if d not in gepaart]
+        qn = next((_erster(q_neu, "schluessel", d) for d in dazu0 if passt(qa, _erster(q_neu, "schluessel", d))), None)
+        if qn:
+            res["warnungen"].append({"typ": "Quellenangabe verändert", "wert": f"{qa['roh']} → {qn['roh']}",
+                                     "hinweis": "Autorenangabe weicht ab (Koautor, et al.) – prüfen."})
+            fehlt.remove(f)
+    dazu = [d for d in dazu0 if not any(passt(_erster(q_alt, "schluessel", f), _erster(q_neu, "schluessel", d)) for f in fehlt0)]
+    # aufgelöst gilt ein Verweis nur, wenn sein Jahr auf der Gegenseite als zusätzliche Zahl im Fließtext steht
+    j_alt = Counter(m.group(0) for m in re.finditer(r"(?<![\d.,])(?:1[5-9]|20)\d{2}(?![\d.,]\d)", rest_alt))
+    j_neu = Counter(m.group(0) for m in re.finditer(r"(?<![\d.,])(?:1[5-9]|20)\d{2}(?![\d.,]\d)", rest_neu))
     for f in fehlt:
         q = _erster(q_alt, "schluessel", f)
-        if _naehe(rest_neu, q["namen"], q["jahr"]) and not q["fund"]:
+        j = re.sub(r"[a-z]$", "", q["jahr"])
+        if not q["fund"] and j_neu[j] > j_alt[j] and _naehe(rest_neu, q["namen"], q["jahr"]):
+            j_neu[j] -= 1
             res["warnungen"].append({"typ": "Quellenverweis umformuliert", "wert": q["roh"],
                                      "hinweis": "Autor und Jahr stehen noch im Text, aber nicht mehr als Verweis – prüfen."})
-            gut_alt.append(re.sub(r"[a-z]$", "", q["jahr"]))
+            gut_alt.append(j)
             continue
         res["harte_verluste"].append({"typ": "Quellenverweis", "wert": q["roh"], "schluessel": f,
                                       "kontext_original": kontext(alt, q["pos"], len(q["roh"]))})
     for d in dazu:
         q = _erster(q_neu, "schluessel", d)
-        if _naehe(rest_alt, q["namen"], q["jahr"]) and not q["fund"]:
+        j = re.sub(r"[a-z]$", "", q["jahr"])
+        if not q["fund"] and j_alt[j] > j_neu[j] and _naehe(rest_alt, q["namen"], q["jahr"]):
+            j_alt[j] -= 1
             res["warnungen"].append({"typ": "Quellenverweis umformuliert", "wert": q["roh"],
                                      "hinweis": "Autor und Jahr standen im Original im Fließtext – prüfen."})
-            gut_neu.append(re.sub(r"[a-z]$", "", q["jahr"]))
+            gut_neu.append(j)
             continue
         res["erfindungen"].append({"typ": "Quellenverweis", "wert": q["roh"], "schluessel": d,
                                    "kontext_neu": kontext(neu, q["pos"], len(q["roh"]))})
@@ -520,9 +536,7 @@ def pruefe(alt: str, neu: str) -> dict:
     q_neu, rest_neu = quellen(neu)
     gut_alt, gut_neu = _vergleiche_quellen(alt, neu, q_alt, q_neu, rest_alt, rest_neu, res)
     # Positionen im Rest-Text entsprechen denen im Original (Verweise sind nur ausgeblendet)
-    z_alt = zahl_funde(rest_alt) + [{"wert": j, "weich": False, "roh": j, "pos": -1, "laenge": 0} for j in gut_alt]
-    z_neu = zahl_funde(rest_neu) + [{"wert": j, "weich": False, "roh": j, "pos": -1, "laenge": 0} for j in gut_neu]
-    _vergleiche_zahlen(alt, neu, z_alt, z_neu, res)
+    _vergleiche_zahlen(alt, neu, zahl_funde(rest_alt), zahl_funde(rest_neu), res, gut_alt, gut_neu)
     _vergleiche_zitate(alt, neu, res)
     res["warnungen"].extend(zahlen_vertauscht(rest_alt, rest_neu))
 
@@ -541,7 +555,7 @@ def pruefe(alt: str, neu: str) -> dict:
     # lange Fachwörter (Nomen, nicht am Satzanfang) schon bei einmaligem Verschwinden melden
     r_alt, r_neu = quellen(alt)[1], quellen(neu)[1]
     lang = [m.group(0) for m in re.finditer(r"(?<=[\wäöüß,;:)\]] )[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜa-zäöüß]+)*", r_alt)
-            if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2]
+            if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2 and m.group(0).lower() not in NICHT_AUTOR]
     staemme_neu = {stamm(x) for x in WORT_RE.findall(r_neu)}
     ersetzt = [w for w in dict.fromkeys(lang) if stamm(w) not in staemme_neu]
     if ersetzt:

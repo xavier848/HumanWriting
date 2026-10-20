@@ -30,14 +30,22 @@ ERKLAERUNG = {
     "satzlaenge_schiefe": "Asymmetrie der Satzlängen-Verteilung (positiv = langer Schwanz zu langen Sätzen).",
     "satzlaenge_dispersion": "Varianz geteilt durch Mittelwert (Dispersionsindex der Satzlängen).",
     "rhythmus_sprung_rel": "Mittlerer Längenunterschied zwischen aufeinanderfolgenden Sätzen, relativ zur Ø-Satzlänge.",
-    "rhythmus_autokorrelation": "Korrelation der Länge eines Satzes mit der des nächsten (Lag 1).",
+    "rhythmus_r1_log": "Lag-1-Autokorrelation der log-Satzlängen + 1/n (Erwartung bei Zufallsreihenfolge = 0); positiv = Längen kommen in Phasen.",
     "anteil_gleichfoermige_laeufe": "Anteil der Sätze, die in einer Dreierfolge fast gleich langer Sätze (±20 %) stehen.",
     "mattr_100": "Moving-Average Type-Token-Ratio über 100-Wort-Fenster: Anteil verschiedener Wortformen.",
     "mtld": "Measure of Textual Lexical Diversity (McCarthy & Jarvis 2010).",
     "yule_k": "Yules K: höher = mehr Wortwiederholung.",
     "nachbarsatz_ueberlappung": "Jaccard-Überlappung der Inhaltswortstämme benachbarter Sätze.",
     "anteil_saetze_mit_wortaufnahme": "Anteil der Sätze, die mindestens einen Inhaltswortstamm des Vorsatzes aufnehmen.",
-    "menzerath_korrelation": "Korrelation zwischen Satzlänge (in Teilsätzen) und Teilsatzlänge (in Wörtern); Menzerath-Altmann-Gesetz: negativ.",
+    "menzerath_korrelation": "Korrelation zwischen Teilsatzzahl und Teilsatzlänge; misst vor allem die Gleichförmigkeit der Satzlängen, kein Menzerath-Befund (nicht bewertet).",
+    "fw_profil_llr_pro_1000": "Log-Likelihood-Quotient (negative Binomialverteilung) über 40 häufige Funktionswörter, pro 1000 Wörter; > 0 = menschlicher. Nur im Modell, nicht im Score.",
+    "satzklammer_mittel": "Mittlere Zahl der Wörter zwischen finitem Hilfs-/Modalverb und Partizip/Infinitiv (Mittelfeld).",
+    "teilsatz_verhaeltnis_21": "Verhältnis der Sätze mit zwei zu denen mit einem Teilsatz (geglättet).",
+    "konnektoren_pro_1000": "Konnektoren (zudem, somit, folglich …) in allen Satzstellungen pro 1000 Token.",
+    "abkuerzungen_pro_1000": "Stil-Abkürzungen (z. B., bzw., d. h. …) pro 1000 Token.",
+    "nominalketten_pro_100": "Genitiv- und von-Ketten aus mindestens zwei Substantiven pro 100 Wörter.",
+    "silben_q21": "Verhältnis der Zwei- zu den Einsilbern (geglättet).",
+    "mattr_klumpung_100": "MATTR-100 geteilt durch die Zufallserwartung (Rarefaktion): < 1 = Begriffe klumpen lokal.",
     "lix": "Lesbarkeitsindex nach Björnsson: Ø-Satzlänge + Prozent Wörter mit mehr als 6 Buchstaben.",
     "flesch_amstad": "Flesch-Reading-Ease, deutsche Anpassung nach Amstad: 180 − ASL − 58,5·ASW.",
     "wiener_sachtextformel": "1. Wiener Sachtextformel (Bamberger & Vanecek): Schulstufe, höher = schwerer.",
@@ -76,10 +84,11 @@ def zielwerte(b) -> str:
         "",
         "Automatisch erzeugt aus `text-analyse/data/baselines.json` (kalibrierung/scripts/referenzen.py). Nicht von Hand bearbeiten.",
         "",
-        f"Grundlage: {k['mensch']['dokumente']} menschliche Hochschultexte vor 2022 ({k['mensch']['abschnitte']} Abschnitte à ~600–1300 Wörter) "
+        f"Grundlage: {k['mensch']['dokumente']} menschliche Hochschultexte vor 2022 ({k['mensch']['abschnitte']} Abschnitte à "
+        f"{k.get('abschnittslaenge', '~600–1300')} Wörter) "
         f"und {k['ki']['dokumente']} KI-Texte zu denselben Themen ({k['ki']['abschnitte']} Abschnitte).",
         "",
-        "**Zielbereich** = mittlere 50 % der menschlichen Abschnitte (P25–P75). **Trennschärfe** = AUROC, richtungsunabhängig (0,5 = trennt nicht, 1,0 = trennt perfekt).",
+        "**Zielbereich** = mittlere 50 % der menschlichen Abschnitte (P25–P75, jedes Dokument zählt gleich). **Trennschärfe** = AUROC, richtungsunabhängig (0,5 = trennt nicht, 1,0 = trennt perfekt).",
         "",
         "## Bewertete Kennzahlen (nach Trennschärfe)",
         "",
@@ -155,23 +164,40 @@ def kennzahlen(b) -> str:
         + ", ".join(f"{q} ({n})" for q, n in k["ki"]["quellen"].items())
         + ". Themengleich: Jeder KI-Text wurde aus einer inhaltlichen Gliederung eines menschlichen Auszugs geschrieben.",
         "",
-        "## Güte auf zurückgehaltenen Dokumenten (Test-Split, 25 %)",
-        "",
-        "| Verfahren | AUROC | Genauigkeit | Median Mensch | Median KI |",
-        "|---|---|---|---|---|",
     ]
-    for name, key in (("Modell P(menschlich)", "modell_test"), ("Menschlichkeits-Score", "score_test")):
-        if key in ev:
+    if "modell_cv" in ev:  # ab Version 2: wiederholte gruppierte Kreuzvalidierung
+        zeilen += [f"## Güte out-of-fold ({ev.get('methode', 'Kreuzvalidierung')})", "",
+                   "Mittelwert ± SD über die Folds; pro Fold wurde alles (Perzentile, Gewichte, Funktionswort-Profil, Modell) nur aus den Train-Themen geschätzt.", "",
+                   "| Verfahren | AUROC | Genauigkeit | bal. Genauigkeit | Median Mensch | Median KI |", "|---|---|---|---|---|---|"]
+        for name, key in (("Modell P(menschlich)", "modell_cv"), ("Menschlichkeits-Score", "score_cv")):
             e = ev[key]
-            zeilen.append(f"| {name} | {e['auroc']} | {e['genauigkeit']} | {e['median_mensch']} | {e['median_ki']} |")
-    zeilen += ["", f"Score-Schwelle (Mitte zwischen den Medianen): {t.get('score_schwelle', '–')}.",
+            pm = lambda x, n=3: f"{e[x]:.{n}f} ± {e.get(x + '_sd', 0):.{n}f}".replace(".", ",") if x in e else "–"  # noqa: E731
+            zeilen.append(f"| {name} | {pm('auroc')} | {pm('genauigkeit')} | {pm('bal_genauigkeit')} | {pm('median_mensch', 2)} | {pm('median_ki', 2)} |")
+    else:
+        zeilen += ["## Güte auf zurückgehaltenen Dokumenten (Test-Split, 25 %)", "",
+                   "| Verfahren | AUROC | Genauigkeit | Median Mensch | Median KI |", "|---|---|---|---|---|"]
+        for name, key in (("Modell P(menschlich)", "modell_test"), ("Menschlichkeits-Score", "score_test")):
+            if key in ev:
+                e = ev[key]
+                zeilen.append(f"| {name} | {e['auroc']} | {e['genauigkeit']} | {e['median_mensch']} | {e['median_ki']} |")
+    zeilen += ["", f"Score-Schwelle (Mitte zwischen den Medianen): {str(t.get('score_schwelle', '–')).replace('.', ',')}."
+               + (f" Ziel für P(menschlich): {str(t['ziel_p_mensch']).replace('.', ',')} (P25 der menschlichen "
+                  "Out-of-fold-Wahrscheinlichkeiten)." if "ziel_p_mensch" in t else ""),
                "", "## Alle Kennzahlen", "",
-               "| Kennzahl | Mensch P10 / P25 / P50 / P75 / P90 | KI P25 / P50 / P75 | Trennschärfe | bewertet | Bedeutung |",
-               "|---|---|---|---|---|---|"]
+               "| Kennzahl | Mensch P10 / P25 / P50 / P75 / P90 | KI P25 / P50 / P75 | Trennschärfe | bewertet | Gewicht | Messunsicherheit | Bedeutung |",
+               "|---|---|---|---|---|---|---|---|"]
     for kk, v in sorted(met.items(), key=lambda kv: -kv[1]["trennschaerfe"]):
         m, ki = v["mensch"], v["ki"]
+        bew = "✔" if v["bewertet"] else ("nur Modell" if v.get("nur_modell") else "")
         zeilen.append(f"| {analyse.NAMEN.get(kk, kk)} | {f(kk, m['p10'])} / {f(kk, m['p25'])} / {f(kk, m['p50'])} / {f(kk, m['p75'])} / {f(kk, m['p90'])} | "
-                      f"{f(kk, ki['p25'])} / {f(kk, ki['p50'])} / {f(kk, ki['p75'])} | {trenn(v)} | {'✔' if v['bewertet'] else ''} | {ERKLAERUNG.get(kk, '')} |")
+                      f"{f(kk, ki['p25'])} / {f(kk, ki['p50'])} / {f(kk, ki['p75'])} | {trenn(v)} | {bew} | "
+                      f"{f(None, v['gewicht']) if v['bewertet'] else ''} | {f(kk, v.get('se_typ'))} | {ERKLAERUNG.get(kk, '')} |")
+    if t.get("cluster"):
+        zeilen += ["", "## Gebündelte Kennzahlen (Cluster)", "",
+                   "Kennzahlen, die in menschlichen Texten stark korrelieren (|r| ≥ 0,7), zählen im Score zusammen höchstens so viel wie ihr stärkstes Mitglied:", ""]
+        for kopf, mitglieder in t["cluster"].items():
+            if len(mitglieder) > 1:
+                zeilen.append("- " + ", ".join(analyse.NAMEN.get(m_, m_) for m_ in mitglieder))
     modell = t.get("modell", {})
     if modell.get("koeffizienten"):
         zeilen += ["", "## Modell", "", "Logistische Regression auf standardisierten Kennzahlen (positiv = spricht für menschlich):", ""]

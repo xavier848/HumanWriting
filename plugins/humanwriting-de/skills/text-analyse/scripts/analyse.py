@@ -25,6 +25,8 @@ Messkonventionen (ausführlich: references/kennzahlen-methodik.md):
   Infinitivgruppen (um … zu, erweiterter Infinitiv) zählen nicht als Teilsatz.
 - Typen = kleingeschriebene Wortformen, keine Lemmata (Homographen verschmelzen).
 - satzlaenge_dispersion = Var/Ø (Ords I), satzlaenge_schiefe = g1, autokorrelation normiert mit 1/N.
+- Längenabhängige Kennzahlen (satzlaenge_schiefe, mattr_klumpung_100) = Median über Fenster à 800 Wörter
+  (Länge der Kalibrierabschnitte); kürzere Texte werden am Stück gemessen.
 """
 from __future__ import annotations
 
@@ -131,7 +133,7 @@ KONNEKTOREN = [
     "zugleich", "gleichzeitig", "schließlich", "hingegen", "wiederum",
 ]
 KONNEKTOR_RE = re.compile(
-    r"\b(?:" + "|".join(re.escape(k).replace(r"\ ", r"\s+") for k in KONNEKTOREN if k != "des weiteren")
+    r"\b(?:" + "|".join(re.escape(k).replace(" ", r"\s+") for k in KONNEKTOREN if k != "des weiteren")
     + r"|des\s+weiteren\b(?!\s+(?-i:[A-ZÄÖÜ])[\wäöüß-]*(?:e?s|en)\b))\b",  # nicht Genitiv "des weiteren Vorgehens"
     re.IGNORECASE,
 )
@@ -297,7 +299,6 @@ ARTIKEL_POSS = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen"
 _INF_RE = re.compile(r"(?:\bzu\s+[a-zäöüß]\w*(?:en|ln|rn)|\b[a-zäöüß]\w*zu\w+(?:en|ln|rn))[.!?]?$")
 
 # Silben (HW04): Kern = Vokal oder Diphthong
-VOKALGRUPPE_RE = re.compile(r"[aeiouyäöü]+")
 SILBENKERN_RE = re.compile(r"aa|ee|oo|ei|ai|ey|ay|oy|au|äu|eu|ie|ou|[aeiouyäöüéèàáâêôû]")
 _AUSNAHMEN_BEE = {"beere", "beeren", "beet", "beete", "beeten"}
 _HIAT_EXTRA_RE = re.compile(r"museum|ideen|tourneen|alleen|armeen")
@@ -642,6 +643,8 @@ def _zeilen_ueberschrift(s: str, breite: float) -> bool:
         return True
     if not ist_ueberschrift(s) or re.search(r"[,;–—-]$", s):
         return False
+    if s[:1] in "([" or s[:1].islower() or s.count(")") > s.count("("):  # Belegrest '(Interview 4)', 'S. 141)'
+        return False
     letztes = s.split()[-1].strip("*_")
     if not (letztes[:1].isupper() or letztes[:1].isdigit()):  # Umbruchzeilen enden meist auf Artikel/Verb/Adjektiv
         return False
@@ -672,7 +675,7 @@ def _in_absaetze(zeilen: list[str]) -> list[list[str]]:
             akt = []
             continue
         akt.append(z)
-        if (nach and SATZENDE_ZEILE_RE.search(s) and (nach[:1].isupper() or nach[:1] in "„\"»«(")
+        if (nach and SATZENDE_ZEILE_RE.search(s) and (nach[:1].isupper() or nach[:1] in "„\"»«")
                 and not LISTE_RE.match(s) and (word_kopie or len(s) < 0.7 * breite)):
             gruppen.append(akt)
             akt = []
@@ -698,7 +701,9 @@ def ist_listenzeile(zeilen: list[str], zi: int, in_liste: bool, vorige_art: str 
     if zi == 0 or in_liste or vorige_art in ("ueberschrift", "zitat"):
         return True
     vorher = zeilen[zi - 1].strip()
-    if re.search(r"[.!?:;]$", vorher) or re.match(r"^#{1,6}\s", vorher) or FETTZEILE_RE.match(vorher):
+    # Satzende/Doppelpunkt davor – nicht bei Beleg 'Hartmann 1999:' oder Abkürzungsrest 'o.' (harter Umbruch)
+    satzende = re.search(r"[.!?:;]$", vorher) and not re.search(r"(?:\b\d{4}[a-z]?:|(?<![\w.])[^\W\d_]\.)$", vorher)
+    if satzende or re.match(r"^#{1,6}\s", vorher) or FETTZEILE_RE.match(vorher):
         return True
     naechste = zeilen[zi + 1].strip() if zi + 1 < len(zeilen) else None
     return naechste is not None and _listenart(naechste) == art  # mehrere gleichartige Marker in Folge
@@ -781,13 +786,16 @@ def zerlege_bloecke(text: str) -> dict:
             im_inhaltsverzeichnis = False
         if LITERATUR_UEBERSCHRIFT.match(erste):
             folgende = list(_erste_zeilen(bloecke[bi + 1:]))
-            einstieg = any(_starke_kapitelzeile(z, EINSTIEG_UEBERSCHRIFT) for z in folgende)
-            if einstieg:
+            # früh im Text (< 10 % und < 1000 Wörter gelesen): Vorspann oder Verzeichniseintrag, nie abschneiden
+            bisher = sum(len(a.split()) for a in absaetze)
+            rest = sum(len(z.split()) for folge_zeilen in bloecke[bi + 1:] for z in folge_zeilen)
+            frueh = bisher < 1000 and bisher < 0.1 * (bisher + rest)
+            if frueh and any(_starke_kapitelzeile(z, EINSTIEG_UEBERSCHRIFT) for z in folgende):
                 ueberspringen = True  # Erklärung/Verzeichnis vor der Einleitung
                 continue
-            if (absaetze or ueberschriften) and not (
+            if not frueh and not (
                     UNTERKAPITEL_NR.match(erste) or any(_starke_kapitelzeile(z, FOLGEKAPITEL_UEBERSCHRIFT) for z in folgende)):
-                abgeschnitten = True
+                abgeschnitten = True  # Unterkapitel '1.3 Quellen' oder Kapitel davor ('3 Quellen' … '4 Fazit') bleiben
                 break
         prosa: list[str] = []
         in_liste = False
@@ -816,7 +824,8 @@ def zerlege_bloecke(text: str) -> dict:
                 listenpunkte[-1] += " " + s  # eingerückte oder angehängte Fortsetzung des Listenpunkts
                 continue
             if (len(zeilen) == 1 and not vorher_liste and NUM_KAPITEL_RE.match(s)
-                    and ist_ueberschrift(LISTE_RE.sub("", s, count=1))):
+                    and ist_ueberschrift(LISTE_RE.sub("", s, count=1))
+                    and not (bi + 1 < len(bloecke) and _listenart(bloecke[bi + 1][0].strip()) == "zahl")):
                 ueberschriften.append(s)  # '1. Einleitung' als eigene Zeile
                 vorige_art = "ueberschrift"
                 continue
@@ -1064,6 +1073,35 @@ def schiefe(xs):
     return sum(((x - m) / s) ** 3 for x in xs) / len(xs) if s else 0.0
 
 
+ABSCHNITT_L = 800  # Wörter je Kalibrierabschnitt (kalibriere.L_STANDARD); Fensterlänge längenabhängiger Kennzahlen
+
+
+def fenster_starts(n: int, L: int = ABSCHNITT_L) -> list[int]:
+    """Startpositionen von k = ceil(n/L) Fenstern der Länge L, gleichmäßig zwischen 0 und n − L (HW01)."""
+    if n <= L:
+        return [0]
+    k = math.ceil(n / L)
+    return [round(i * (n - L) / (k - 1)) for i in range(k)]
+
+
+def satz_fenster(woerter_je_satz: list[int], L: int = ABSCHNITT_L) -> list[tuple[int, int]]:
+    """Fenster aus ganzen Sätzen mit höchstens L Wörtern (Satzindizes von, bis); ≤ L Wörter: ein Fenster."""
+    n = sum(woerter_je_satz)
+    if n <= L or not woerter_je_satz:
+        return [(0, len(woerter_je_satz))]
+    kum = [0]
+    for x in woerter_je_satz:
+        kum.append(kum[-1] + x)
+    out = []
+    for st in fenster_starts(n, L):
+        a = min(next(i for i, c in enumerate(kum) if c >= st), len(woerter_je_satz) - 1)
+        e = a
+        while e < len(woerter_je_satz) and kum[e + 1] - kum[a] <= L:
+            e += 1
+        out.append((a, max(e, a + 1)))
+    return out
+
+
 def autokorrelation(xs, lag=1):
     if len(xs) <= lag + 2:
         return 0.0
@@ -1155,7 +1193,8 @@ def _log_nb(k: int, mu: float, s: float) -> float:
             + s * math.log(s / (s + mu)) + k * math.log(mu / (s + mu)))
 
 
-def _fw_llr_zaehlung(zaehlung, n: int, profil: dict) -> float | None:
+def fw_llr_zaehlung(zaehlung, n: int, profil: dict | None) -> float | None:
+    """fw_llr aus Zählungen {Wort: k} und Wortzahl n (bewerte(), kalibriere.py)."""
     woerter = (profil or {}).get("woerter") or []
     if not n or not woerter:
         return None
@@ -1170,11 +1209,14 @@ def _fw_llr_zaehlung(zaehlung, n: int, profil: dict) -> float | None:
     return 1000.0 * llr / n
 
 
+_fw_llr_zaehlung = fw_llr_zaehlung  # alter Name
+
+
 def fw_llr(woerter_low: list[str], profil: dict | None) -> float | None:
     """Funktionswort-Profil (HW07): 1000·LLR/n, NegBin je Wort; positiv = menschlicher."""
     if not profil or not woerter_low:
         return None
-    return _fw_llr_zaehlung(Counter(woerter_low), len(woerter_low), profil)
+    return fw_llr_zaehlung(Counter(woerter_low), len(woerter_low), profil)
 
 
 # ---------------------------------------------------------------------------
@@ -1202,8 +1244,13 @@ def lade_muster(pfad: str | None = None) -> list[dict]:
 def muster_treffer(satz: str, muster: list[dict]) -> list[tuple]:
     """Treffer eines Satzes; bei Überlappung zählt nur der Treffer mit höchstem Gewicht (dann der längste).
     Rückgabe: (start, ende, gewicht, muster, fund, verdrängte Muster-IDs)."""
-    kand = [(t.start(), t.end(), float(mu.get("gewicht", 1.0)), mu, t.group(0))
-            for mu in muster for t in mu["_re"].finditer(satz) if t.end() > t.start()]
+    return muster_aufloesen([(t.start(), t.end(), float(mu.get("gewicht", 1.0)), mu, t.group(0))
+                             for mu in muster for t in mu["_re"].finditer(satz) if t.end() > t.start()])
+
+
+def muster_aufloesen(kand: list[tuple]) -> list[tuple]:
+    """Überlappende Kandidaten (start, ende, gewicht, muster, fund) eines Satzes auflösen: höchstes Gewicht, dann
+    längster, dann frühester Treffer gewinnt. Auch von kalibriere.py genutzt (gleiche Regel mit Fold-Gewichten)."""
     behalten = []
     for k in sorted(kand, key=lambda k: (-k[2], -(k[1] - k[0]), k[0])):
         konflikt = next((b for b in behalten if not (k[1] <= b[0] or k[0] >= b[1])), None)
@@ -1509,7 +1556,9 @@ def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict
     m["satzlaenge_p10"] = perzentil(laengen, 0.10)
     m["satzlaenge_p90"] = perzentil(laengen, 0.90)
     m["satzlaenge_max"] = float(max(laengen)) if laengen else 0.0
-    m["satzlaenge_schiefe"] = schiefe(laengen)
+    # längenabhängig (HW01: +0,36 SD zwischen 600 und 1300 Wörtern): Median über Satzfenster à ABSCHNITT_L Wörter
+    w_je_satz = [sum(1 for t in s["tokens"] if ist_wort(t)) for s in saetze]
+    m["satzlaenge_schiefe"] = statistics.median(schiefe(laengen[a:e]) for a, e in satz_fenster(w_je_satz)) if laengen else 0.0
     m["satzlaenge_dispersion"] = (sd(laengen) ** 2 / mittel(laengen)) if laengen and mittel(laengen) else 0.0
     m["anteil_kurze_saetze"] = anteil(sum(l <= 10 for l in laengen), n_s)
     m["anteil_sehr_kurze_saetze"] = anteil(sum(l <= 6 for l in laengen), n_s)
@@ -1560,7 +1609,9 @@ def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict
     # --- Wortschatz ------------------------------------------------------------
     m["mattr_100"] = mattr(woerter_low, 100)
     m["mattr_50"] = mattr(woerter_low, 50)
-    m["mattr_klumpung_100"] = mattr_klumpung(woerter_low, 100)  # HW12, Kandidat (nur auf festen Fenstern gültig)
+    # HW12: nur auf festen Fenstern gültig (−0,49 SD zwischen 600 und 1300 Wörtern) – Median über Fenster à ABSCHNITT_L
+    m["mattr_klumpung_100"] = statistics.median(mattr_klumpung(woerter_low[a:a + ABSCHNITT_L], 100)
+                                                for a in fenster_starts(n_w))
     m["mtld"] = mtld(woerter_low)
     m["yule_k"] = yule_k(woerter_low)
     m["anteil_funktionswoerter"] = anteil(sum(w in FUNKTIONSWOERTER for w in woerter_low), n_w)
@@ -1767,6 +1818,10 @@ def analysiere_text(text: str, muster: list[dict] | None = None, fw_profil: dict
         info["warnungen"].append(f"Nur {n_s} Sätze – Verteilungsmaße (Varianz, Rhythmus) sind wenig aussagekräftig.")
     elif n_s < 30:
         info["warnungen"].append(f"Nur {n_s} Sätze – Rhythmuswert unsicher (SE ≈ 1/√n), wird nicht bewertet.")
+    if n_w > 1.5 * ABSCHNITT_L:  # kein Blockmodus: Referenz = Abschnitte à ABSCHNITT_L Wörter (HW01)
+        info["warnungen"].append(f"{n_w} Wörter – die Referenzwerte stammen aus Abschnitten à {ABSCHNITT_L} Wörtern. Absatz- und "
+                                 "Streuungsmaße (CV) liegen bei langen Texten höher; für die Umschreib-Schleife besser "
+                                 f"Abschnitte von etwa {ABSCHNITT_L} Wörtern messen.")
     for s in saetze:
         s.pop("tokens", None)
         s.pop("konnektor_start", None)
@@ -1914,7 +1969,7 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
     fw = ts.get("fw_profil")
     if fw and "fw_profil_llr_pro_1000" not in m and ergebnis.get("fw_zaehlung"):
         z = ergebnis["fw_zaehlung"]
-        wert = _fw_llr_zaehlung(z.get("k", {}), z.get("n", 0), fw)
+        wert = fw_llr_zaehlung(z.get("k", {}), z.get("n", 0), fw)
         m["fw_profil_llr_pro_1000"] = round(wert, 4) if wert is not None else None
     n_s = ergebnis.get("info", {}).get("saetze")
     ref = ts.get("metriken", {})
@@ -1952,6 +2007,7 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
             "trennschaerfe": r.get("auroc"),
             "gewicht": r.get("gewicht", 0.0),
             "bewertet": bewertet,
+            "nur_modell": bool(r.get("nur_modell")),  # nur im Modell p_mensch, nie Rot-Ziel (HW07)
             "status": status,
             "unsicher": unsicher,
             "ki_naeher": ki_naeher,
@@ -2021,7 +2077,11 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
         out.append("| | Kennzahl | Wert | Mensch (Zielbereich P25–P75) | Mensch Median | KI Median | Aufgabe |")
         out.append("|---|---|---|---|---|---|---|")
         for z in bewertung["kennzahlen"]:
-            if not z["bewertet"] and not alle:
+            if not (z["bewertet"] or z.get("nur_modell")) and not alle:
+                continue
+            if z.get("nur_modell"):  # eigene Anzeige ohne Ampel: nur Tendenz (HW07)
+                out.append(f"| ℹ️ | {z['name']} | {fmt(z['wert'])} | {fmt(z['mensch_p25'])}–{fmt(z['mensch_p75'])} | "
+                           f"{fmt(z['mensch_p50'])} | {fmt(z['ki_p50'])} | nur Tendenz (fließt ins Modell) |")
                 continue
             aufgabe = ""
             if z["richtung"] == "erhoehen":
@@ -2030,7 +2090,7 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
                 aufgabe = "↓ senken"
             if z["status"] != "gruen" and z["ki_naeher"]:
                 aufgabe += " (KI-typisch)"
-            if z.get("unsicher"):
+            if z.get("unsicher") and z["status"] != "gruen":
                 aufgabe += " (Grenzfall)"
             out.append(
                 f"| {STATUS_SYMBOL[z['status']]} | {z['name']} | {fmt(z['wert'])} | {fmt(z['mensch_p25'])}–{fmt(z['mensch_p75'])} | "

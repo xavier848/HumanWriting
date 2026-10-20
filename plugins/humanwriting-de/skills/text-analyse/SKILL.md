@@ -13,7 +13,8 @@ Misst einen Text mit einem deterministischen Python-Skript. **Schätze Kennzahle
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" TEXTDATEI
 ```
 
-- Eingabe: `.md`, `.txt`, `.docx` oder `.pdf` (PDF nur mit `pdftotext`). Text aus dem Chat zuerst in eine Datei schreiben (z. B. `/tmp/text.md`) oder per stdin übergeben (`-` als Dateiname).
+- Eingabe: `.md`, `.txt`, `.docx`, `.odt` oder `.pdf` (PDF nur mit `pdftotext`; `.doc`, `.rtf` und `.pages` werden mit Meldung abgelehnt). Text aus dem Chat zuerst in eine Datei schreiben (z. B. `/tmp/text.md`) oder per stdin übergeben (`-` als Dateiname).
+- Die Referenzwerte stammen aus Abschnitten à 800 Wörtern. Lange Texte (ab ~1200 Wörtern, das Skript warnt) am besten abschnittsweise messen; Absatz- und Streuungsmaße liegen bei langen Texten sonst höher.
 - `--format json` liefert alle Werte maschinenlesbar inklusive Satzliste mit Markierungen (für die Umschreib-Schleife).
 - `--alle` zeigt auch die nicht bewerteten Kennzahlen, `--stellen 30` mehr auffällige Sätze.
 - Falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt wurde: Skript suchen mit `find ~/.claude -path '*text-analyse/scripts/analyse.py' 2>/dev/null | head -1`.
@@ -33,10 +34,11 @@ Der Bericht enthält:
    - 🔴 außerhalb, „KI-typisch“ = näher am KI-Median als am Mensch-Median
    - „↑ erhöhen / ↓ senken“ zeigt die Richtung zum Zielbereich.
 4. **Satzlängen-Verteilung** als Histogramm und **Satzlängen im Verlauf** (Rhythmus sichtbar machen).
-5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `konnektor_anfang`, `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel). Die Markierung `gleichfoermig` (Folge fast gleich langer Sätze) ist nur ein Hinweis auf die Stelle: Ähnlich lange Sätze hintereinander sind auch bei Menschen normal. Entscheidend ist die Verteilung insgesamt, nicht einzelne Folgen.
-6. **Unsicher** (Zusatz an einer Kennzahl): Der Wert liegt so nah an der Grenze des Zielbereichs, dass er innerhalb der typischen Messunsicherheit schwankt. Solche Kennzahlen nicht als Hebel nennen.
+5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `konnektor_anfang`, `konnektor_mitte` (Konnektor im Satzinneren – eher streichen als verschieben), `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel). Die Markierung `gleichfoermig` (Folge fast gleich langer Sätze) ist nur ein Hinweis auf die Stelle: Ähnlich lange Sätze hintereinander sind auch bei Menschen normal. Entscheidend ist die Verteilung insgesamt, nicht einzelne Folgen.
+6. **Grenzfall** (Zusatz an einer gelben oder roten Kennzahl, im JSON `unsicher: true`): Der Wert liegt so nah an P25/P75, dass er innerhalb der typischen Messunsicherheit eines 800-Wörter-Abschnitts schwankt. Gelbe Grenzfälle nicht als Hebel nennen. Weil einzelne Kennzahlen bei dieser Textlänge stark streuen, ist die Modell-Einschätzung das verlässlichere Gesamturteil.
+7. **ℹ️ Funktionswort-Profil** (`fw_profil_llr_pro_1000`, > 0 = menschlich): geht nur in die Modell-Einschätzung ein, nicht in den Score. Nur als Tendenz lesen; nie einzelne Funktionswörter gezielt einstreuen.
 
-Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut Score und Modell auf zurückgehaltenen Texten funktionieren, steht in `references/kennzahlen.md`.
+Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut Score und Modell auf zurückgehaltenen Texten funktionieren, steht in `references/kennzahlen.md`. Wie gemessen wird (Bereinigung, Satzgrenzen, Silben, Teilsätze, Fenster) und welche Maße bewusst fehlen, steht in `references/kennzahlen-methodik.md`.
 
 ## Ergebnis an den Nutzer zurückgeben
 

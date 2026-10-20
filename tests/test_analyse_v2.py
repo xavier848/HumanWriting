@@ -337,6 +337,27 @@ class Struktur(unittest.TestCase):
                    "# Literaturverzeichnis\n\nMüller, A. (2019): Buch.")
         self.assertEqual(s["absaetze"], ["Text steht hier."])
 
+    def test_verzeichniseintrag_schneidet_nicht_ab(self):
+        # Inhaltsverzeichnis ohne erkannte Überschrift: Eintrag "Literatur" direkt vor "Anhang" (pdftotext)
+        lang = "Die Arbeit untersucht kleine Unternehmen in der Region. " * 40
+        s = self.z(f"Zusammenfassung\n\nKurzer Text hier. Noch einer.\n\nLiteratur\n\nAnhang\n\n1 Einleitung\n\n{lang}\n\n"
+                   "Literatur\n\nMüller, A. (2019): Buch. Berlin.")
+        self.assertTrue(s["literatur_abgeschnitten"])
+        self.assertIn(lang.strip(), s["absaetze"])
+
+    def test_lose_nummerierte_liste_bleibt_liste(self):
+        s = self.z("Die Punkte sind:\n\n1. Kosten\n\n2. Zeit\n\n3. Qualität\n\nText danach.\n\n1. Einleitung\n\nDie Arbeit beginnt.")
+        self.assertEqual(s["listenpunkte"], ["Kosten", "Zeit", "Qualität"])
+        self.assertEqual(s["ueberschriften"], ["1. Einleitung"])
+
+    def test_harter_umbruch_belegreste(self):
+        s = self.z("Die Befragten nennen viele Gründe, warum sie bleiben und warum sie\ngehen wollen, wie eine Person "
+                   "deutlich gesagt hat.\n(Interview 4)\n\nDiese Zahl (Ansbacher zitiert in Hartmann 1999:\n30) von nur 22 Personen "
+                   "läßt die Frage offen. Sie gilt im o.\ng. Sinne weiter.")
+        self.assertEqual(s["ueberschriften"], [])
+        self.assertEqual(s["listenpunkte"], [])
+        self.assertEqual(len(s["absaetze"]), 2)
+
     def test_zitatblock_code_yaml_setext_trennlinie(self):
         s = self.z("---\ntitle: Hausarbeit\n---\n\nMüller schreibt:\n\n> Die Digitalisierung ist kein Selbstzweck.\n> Sie verlangt mehr.\n\n"
                    "```python\nx = 1\n\ny = berechne(x)\n```\n\n~~~\nSELECT name FROM kunden\n~~~\n\nEinleitung\n==========\n\n"

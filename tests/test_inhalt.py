@@ -471,5 +471,151 @@ class Fussnoten(unittest.TestCase):
         self.assertFalse(res["ok"])
 
 
+# ---------------------------------------------------------------------------
+# Regex-Muster in ki_muster.json (je geändertes Muster ≥ 3 Positiv- und ≥ 3 Negativsätze)
+# ---------------------------------------------------------------------------
+
+MUSTER_SAETZE = {
+    "rolle_spielen": (
+        ["Dabei spielt die Digitalisierung eine zentrale Rolle.",
+         "Hierbei spielen digitale Medien eine immer größere Rolle.",
+         "Es zeigt sich, dass Vertrauen eine entscheidende Rolle spielt.",
+         "Die Führungskraft hat dabei eine wichtige Rolle gespielt."],
+        ["Er spielt eine Rolle im Theaterstück.",
+         "Die zentrale Rolle des Staates wird kritisch diskutiert.",
+         "Das Alter spielt keine wichtige Rolle.",
+         "Die Kinder spielten eine Szene nach."]),
+    "rolle_zukommen": (
+        ["Der Führungskraft kommt eine zentrale Rolle zu.",
+         "Dabei kommt der Kommunikation im Veränderungsprozess eine besondere Bedeutung zu.",
+         "Es zeigt sich, dass dem Vertrauen eine wichtige Rolle zukommt."],
+        ["Die Rolle kommt aus dem Theater.",
+         "Er kommt zu einer wichtigen Erkenntnis.",
+         "Eine besondere Bedeutung hat die Kommunikation."]),
+    "gilt_es": (
+        ["Daher gilt es, die Kosten zu senken.",
+         "Es gilt, die Mitarbeitenden früh einzubinden.",
+         "Deren Bedürfnisse gilt es als Erstes zu erfüllen.",
+         "Es gilt: Qualität vor Quantität."],
+        ["Mittlerweile gilt es als erwiesen, dass Bewegung hilft.",
+         "Es gilt das Prinzip der Gleichbehandlung.",
+         "Diese Regel gilt seit 2019.",
+         "Ob das auch für KMU gilt, ist offen."]),
+    "beitrag_leisten": (
+        ["Schulungen tragen maßgeblich dazu bei, Fehler zu vermeiden.",
+         "Das Programm trägt entscheidend zur Motivation der Beschäftigten bei.",
+         "Es zeigt sich, dass klare Ziele wesentlich zum Erfolg beitragen."],
+        ["Er trägt die Verantwortung für das Projekt.",
+         "Das trägt zur Verwirrung bei.",
+         "Die Kosten trug maßgeblich der Bund."]),
+    "des_weiteren": (
+        ["Des Weiteren wurde eine Befragung durchgeführt.",
+         "Des weiteren zeigt sich ein deutlicher Effekt.",
+         "Es wurde des Weiteren festgestellt, dass die Kosten steigen.",
+         "Die Kosten sind des weiteren gestiegen."],
+        ["Das dient der Planung des weiteren Vorgehens.",
+         "Im Laufe des weiteren Verlaufs zeigte sich nichts.",
+         "Die Phase des weiteren beruflichen Werdegangs ist offen."]),
+    "insgesamt_zeigt": (
+        ["Insgesamt zeigt sich ein positives Bild.",
+         "Insgesamt wird deutlich, dass die Maßnahmen wirken.",
+         "Insgesamt ergibt sich ein differenziertes Bild."],
+        ["Insgesamt ergibt sich eine Zahl von 53 Vereinen.",
+         "Insgesamt lässt sich festhalten, dass der Effekt klein ist.",
+         "Insgesamt wurden 412 Personen befragt."]),
+    "zusammenfassend": (
+        ["Zusammenfassend lässt sich festhalten, dass der Effekt klein ist.",
+         "Abschließend kann man sagen, dass das Projekt gelungen ist.",
+         "Insgesamt lässt sich feststellen, dass die Kosten steigen."],
+        ["Insgesamt können 128 Fehler festgestellt werden.",
+         "Insgesamt können drei Fehler festgestellt werden.",
+         "Zusammenfassend werden die Ergebnisse dargestellt."]),
+    "dies_verdeutlicht": (
+        ["Dies zeigt, dass Vertrauen wichtig ist.",
+         "Das verdeutlicht, wie wichtig Kommunikation ist.",
+         "Dieses Ergebnis unterstreicht, dass die Maßnahme wirkt."],
+        ["Es gibt ein Modell, das zeigt, dass Lernen wirkt.",
+         "Ein Experiment, das belegt, dass Schlaf hilft, fehlt.",
+         "Die Tabelle zeigt die Ergebnisse."]),
+    "mehr_als_nur": (
+        ["Führung ist weit mehr als Kontrolle.",
+         "Nachhaltigkeit ist mehr als nur ein Trend.",
+         "Es geht nicht einfach um Kosten."],
+        ["Weit mehr als 90 Prozent der Befragten stimmten zu.",
+         "Weit mehr als die Hälfte der Betriebe nutzt Cloud-Dienste.",
+         "Das kostet weit mehr als doppelt so viel.",
+         "Die Umstellung dauerte weit mehr als drei Jahre."]),
+    "praegt_gestaltet": (
+        ["Die Digitalisierung prägt den Alltag maßgeblich.",
+         "Diese Erfahrungen prägen Kinder nachhaltig.",
+         "Es sind Akteure, die den Wandel entscheidend gestalten."],
+        ["Viele Unternehmen gestalten ihre Verpackungen nachhaltig.",
+         "Wir gestalten den Prozess nachhaltig und fair.",
+         "Diese Zeit prägte ihn."]),
+    "kern_zentral": (
+        ["Im Kern geht es um Vertrauen.",
+         "Ein zentraler Faktor ist die Kommunikation.",
+         "Ein wesentlicher Hebel ist die Führungskultur."],
+        ["Im Kern der Zelle befindet sich die DNA.",
+         "Ein wesentlicher Bestandteil des Vertrags ist die Laufzeit.",
+         "Das Kerngeschäft des Unternehmens wächst."]),
+    "spannungsfeld": (
+        ["Unternehmen bewegen sich im Spannungsfeld zwischen Kosten und Qualität.",
+         "Es gilt, die richtige Balance zu finden.",
+         "Ein Gleichgewicht zwischen Arbeit und Freizeit ist wichtig."],
+        ["Der Preis ergibt sich aus dem Gleichgewicht zwischen Angebot und Nachfrage.",
+         "Das Gleichgewicht zwischen Nachfrage und Angebot verschiebt sich.",
+         "Die Balance des Körpers verbessert sich."]),
+    "fokus_mittelpunkt": (
+        ["Im Folgenden steht die Kommunikation im Mittelpunkt.",
+         "Dabei rückt die Nachhaltigkeit in den Fokus.",
+         "Die Kundenzufriedenheit steht im Zentrum der Arbeit.",
+         "Zwei Fragen stehen im Mittelpunkt."],
+        ["Das Gebäude steht im Zentrum von Hamburg.",
+         "Das Rathaus steht im Zentrum der Stadt.",
+         "Die Kamera rückt näher an das Objekt."]),
+}
+
+
+def lade_muster():
+    """Wie analyse.lade_muster: IGNORECASE, außer bei gross_klein."""
+    with open(MUSTER_PFAD, encoding="utf-8") as f:
+        daten = json.load(f)
+    return {m["id"]: re.compile(m["regex"], 0 if m.get("gross_klein") else re.IGNORECASE) for m in daten["muster"]}
+
+
+class KiMuster(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.muster = lade_muster()
+
+    def test_alle_muster_kompilieren(self):
+        self.assertGreaterEqual(len(self.muster), 40)
+
+    def test_mindestens_drei_saetze_je_richtung(self):
+        for mid, (pos, neg) in MUSTER_SAETZE.items():
+            with self.subTest(muster=mid):
+                self.assertIn(mid, self.muster)
+                self.assertGreaterEqual(len(pos), 3)
+                self.assertGreaterEqual(len(neg), 3)
+
+    def test_positiv(self):
+        for mid, (pos, _) in MUSTER_SAETZE.items():
+            for s in pos:
+                with self.subTest(muster=mid, satz=s):
+                    self.assertTrue(self.muster[mid].search(s))
+
+    def test_negativ(self):
+        for mid, (_, neg) in MUSTER_SAETZE.items():
+            for s in neg:
+                with self.subTest(muster=mid, satz=s):
+                    self.assertIsNone(self.muster[mid].search(s))
+
+    def test_insgesamt_nicht_doppelt(self):
+        s = "Insgesamt lässt sich festhalten, dass der Effekt klein ist."
+        treffer = [mid for mid in ("insgesamt_zeigt", "zusammenfassend") if self.muster[mid].search(s)]
+        self.assertEqual(treffer, ["zusammenfassend"])
+
+
 if __name__ == "__main__":
     unittest.main()

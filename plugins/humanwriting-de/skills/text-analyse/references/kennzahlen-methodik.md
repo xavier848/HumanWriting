@@ -1,0 +1,91 @@
+# Kennzahlen: Messkonventionen und Negativliste
+
+Diese Datei hält fest, wie `scripts/analyse.py` misst und welche Maße bewusst fehlen. Sie gilt für die Kalibrierung (`kalibrierung/scripts/kalibriere.py`) und für jede Nutzermessung gleichermaßen. Wer eine Konvention ändert, muss danach `baselines.json` neu kalibrieren.
+
+Quellen: Handbuch „Quantitative Linguistik“ (HSK 27): Art. 19 Best (Wortlänge), Art. 22 Best (Satzlänge), Art. 27 Wimmer (Type-Token-Relation), Art. 28 Tuldava (Stilistik), Art. 29 Tweedie (statistische Modelle), Art. 47 Cramer (Menzerath), Art. 51 Pawłowski (Sequenzen), Art. 64 Mikk (Verständlichkeit).
+
+## 1. Was gemessen wird (Eingabebereinigung)
+
+Gemessen wird nur Fließtext. Vorher fallen weg:
+
+- Überschriften (`#`, Setext `===`/`---`, ganze Zeile fett, kurze Zeile ohne Satzzeichen, „1. Einleitung“ als eigene Zeile), Listenpunkte, Tabellen (Pipe- und Pandoc-Tabellen, Tabellen in .docx/.odt), Code-Blöcke (``` und ~~~), YAML-Front-Matter, Trennlinien, HTML-Tags und -Kommentare, Blockzitate (`>`; gezählt als `info.zitatbloecke`).
+- Inhaltsverzeichnis, Abbildungs-, Tabellen- und Abkürzungsverzeichnis; ein vorangestellter Teil (Eidesstattliche Erklärung o. Ä.), wenn danach eine Einleitung folgt.
+- Alles ab dem Literaturverzeichnis bzw. Anhang. Abgeschnitten wird nur, wenn schon mindestens 10 % des Texts (oder 1000 Wörter) gelesen sind und kein Folgekapitel (Fazit, Diskussion …) mehr kommt; Unterkapitel wie „1.3 Quellen“ schneiden nie ab.
+- Quellenverweise in Klammern (Autor-Jahr, „o. J.“, „ebd.“, Interview-/Transkript-/Anhangbelege), numerische Belege („[3, S. 12]“), Fußnotenzeichen (hochgestellt, `[^1]`, nicht hochgestellte Ziffern aus PDFs wie „belegt.12“) und Fußnotentexte in Markdown (`[^1]: …`).
+- Pandoc-Schreibweisen werden zurückübersetzt: `--` = Halbgeviertstrich, `---` = Geviertstrich, `\*` = `*`.
+
+Eingaben mit einfachen Zeilenumbrüchen (Word-Kopie, PDF) werden heuristisch in Absätze zerlegt; Silbentrennung am Zeilenende wird aufgelöst („Unter-\nnehmen“ → „Unternehmen“, „E-\nMail“ → „E-Mail“, „Lehr-\nnoch“ bleibt getrennt). Bei PDF-Eingaben sind die Absatzkennzahlen trotzdem nur eingeschränkt verlässlich (Warnung im Bericht). Textdateien werden als UTF-8, UTF-16 (BOM) oder Windows-1252 gelesen; .doc, .rtf und .pages werden mit Meldung abgelehnt.
+
+## 2. Messkonventionen (HW34)
+
+| Punkt | Festlegung | Begründung / Folge |
+|---|---|---|
+| Satzlänge | Zahl der Token nach `TOKEN_RE`: Wörter **und** Zahlen. Eine Ziffernfolge („3,5“, „12.03.2020“) zählt als 1 Token, Abkürzungen zählen wie geschrieben („z. B.“ = 2 Token). | Konstante, einfache Operationalisierung (Best, Art. 22, S. 300). In den Wortlängenmaßen fehlen Zahlen; der Name lautet deshalb „Satzlänge Ø (Token inkl. Zahlen)“. |
+| Satzgrenze | Satzzeichen + großgeschriebenes Folgewort (oder Ziffer, „§“). Keine Grenze nach Abkürzungen, Initialen, Ordinalzahlen („die 3. Phase“), Auslassungen „[…]“ vor einem Nomen, „(sic!)“/„(!)“/„(?)“. Grenze nach „usw./etc.“, einer Zahl oder einem Datum nur vor einem typischen Satzanfangswort (Artikel, Pronomen, Konnektor …). | Kap. 22 (S. 300) verlangt Regeln für Parenthesen und Interjektionen. Restfehler: „α = .05. Ergebnisse“ wird nicht getrennt. |
+| Wortlänge, Silben | Nur Buchstabenwörter. Ausgeschlossen: Ein-Buchstaben-Token (z, B, d, h), vokallose Token (bzw, vgl, Std), Akronyme (2–5 Großbuchstaben, optional „s“: KMU, USA, KMUs) und Wörter mit Ziffern (CO2, 1970er). Die Satzlänge bleibt davon unberührt. | Best (Art. 19, S. 269): vokallose Einheiten sind eine eigene Klasse. Menschen nutzen mehr Abkürzungen (vokallose Token 0,56 % gegen 0,22 %, AUROC 0,677); vorher steckte das unerkannt in `anteil_kurze_woerter` und `anteil_einsilbig` (HW05). Stil-Abkürzungen zählt dafür `abkuerzungen_pro_1000`, Verweis-Abkürzungen (vgl., S., f., ff., ebd., Hrsg., Abb., Kap.) nur `info.verweis_abk` (sie stammen aus Quellenangaben, die KI-Texte designbedingt nicht haben). Akronyme werden nicht als Kennzahl geführt (AUROC 0,48). |
+| Silbe | Ein Silbenkern ist ein Vokal oder ein Diphthong (aa ee oo ei ai ey ay oy au äu eu ie ou). Zuschläge: -ien nach Konsonant (Stu-di-en, auch in Komposita: Stu-di-en-gang), Hiat in Museum/Ideen, ko-o-, be-en-/ge-eh-, i vor -ent/-enz (Pa-ti-ent, Ef-fi-zi-enz, nicht „dient“). „qu“: u ist kein Kern. Einige Anglizismen werden auf Lautkerne abgebildet (Team = 1, Software = 2). Vokallose Token: 0 Silben. | Best (Art. 19, S. 266): einfache, reproduzierbare Definition; Gold ist die Duden-Trennung (Stu-die 2, Stra-te-gie 3, In-for-ma-ti-on 5). Gegenüber der alten Vokalgruppen-Zählung steigt silben_mittel im Korpus um ≈ 0,06 (Mensch) bzw. 0,05 (KI); Flesch-Amstad wird um ≈ 3 Punkte „schwerer“. Bekannte Restfehler: Milieu (3 statt 2), seltene Anglizismen (Dealer), Petroleum. Goldliste: `tests/test_analyse_v2.py`. |
+| Teilsatz | Stufe 1 (heuristisch): ein Teilsatz pro finitem Verb. Hauptsatz + Nebensätze (Subjunktion überall; „bis/ehe/seitdem/soweit“ nur nach Komma und nur vor Verbletztstellung; Relativsatz nach Komma nur, wenn das Segment auf ein kleingeschriebenes Verb endet und keine Artikelreihe ist; Nebensatz am Satzanfang mit Da/Während/Wie/Bis/Je…desto). Ein Segment nach „aber/doch/denn/sondern/jedoch“ oder nach „;“ zählt nur mit Verbkandidat als Hauptsatz. **Infinitivgruppen** (um … zu, erweiterter Infinitiv) zählen nicht als Teilsatz, sondern in `info.infinitivgruppen`. Dezimalkommas und „3,45; SD =“ zählen nicht als Satzzeichen. | Heups (Art. 47, S. 673), Best (Art. 22, S. 300). Validierung: 46 annotierte Testsätze, 1 Fehler (Relativsatz mit eingeschobener Aufzählung). Stufe 2 („und“-Koordination ohne Komma, Goldprüfung an je 150 Sätzen Mensch/KI mit ≥ 85 % Übereinstimmung) steht aus. Der alte Komma-Zähler läuft für einen Kalibriervergleich in `info.teilsatz_alt` mit (AUROC woerter_pro_teilsatz alt 0,804, neu 0,802). |
+| Typen | Kleingeschriebene Wortformen, keine Lemmata. | Homographen verschmelzen (Leben/leben, „ein“ als Artikel, Zahlwort, Verbzusatz); Typenmaße messen teils Formenreichtum (Wimmer, §2). |
+| stamm() | Ein Suffix abschneiden, dann auf 8 Zeichen kürzen. | Die Kürzung fängt Flexion ab (Unternehmen/Unternehmens), verschmilzt aber Information/Informatik. Ohne Kürzung kein Gewinn (HW26 verworfen). |
+| satzlaenge_dispersion | Var/Ø = Ords I. | Für die 1-verschobene Zählgröße wäre Var/(Ø − 1) der Poisson-Bezug; empirisch gleich (AUROC 0,787 gegen 0,788). |
+| autokorrelation() | Normiert über die Summe aller N Werte (1/N), nicht 1/(N−k) wie bei Pawłowski. | Für `rhythmus_r1_log` wird der Erwartungswert unter Zufallsreihenfolge (−1/n) addiert. |
+| satzlaenge_schiefe | Standardisierte Schiefe g1, nicht Ords S = m3/m2. | — |
+| Fenster | `satzlaenge_schiefe` (Satzfenster) und `mattr_klumpung_100` (Wortfenster) = Median über k = ⌈n/800⌉ gleich lange Fenster à `ABSCHNITT_L` = 800 Wörter, Starts gleichmäßig verteilt; bis 800 Wörter am Stück. | Beide sind stark längenabhängig (+0,36 bzw. −0,49 SD zwischen 600 und 1300 Wörtern, HW01/HW12). Am Stück gemessen lagen 44 % der langen menschlichen Volltexte über P75 (Schiefe) bzw. 70 % unter P25 (Klumpung), fensterweise 10 % bzw. 12 %. Die Kalibrierabschnitte (≤ 800 Wörter) ändern sich dadurch nicht. Alle übrigen Kennzahlen werden am Stück gemessen (kein Blockmodus); ab 1200 Wörtern gibt es eine Warnung. |
+| KI-Muster | Überlappende Treffer eines Satzes: es zählt der mit dem höchsten Gewicht, dann der längste (`muster_aufloesen`); Gewicht 0 zählt nicht. Den Gedankenstrich misst nur `gedankenstrich_pro_1000` (kein eigenes Muster mehr). | `kalibriere.py` löst `ki_muster_pro_1000` mit denselben Regeln und den Fold-Gewichten auf; Kalibrierung und Laufzeit liefern identische Werte. |
+
+## 3. Kennzahlen aus der QL-Prüfung
+
+Medianwerte und AUROC (Mensch > KI) aus einer eigenen Messung auf 1174 menschlichen und 324 KI-Abschnitten des Kalibrierkorpus (Abschnitte wie `kalibriere.zerlege`, ungepaart); in Klammern die Werte der kritischen Nachprüfung.
+
+| ID | Definition | Mensch / KI | AUROC | Status |
+|---|---|---|---|---|
+| `fw_profil_llr_pro_1000` (HW07) | 1000·LLR/n über die 40 Funktionswörter in `FW_WOERTER`; LLR = Σ_w [logNB(k_w; r_mensch·n, s) − logNB(k_w; r_ki·n, s)], s ≥ 10⁶ = Poisson. Positiv = menschlicher. Nur mit `fw_profil` aus baselines.json. | 4,2 / −2,9 (Probeprofil) | 0,95 (0,967) | stärkstes neues Signal; zunächst nur im Logit-Modell, nicht als Rot-Ziel (Goodhart). Vor Gewichtung an einem anderen Modell prüfen. |
+| `satzklammer_mittel` (HW08) | Wörter zwischen erstem finiten Hilfs-/Modalverb und Partizip/Infinitiv am Teilsatzende (Teilsätze an , ; : ( ) – — getrennt; Infinitiv-Hilfsverben am Ende übersprungen: „müssen … erhoben werden“). None bei < 5 Klammern. `info.anteil_klammer_ab_8`. | 6,7 / 5,3 (6,9 / 5,2) | 0,77 (0,80) | bewertbar; kein Satz-Flag |
+| `teilsatz_verhaeltnis_21` (HW09) | (n₂ + 0,5)/(n₁ + 0,5), n_k = Sätze mit k Teilsätzen; `info.teilsatz_verteilung`. | 0,55 / 0,83 (0,58 / 0,82) | 0,27 → umgekehrt 0,73 (0,715) | bewertbar |
+| `rhythmus_r1_log` (HW10) | Lag-1-Autokorrelation der log-Satzlängen + 1/n; ersetzt `rhythmus_autokorrelation`. Bei < 30 Sätzen nicht bewertet. `info.rhythmus_r1_log_absatz` nur über Paare im selben Absatz. | 0,03 / −0,09 | 0,72 (0,70) | bewertbar |
+| `konnektoren_pro_1000` (HW15) | Satzadverb-Konnektoren in allen Stellungen (zudem, außerdem, ferner, des Weiteren, weiterhin, folglich, somit, demnach, infolgedessen, allerdings, jedoch, dennoch, gleichwohl, nichtsdestotrotz, insbesondere, letztlich, letztendlich, zugleich, gleichzeitig, schließlich, hingegen, wiederum); „darüber hinaus“ fehlt (eigenes KI-Muster). Satz-Flag `konnektor_mitte`, `info.anteil_konnektor_mittelstellung`. | 6,3 / 9,8 (6,6 / 10,1) | 0,25 → umgekehrt 0,75 (0,75) | bewertbar |
+| `abkuerzungen_pro_1000` (HW05) | Stil-Abkürzungen: z. B., d. h., u. a., bzw., ggf., bspw., i. d. R., u. U., usw., etc., ca., sog., insb., evtl. | 2,1 / 0,0 | 0,78 | bewertbar, aber Designartefakt prüfen (KI-Korpus ohne Abkürzungsstil?) |
+| `nominalketten_pro_100` (HW13) | Maximale Genitiv-/von-Ketten mit ≥ 2 Substantiven (Substantiv = großgeschrieben, am Satzanfang nur, wenn die Form im Text auch innen groß vorkommt); Satzzeichen brechen die Kette. | 3,1 / 2,6 (3,1 / 2,5) | 0,68 (0,68) | Kandidat (gepaart 0,653) |
+| `silben_q21` (HW22) | (n₂ + 0,5)/(n₁ + 0,5) über die Silbenklassen. | 0,59 / 0,66 (0,58 / 0,65) | 0,27 → umgekehrt 0,73 (0,71) | Kandidat; Score nur nach gepaarter Prüfung |
+| `mattr_klumpung_100` (HW12) | MATTR-100 ÷ (E[V₁₀₀]/100), E[V] hypergeometrisch (Rarefaktion) aus dem Häufigkeitsspektrum. | 0,970 / 0,991 (0,974 / 0,987) | 0,23 → umgekehrt 0,77 (0,744) | Kandidat; nur auf festen Fenstern gültig (−0,49 SD zwischen 600 und 1300 Wörtern) |
+
+Umbenennungen ohne neue Rechnung: `mattr_100`/`mattr_50`/`mtld` heißen „Lexikalische Variation“, `yule_k` „Yules K (Wiederholungsrate)“ (HW20: Wimmer nennt die TTR als Reichtumsmaß eine Fehlbenennung, sie misst Informationsfluss; Yules K misst Konzentration). `menzerath_korrelation` heißt „Kopplung Teilsatzzahl–Teilsatzlänge“: sie korreliert zu 0,78 mit `satzlaenge_cv` und ist kein Menzerath-Befund (HW16); sie gehört in `NICHT_BEWERTEN`. `info.kernbegriffe` nennt die 5 häufigsten Inhaltsstämme mit häufigster Wortform und Anzahl – bei `mattr_100` > P75 diese Begriffe wörtlich wiederaufnehmen statt Synonyme einzustreuen.
+
+## 4. Bewertung
+
+- `bewerte()` liest pro Kennzahl optional `se_typ` (typische Messunsicherheit: gepoolte SD zwischen Abschnitten desselben menschlichen Dokuments), `cluster` (ID des Clusterkopfs) und `gewicht` (bereits clustergedeckelt). Je Kennzahl kommt `unsicher: true`, wenn |Wert − nächste Grenze P25/P75| < se_typ ist. Status und Score bleiben davon unberührt; die Schleife greift nur sichere rote Kennzahlen an (HW18).
+- `ki_naeher` vergleicht Abstände in Einheiten der jeweiligen Streuung: |Wert − KI-Median|/KI-SD < |Wert − Mensch-Median|/Mensch-SD.
+- Auf Textsortenebene optional: `fw_profil` (siehe oben; fehlt die Kennzahl im Ergebnis, rechnet `bewerte()` sie aus `ergebnis["fw_zaehlung"]` nach), `ziel_p_mensch`, `score_schwelle` (beide werden durchgereicht).
+- Kennzahlen mit Wert `None` (z. B. `satzklammer_mittel` bei < 5 Klammern) werden übersprungen; Kalibrierung und Modell müssen `None` ebenfalls auslassen.
+- Kennzahlen mit `nur_modell` in baselines.json (derzeit `fw_profil_llr_pro_1000`) gehen nur in `p_mensch` ein. `bewerte()` gibt `nur_modell: true` aus; der Bericht zeigt sie ohne Ampel als „nur Tendenz“.
+
+## 5. Negativliste (HW35)
+
+Diese Maße wurden geprüft und nicht übernommen. Nicht ohne neue gepaarte Messung wieder einbauen.
+
+**A. Nicht übernehmen (gemessen, ohne Nutzen)**
+
+- Rohe TTR, Guiraud, Herdan C₂/b, Brunet W, Dugast U, Ejiri/Smith: längenabhängig, verletzen teils die Richtungsanforderung, r = 0,82–0,84 mit MATTR (Art. 27–29).
+- Simpsons D (= Yules K, r = 1,00); Mistríks I_g (wird negativ); Těšitelovás D (läuft bei kurzen Texten gegen 100); Sichels S (Test 0,525).
+- Ljung-Box, Lag-2-ACF, ARMA-Parameter und Ve als Score (AUROC 0,44–0,54); Markov-Transinformation der Satzklassen (0,458); Tag-n-Gramme ohne Parser (0,45–0,53); Anpassungsgüten wie X²/N oder Hyperpoisson-P (0,47–0,60; der P-Wert hängt von N ab); QSUM.
+- Menzerath-Klassenfit a/b und Menzerath-Verhältnis R (AUROC 0,54–0,62, bei 7–16 % der Abschnitte nicht schätzbar).
+- Satzanfangs-Schablonen über die ersten 3 Token (0,644, gepaart 0,624).
+- Substantivanteil und Verbquote per Großschreibung (0,585, gepaart 0,618).
+- Silben-Blockdispersion (0,582, gepaart 0,546); Silben-Dispersionsindex D = Var/(Ø − 1) (≈ silben_sd, r = 0,89).
+- gap_cv (Neutyp-Lücken, +0,67 SD längenabhängig, hob die Gesamt-AUROC nicht); stasis_max (r = 0,98 mit gap_cv).
+- stamm() ohne 8-Zeichen-Kürzung (kein Gewinn, teils schlechter).
+- Permutations-z für r1 (gleich dem analytischen Wert, r = 0,996); η (Von-Neumann) zusätzlich zu r1 (r = −0,98); Runs-Test (0,638).
+- Frequenzband-Profil gegen ein Referenzkorpus (misst das Fachgebiet); Plus-/Minus-Schlüsselwörter als Kennzahl (überangepasst, Claude-spezifisch); Konjunktiv-I-/Referat-Marker (Designartefakt, Kollision mit 1. Person); Change-Point-Scan.
+
+**B. Nur Diagnose bzw. `info`**
+
+- Hyperpoisson-Anpassung der Silbenverteilung (Plausibilitätsprüfung der Textaufbereitung; a, b nicht identifizierbar, r = 0,993; Schranken a ≤ 20, b ≤ 40).
+- Satzlänge in Silben oder Anschlägen (r = 0,95–0,96 mit der Wortzahl); Substantiv-Wiederholungsrate (r = −0,74 mit MATTR); Verbsegmente nach Mikk (r = 0,67 mit der Satzlänge).
+- MATTR-SD, Wortlängen-Reihen-Autokorrelation und Surprisal (0,54–0,58); Ord S der Satzlänge (r = 0,80 mit der Dispersion); formen_pro_stamm (r = 0,53 mit der Wortlänge); Menzerath auf Wortebene (prüft nur silben()).
+- Absatzeffekt ε² (0,667, gepaart 0,639; hängt an der PDF-Extraktion).
+- `mattr_klumpung_100` nur auf festen Fenstern; `kernbegriff_anteil_500` nur als Kalibrierkandidat (r = 0,73 mit nachbarsatz_ueberlappung).
+- `anteil_klammer_ab_8`, `anteil_konnektor_mittelstellung`, `teilsatz_verteilung`, `infinitivgruppen`, `verweis_abk`, `teilsatz_alt` stehen nur in `info`.
+
+**C. Spekulativ – nur bei gepaarter AUROC ≥ 0,60 und geringer Redundanz aufnehmen**
+
+Hřebíček-Aggregate, Teilsatz-Wortlänge-Exponent (H5a), Silben pro Teilsatz (Fenk-Oczlon), Zipf-Steigung nach Zonen, Wortlängen-Spektrum-Distanz, Abtönungspartikel-Rate.
