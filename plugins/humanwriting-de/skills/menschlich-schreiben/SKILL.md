@@ -36,7 +36,7 @@ Menschen greifen das Schlüsselwort des Vorsatzes wieder auf. KI wechselt ständ
 - Keine Synonym-Ketten, um „Wiederholungen zu vermeiden“. In Fachtexten ist Wiederholung präzise.
 
 ### 3. Konnektoren und Satzanfänge
-- **Weniger Konnektoren insgesamt** (Claude ~10, Menschen ~7 pro 1000 Wörter; besonders *zugleich, darüber hinaus, hingegen, zudem, jedoch*). Wo der Bezug klar ist, den Konnektor weglassen oder über das wiederholte Nomen anschließen – nicht bloß ins Satzinnere verschieben.
+- **Weniger Konnektoren insgesamt** (Claude ~10, Menschen ~6 pro 1000 Wörter; besonders *zugleich, darüber hinaus, hingegen, zudem, jedoch*). Wo der Bezug klar ist, den Konnektor weglassen oder über das wiederholte Nomen anschließen – nicht bloß ins Satzinnere verschieben.
 - Keine Sätze der Form „Dies zeigt/verdeutlicht/unterstreicht, dass …“; „Insgesamt zeigt sich“ vermeiden.
 - Satzanfänge variieren: Subjekt, Objekt, Adverbial, Nebensatz, Präpositionalgruppe.
 

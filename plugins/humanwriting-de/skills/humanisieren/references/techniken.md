@@ -47,7 +47,7 @@ KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen
 
 ## Konnektoren und Satzanfänge
 
-**Konnektoren pro 1000 ↓** (Claude ~10, Mensch ~7 pro 1000 Wörter; besonders *zugleich, darüber hinaus, hingegen, zudem, jedoch*):
+**Konnektoren pro 1000 ↓** (Claude ~10, Mensch ~6 pro 1000 Wörter; besonders *zugleich, darüber hinaus, hingegen, zudem, jedoch*):
 - Konnektor **streichen**, wenn der logische Bezug klar ist (häufigster Fall).
 - Oder den Anschluss über das **wiederholte Nomen** herstellen.
 - **Nicht** ins Satzinnere verschieben – Claude stellt Konnektoren schon zu über 80 % ins Satzinnere; das ändert die Dichte nicht.
