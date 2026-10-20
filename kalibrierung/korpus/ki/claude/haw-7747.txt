@@ -1,0 +1,37 @@
+## Probandenbefragung: Stichprobe, Einflussfaktoren auf die EDA-Messung und Stimmungsveränderung
+
+In diesem Kapitel werden die Ergebnisse der Probandenbefragung dargestellt, die vor und nach den Erste-Hilfe-Szenarien durchgeführt wurde. Neben der Beschreibung der Stichprobe stehen dabei vor allem jene Faktoren im Vordergrund, die die Messung der elektrodermalen Aktivität (EDA) beeinflussen können.
+
+### Aufbau der Befragung und Datengrundlage
+
+Der Fragebogen erfasste zunächst körperliche Einschränkungen und Vorerkrankungen der Teilnehmenden. Diese sind relevant, da sie zum einen die Durchführung des Szenarios erschweren und zum anderen sowohl das thermische als auch das emotionale Schwitzen beeinflussen können. Zusätzlich wurde gefragt, ob die Teilnehmenden bereits Krankheitsbilder negativ erlebt haben. Damit lässt sich einschätzen, ob das im Szenario dargestellte Krankheitsbild als persönlicher Stressor gewirkt haben könnte. Um den Einfluss des Szenarios selbst zu überprüfen, bewerteten die Teilnehmenden vor und nach der Durchführung ihren emotionalen Umgang mit Unfällen, ihre Laune und ihre Aufregung. Die Befragung dient somit nicht nur der Beschreibung der Stichprobe, sondern auch der Einordnung der physiologischen Messwerte.
+
+An der Untersuchung nahmen 23 Personen teil. Ein Datensatz ging durch einen Importfehler verloren, sodass 22 Datensätze ausgewertet werden konnten. Davon entfallen 10 auf die Gruppe mit App und 12 auf die Gruppe ohne App; die beiden Gruppen sind damit annähernd gleich groß. Die Szenarien wurden nach Einwilligung der Teilnehmenden mit drei Kameras aufgezeichnet, und die durchgeführten Schritte wurden protokolliert.
+
+Da die Teilnahme freiwillig war, ist davon auszugehen, dass die Teilnehmenden ein gewisses Interesse an Erster Hilfe mitbrachten. Dennoch zeigte sich die Mehrheit im Szenario sehr unsicher. Dies verdeutlicht, dass Interesse allein nicht mit Handlungssicherheit gleichzusetzen ist. Die Reaktionen und der Umfang der geleisteten Hilfe unterschieden sich stark zwischen den Personen. In der App-Gruppe wurde die App erkennbar als Stütze genutzt.
+
+Im Folgenden werden die Ergebnisse der Vor- und Nachbefragung miteinander verglichen, wobei der Fokus auf den Faktoren liegt, die die EDA-Messung beeinflussen können. Die einzelnen Aspekte werden chronologisch nummeriert dargestellt und am Ende des Kapitels tabellarisch zusammengefasst.
+
+### Stichprobe und Einflussfaktoren auf die EDA-Messung
+
+**1. Alter und Geschlecht:** Die Stichprobe umfasst 15 Männer mit einem Durchschnittsalter von 28,8 Jahren und 7 Frauen mit einem Durchschnittsalter von 27 Jahren. Im Vergleich dazu lag das Durchschnittsalter der Bevölkerung im Jahr 2014 bei 42,9 Jahren für Männer und 45,6 Jahren für Frauen. Die männlichen Teilnehmenden sind damit um 32,87 % jünger, die weiblichen um 40,79 %.
+
+Das vergleichsweise junge Alter lässt auf eine höhere Technikaffinität schließen. Dadurch dürfte die Hürde, eine App in einer Notfallsituation zu nutzen, geringer sein, und die App wurde vermutlich eher aktiv in das Vorgehen eingebunden, anstatt zu einer Überforderung zu führen. Dies ist für die Auswertung bedeutsam, da Überforderung selbst als Stressor wirkt. Gleichzeitig senkt ein junges Alter die Wahrscheinlichkeit, bereits mit einem realen Unfall konfrontiert gewesen zu sein, da die bisherige Lebensspanne kürzer ist. Dies passt zu der beobachteten Unsicherheit, die ihrerseits als Stressverstärker wirken kann.
+
+**2. Body-Mass-Index:** Aus den Angaben zu Körpergröße und Gewicht wurde der BMI berechnet, um übergewichtige Personen zu identifizieren. Diese schwitzen thermisch stärker, was die EDA-Messung beeinflussen kann. Erhöhte EDA-Werte wären in diesem Fall nicht zwingend auf psychischen Stress, sondern möglicherweise auf thermoregulatorische Prozesse zurückzuführen.
+
+**3. Vorerkrankungen und Medikamente:** 20 der 22 Teilnehmenden verneinten Vorerkrankungen und Medikamenteneinnahme. Zwei Personen bejahten die Frage. Eine Person leidet an einer Hypothyreose und nimmt L-Thyroxin ein; eine mögliche Hypothermie kann hier das thermische Schwitzen und damit die EDA beeinflussen. Die zweite Person hat Diabetes Typ 2 mit Nierenschädigung und wird mit Candesartan behandelt. Auf Nachfrage wurden keine weiteren EDA-relevanten Erkrankungen angegeben, insbesondere keine Hautsymptome. Die Messwerte dieser beiden Personen sind dennoch mit entsprechender Vorsicht zu interpretieren.
+
+**4. Erste-Hilfe-Vorwissen:** Die Selbsteinschätzung des Erste-Hilfe-Wissens streut stark. Der Mittelwert liegt bei 3,18, was der Kategorie „eher schlecht“ entspricht. Zwei Personen bewerteten ihr Wissen mit 1 („sehr schlecht“), drei Personen mit 5 bis 6 („gut“ bis „sehr gut“). Insgesamt ist das Selbstvertrauen der Teilnehmenden in ihre Erste-Hilfe-Kenntnisse damit als mäßig einzuschätzen. Dieses Ergebnis deckt sich mit der im Szenario beobachteten Unsicherheit vieler Teilnehmender. Ein geringes Vorwissen kann die Unsicherheit in der Notfallsituation zusätzlich verstärken und damit ebenfalls zu einer erhöhten Stressreaktion beitragen.
+
+**5. Fitness:** Obwohl das Szenario nur geringe körperliche Anforderungen stellt, kann eine schlechte Fitness zu verstärktem thermischem Schwitzen führen. Die Angaben zur Fitness sind daher ebenfalls bei der Interpretation der EDA-Werte zu berücksichtigen, um mögliche Verzerrungen zu erkennen.
+
+### Stimmungsveränderung
+
+Neben den physiologischen Einflussfaktoren wurde auch die Stimmung der Teilnehmenden vor und nach dem Szenario erhoben, um Hinweise auf die psychische Belastung durch die Situation zu erhalten.
+
+**6. Laune:** Bei 10 Teilnehmenden blieb die Laune nach dem Szenario unverändert. Bei 4 Personen verschlechterte sie sich um eine Stufe, bei weiteren 4 verbesserte sie sich um eine Stufe. Drei Personen gaben eine Verschlechterung um zwei Stufen an, eine Person sogar um vier Stufen. Insgesamt überwiegen damit die Verschlechterungen: Acht Personen berichten eine schlechtere, vier eine bessere Laune.
+
+Eine verbesserte Laune lässt sich als Erleichterung über den Abschluss des Szenarios und über ein subjektiv gutes Ergebnis deuten. Eine Verschlechterung spricht dagegen für eine negative Erfahrung, etwa weil die Person das eigene Abschneiden als schlecht empfunden hat. Welche Erklärung im Einzelfall zutrifft, lässt sich aus den Fragebogendaten allein nicht ableiten, kann jedoch durch einen Abgleich mit den Videoaufzeichnungen und Protokollen ergänzt werden.
+
+Im Gruppenvergleich (Tabelle 6) zeigt sich für die App-Gruppe ein Mittelwert von 5,1 vor und 4,9 nach dem Szenario. Damit ist eine leicht negative Tendenz erkennbar. Mit einer Differenz von 0,2 Punkten fällt diese Veränderung allerdings gering aus und sollte angesichts der kleinen Gruppengröße nicht überinterpretiert werden.

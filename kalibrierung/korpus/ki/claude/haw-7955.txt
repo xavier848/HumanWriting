@@ -1,0 +1,31 @@
+## Ausgewählte Archetypen und ihre Nutzung im Charakterdesign
+
+Im Folgenden werden ausgewählte Archetypen vorgestellt, die sich für die Gestaltung von Figuren in Computerspielen als besonders ergiebig erweisen. Neben Anima und Animus stehen dabei die Eltern-, Königs- und Kindarchetypen sowie das Ungeheuer im Mittelpunkt. Für jeden Archetyp wird zunächst seine psychologische Grundlage skizziert und anschließend aufgezeigt, wie er sich im Charakterdesign einsetzen lässt.
+
+### Anima und Animus
+
+Nach Jung (2006) bezeichnen Anima und Animus den jeweils gegengeschlechtlichen Pol der Psyche: Die Anima repräsentiert den weiblichen Anteil im Mann, der Animus den männlichen Anteil in der Frau. Die Projektion der Anima ist dabei stets weiblich geprägt. Jung betont, dass die Anima eng mit dem Mutterarchetyp verbunden ist, mit diesem jedoch nicht gleichgesetzt werden darf (Jung, 2006). Für das Charakterdesign bedeutet dies, dass weibliche Figuren, die auf den Protagonisten eine besondere Anziehung oder Faszination ausüben, häufig Züge der Anima tragen, ohne dabei zwangsläufig mütterliche Funktionen zu übernehmen. Umgekehrt lässt sich der Animus in Spielen mit weiblicher Hauptfigur nutzen, um männliche Nebenfiguren mit einer vergleichbaren Anziehungskraft auszustatten.
+
+### Elternarchetypen
+
+Die Mutter kann als Basisarchetyp verstanden werden. Sie ist die Lebensspenderin, mit der das Kind bereits vor der Geburt eine körperliche Einheit bildet. Aus dieser Einheit erwächst die erste Bindung des Menschen, und die Mutter bietet zugleich den ersten Schutz vor der Umwelt (Jung, 2006). In ihrer positiven Ausprägung als liebevolle Mutter bildet sie das Fundament einer stabilen Entwicklung: Sie investiert Zeit und Wissen in das Kind, ernährt es, lehrt und schützt es und bereitet es schrittweise auf das Erwachsensein vor.
+
+Der liebevolle Vater erfüllt funktional vergleichbare Aufgaben. Da er das Kind nicht austrägt, ist die Bindung auf physischer Ebene zwar schwächer ausgeprägt, doch auch er sichert das Überleben des Kindes, gewährt ihm Schutz und ermöglicht seine individuelle Entfaltung. Im Spiel können liebevolle Elternfiguren als Ausgangspunkt der Handlung dienen: Ihr Verlust oder ihre Abwesenheit motiviert die Spielfigur häufig dazu, aufzubrechen und die Welt eigenständig zu erkunden. Ebenso können sie als Ratgeber auftreten, die der Spielfigur Wissen und Ausrüstung mit auf den Weg geben.
+
+Als Gegenbild zur liebevollen Mutter steht die destruktive Mutter. Sie tritt bevormundend und egoistisch auf und verhindert, dass das Kind selbstständig wird. Gerade weil das Kind von ihr abhängig ist, wirkt sie besonders bedrohlich, denn Widerstand gegen sie ist kaum möglich. Im Spiel eignet sich die destruktive Mutter daher hervorragend als Endgegner, dessen wahre Rolle unter Umständen lange verdeckt bleiben kann. Die Loslösung der Spielfigur von ihr lässt sich als dramaturgischer Höhepunkt inszenieren.
+
+### Das Ungeheuer
+
+Befindet sich ein Mensch in einer scheinbar ausweglosen Gefahr, zeigen sich typischerweise drei Reaktionsmuster: Erstarren bzw. Totstellen, Flucht oder das Überwinden der Wand sowie ein unkontrollierter Gewaltausbruch. Das Ungeheuer verkörpert vor allem die letztgenannte Reaktion. Im Spiel tritt es als Gegner auf, der nicht durch Intelligenz, sondern durch rohe Kraft besticht. Es soll beim Spieler einen Schauder auslösen, wie man ihn angesichts einer Naturgewalt empfindet. Ein bekanntes Beispiel ist der Hulk aus dem Marvel-Universum, der von Wut getrieben wird und in seiner Zerstörungskraft auch Unbeteiligte gefährdet. Für die Gestaltung bedeutet dies, dass das Ungeheuer weniger über komplexe Motive als über seine körperliche Präsenz, seine Größe und seine Unberechenbarkeit wirken sollte. Die beiden anderen Reaktionsmuster, Erstarren und Flucht, lassen sich wiederum als Handlungsoptionen des Spielers in die Spielmechanik übertragen, etwa in Form von Versteck- oder Fluchtsequenzen.
+
+### Der König
+
+Moore und Gillette (1992) beschreiben den König als Archetyp, der mit der Weisheit Salomos ausgestattet ist und eine besondere Nähe zum Göttlichen aufweist. Sie verweisen auf Bezüge zu Adam bzw. dem Anthropos, zum Atman sowie zur Imago Dei; bei Freud findet sich der König als Urvater der Horde wieder (Moore & Gillette, 1992). Der Königsarchetyp bildet die Grundlage des Vaterarchetyps, ist jedoch umfassender als dieser.
+
+Kennzeichnend für den König ist, dass er die übrigen Archetypen in sich vereint. Voraussetzung dafür ist, dass er seine eigenen Archetypen kennt. Er ist ein erfahrener Anführer, der sich in alle Geführten einfühlen kann. Zu seinen Funktionen gehört es, zu beraten, zu vermitteln, Streit zu schlichten und Kompromisse herbeizuführen. Er trägt Verantwortung und gibt Impulse für die Entwicklung anderer. Missbraucht er seine Macht hingegen zum eigenen Vorteil, wird er zum Tyrannen (Moore & Gillette, 1992). Für das Charakterdesign ergibt sich daraus ein breites Spektrum, das vom weisen Herrscher, der der Spielfigur als Mentor zur Seite steht, bis zum tyrannischen Antagonisten reicht.
+
+### Kindarchetypen
+
+Das göttliche Kind stellt die kindliche Form des Königs dar. Es steht für Ordnung, Frieden und Mitgefühl mit allem Lebendigen. Der Kontakt mit ihm erzeugt Wohlbefinden, Lebensmut und Freude. Gleichzeitig ist das göttliche Kind hilflos und verletzlich (Moore & Gillette, 1992). Als Beispiele nennen Moore und Gillette (1992) das Jesuskind und die Geburt Zoroasters. Darüber hinaus lassen sich etwa der junge Dalai Lama in dem Film „Sieben Jahre in Tibet“ oder das löffelbiegende Kind, dem der Protagonist beim Orakel in „Matrix“ begegnet, diesem Archetyp zuordnen. Im Spiel kann eine solche Figur als schutzbedürftiger Begleiter fungieren, dessen Anwesenheit dem Spieler Hoffnung vermittelt und ihn zugleich in die Verantwortung nimmt.
+
+Eine besonders starke emotionale Wirkung lässt sich mit dem toten Kind erzielen. Es ist ein Mittel, um beim Spieler ein Höchstmaß an mitleidsvoller Ohnmacht hervorzurufen. Die Endgültigkeit des Todes führt zu Verzweiflung, zu Verlustschmerz und Trauer sowie zur Angst vor weiteren Todesfällen. Hinzu kommt das Mitleid angesichts des ungelebten Lebens und des erlittenen Leids. Im Charakterdesign sollte dieses Mittel daher gezielt und bewusst eingesetzt werden, da es die Stimmung eines Spiels nachhaltig prägt.

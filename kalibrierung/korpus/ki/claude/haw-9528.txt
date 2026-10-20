@@ -1,0 +1,35 @@
+## Testkonzept: Spam- und Ham-Gewinnung, Testumgebung und Bewertungskriterien
+
+### Ausgangspunkt: Die Vergleichsstudie von Cormack und Lynam
+
+Als methodischer Bezugspunkt für das eigene Testkonzept dient die Vergleichsstudie, die Cormack und Lynam (2007) an der University of Waterloo durchgeführt haben. Darin wurden sechs Open-Source-Spamfilter in jeweils mehreren Konfigurationen miteinander verglichen. Als Datengrundlage diente ein seit über 20 Jahren genutztes E-Mail-Postfach, das kontinuierlich Spam empfing und damit einen realistischen Mailstrom abbildete. Ein Verteilsystem leitete jede eingehende Nachricht parallel an alle zu testenden Filter weiter, sodass sämtliche Systeme identische Eingaben erhielten. Auf diese Weise lassen sich Unterschiede in den Ergebnissen tatsächlich auf die Filter selbst zurückführen und nicht auf eine abweichende Zusammensetzung des Mailaufkommens. Der Schwerpunkt der Untersuchung lag auf Bayes-Filtern, die durch eine manuelle Überprüfung jeder einzelnen Filterentscheidung trainiert wurden. Die lernenden Filter erhielten auf diese Weise fortlaufend Rückmeldung darüber, ob eine Nachricht korrekt oder fehlerhaft klassifiziert worden war.
+
+Kritisch anzumerken ist allerdings, dass aus der Studie nicht eindeutig hervorgeht, ob die weitergeleiteten Nachrichten für die Filter noch als aktuell gelten konnten. Gerade bei Verfahren, die zeitabhängige Merkmale oder Header-Informationen auswerten, könnte die Weiterleitung die Ergebnisse beeinflussen. Eine belastbare Einschätzung dieses Aspekts würde eine genauere Analyse des eingesetzten Weiterleitungssystems erfordern, die der Veröffentlichung nicht zu entnehmen ist. Für das eigene Testkonzept ergibt sich daraus die Konsequenz, die Mails möglichst unverändert und ohne zwischengeschaltete Weiterleitung an die Filter zu übergeben.
+
+### Gewinnung von Spam
+
+Für den eigenen Test mussten zunächst E-Mail-Konten geschaffen werden, die tatsächlich Spam erhalten. Neu angelegte Adressen erhalten naturgemäß keinen Spam, solange sie Spammern nicht bekannt sind. Daher war zunächst zu klären, auf welchem Weg Spammer überhaupt an Adressen gelangen. Eine zentrale Strategie ist das sogenannte Harvesting: Automatisierte Programme durchsuchen – ähnlich wie die Crawler von Suchmaschinen – den Quelltext von Webseiten und extrahieren die darin enthaltenen E-Mail-Adressen. Dabei werden auch Adressen erfasst, die für menschliche Besucher unsichtbar sind, etwa weil sie lediglich in den Metadaten einer Seite stehen. Möglichkeiten, sich gegen solche Harvester zu schützen, beschreibt Eggendorfer (2005); für die vorliegende Untersuchung war jedoch gerade der umgekehrte Effekt erwünscht.
+
+Da die Wahrscheinlichkeit eines Harvester-Besuchs mit der Zahl der Verlinkungen einer Seite steigt, wurde versucht, die Seiten mit den Testadressen möglichst breit im Netz zu verankern. Freunde und Kommilitonen wurden gebeten, Links auf diese Seiten zu setzen. Ergänzend wurden Aufrufe in Newsgroups wie de.admin.net-abuse.mail und news.admin.net-abuse.email, in Foren, auf Mailinglisten sowie in Google und Yahoo Groups platziert. Die Testadressen selbst wurden dabei zu keinem Zeitpunkt direkt veröffentlicht. Dadurch sollte sichergestellt werden, dass die eingehenden Nachrichten tatsächlich über automatisiertes Harvesting an die Konten gelangten und nicht etwa durch gezielte manuelle Zusendungen.
+
+### Gewinnung von Ham
+
+Die Beschaffung legitimer E-Mails, sogenannter Ham-Mails, erwies sich als deutlich schwieriger. Sowohl die eigene Recherche als auch Gespräche auf dem EU Spam Symposium 2006 ergaben, dass keine brauchbaren, frei verfügbaren Ham-Archive existieren. Als Alternative wurde erwogen, den Mailverkehr eines Unternehmens zu nutzen. Dieser Ansatz wurde jedoch verworfen, da er zum einen ein erhebliches Vertrauensverhältnis voraussetzt und zum anderen datenschutzrechtliche Probleme aufwirft, insbesondere dann, wenn dienstliche Konten auch privat genutzt werden.
+
+Stattdessen wurde ein eigener Verteiler eingerichtet, über den Kommilitonen, Freunde und Bekannte – auch aus anderssprachigen Ländern – manuell Nachrichten versandten. Dieses Vorgehen hat den Vorteil, dass einzelne Ham-Mails gezielt über alle Filter hinweg verglichen werden können, da ihr Inhalt und ihre Herkunft bekannt sind. Die Beteiligung von Personen aus anderssprachigen Ländern trägt zudem dazu bei, dass das Ham-Korpus nicht ausschließlich aus deutschsprachigen Nachrichten besteht und damit ein realistischeres Bild des alltäglichen Mailverkehrs liefert.
+
+### Testumgebung
+
+Als Mail Transfer Agent (MTA) kam ein Sendmail-Server zum Einsatz, der für insgesamt zehn Domänen zuständig war. Die zugehörigen Konten waren ab dem Zeitpunkt ihrer Veröffentlichung aktiv. Eingehende Nachrichten wurden direkt in eine MySQL-Datenbank geschrieben, was präzise Abfragen und eine detaillierte Auswertung ermöglichte. So lässt sich für jede einzelne Nachricht nachvollziehen, wann sie eingegangen ist und wie sie von den verschiedenen Filtern bewertet wurde.
+
+Zwischen der Veröffentlichung der Adressen und dem Eintreffen des ersten Spams verging eine gewisse Anlaufzeit. Grundsätzlich wäre ein längerer Vorlauf wünschenswert gewesen, da mit der Zeit sowohl die Spammenge als auch die Last auf den Systemen zunimmt. Aufgrund des begrenzten Bearbeitungszeitraums wurden die Appliances jedoch nach etwa vier Monaten in Betrieb genommen. Nach einer einwöchigen Phase für Konfigurationstests begann der eigentliche Testlauf.
+
+### Bewertungskriterien
+
+Die Auswertung erfolgte auf Grundlage der Datenbank sowie der Statistiken, die die einzelnen Systeme selbst bereitstellen. Bei der Bewertung wird ein False Positive als schwerwiegender eingestuft als ein False Negative: Eine unerwünschte Nachricht, die den Filter passiert, lässt sich vom Empfänger mit geringem Aufwand löschen, während eine fälschlich als Spam klassifizierte legitime Nachricht unter Umständen endgültig verloren geht. Ein Filter mit wenigen False Positives ist daher tendenziell auch dann vorzuziehen, wenn er insgesamt etwas mehr Spam passieren lässt.
+
+Da sich die Spammenge pro Domäne nicht steuern ließ, sind absolute Zahlen nur begrenzt aussagekräftig. Erhält eine Domäne beispielsweise deutlich mehr Spam als eine andere, wären die absoluten Fehlerzahlen der jeweiligen Filter nicht direkt vergleichbar. Die Ergebnisse werden daher über relative Werte normiert. Zusätzlich wird die Gesamtfehlerrate nach Cormack und Lynam (2007) herangezogen. Ziel ist es, auf Basis der ermittelten Fehler- und Zuverlässigkeitsraten sowie eines Fragenkatalogs eine Empfehlung für eine zukunftsfeste Kombination von Filtermechanismen abzuleiten.
+
+### Überleitung zur Umsetzung
+
+Im folgenden Kapitel wird die praktische Umsetzung dieses Konzepts beschrieben – von der Einrichtung eines sicheren Web- und Mailservers bis hin zur Struktur der Datenbank. Als Server diente der Rechner Troubardix im Serverraum des Instituts. Der Fernzugriff erfolgte über SSH in der Version 4.2p1 aus dem RPM-Paket und wurde durch einen 3072-Bit-RSA-Schlüssel abgesichert; der Root-Login per Remote-Zugriff wurde deaktiviert.
