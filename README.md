@@ -6,7 +6,7 @@ Claude-Code-Plugin für **menschlich geschriebene deutsche Hochschultexte** (Hau
 
 | Skill | Wofür | Wie |
 |---|---|---|
-| `menschlich-schreiben` | Beim Schreiben von Uni-Texten | Stilregeln mit kalibrierten Zielwerten (Satzlängen-Mix, Begriffswiederholung, keine Floskeln/Gedankenstriche …), Selbstcheck mit der Analyse |
+| `menschlich-schreiben` | Beim Schreiben von Uni-Texten | Stilregeln mit kalibrierten Zielwerten (lange, verdichtete Sätze statt Einheitslänge, gefüllte Satzklammer, wenige Konnektoren, Begriffswiederholung, keine Floskeln/Gedankenstriche/Semikolons …), Selbstcheck mit der Analyse |
 | `text-analyse` | Text vermessen | `analyse.py`: Satzlänge und -varianz, Verteilung, Rhythmus, Wortlänge, Silben, Wortschatzvielfalt, Begriffsaufnahme, Satzbau, Zeichensetzung, Absätze, Lesbarkeit, KI-Muster – jeweils mit Zielbereich (Mensch) und KI-Median, Score und Modell-Wahrscheinlichkeit |
 | `humanisieren` | Stil-Coach mit Messschleife | Standard: `coach.py` misst und gibt satzgenaue Arbeitsaufträge, du formulierst selbst, dann wird erneut gemessen (mit Fortschritt). Auf Wunsch überarbeitet Claude selbst, mit Inhaltscheck (`inhalt_check.py`). |
 
@@ -23,6 +23,7 @@ Die Analyse funktioniert auch ohne Claude:
 
 ```bash
 python3 plugins/humanwriting-de/skills/text-analyse/scripts/analyse.py meine_arbeit.docx
+python3 plugins/humanwriting-de/skills/humanisieren/scripts/coach.py meine_arbeit.md --verlauf meine_arbeit.coach.json
 python3 plugins/humanwriting-de/skills/humanisieren/scripts/inhalt_check.py alt.md neu.md
 ```
 
@@ -35,9 +36,9 @@ Nur Python 3.8+ (Standardbibliothek), keine Installation nötig.
 plugins/humanwriting-de/
   .claude-plugin/plugin.json
   skills/
-    menschlich-schreiben/  SKILL.md, references/{zielwerte,ki-muster}.md (generiert)
-    text-analyse/          SKILL.md, scripts/analyse.py, data/{baselines,ki_muster}.json, references/kennzahlen.md
-    humanisieren/          SKILL.md, scripts/inhalt_check.py, references/techniken.md
+    menschlich-schreiben/  SKILL.md, references/hintergrund.md, references/{zielwerte,ki-muster,persoenlicher-wortschatz}.md (generiert)
+    text-analyse/          SKILL.md, scripts/analyse.py, data/{baselines,ki_muster,wortlisten}.json, references/kennzahlen*.md
+    humanisieren/          SKILL.md, scripts/{coach,inhalt_check}.py, references/techniken.md
 kalibrierung/              Korpus-Pipeline, Kalibrierung, Ergebnisse (siehe kalibrierung/README.md)
 tests/                     python3 -m unittest discover -s tests
 ```
