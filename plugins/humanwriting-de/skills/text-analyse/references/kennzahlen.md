@@ -13,36 +13,36 @@ Mittelwert ± SD über die Folds; pro Fold wurde alles (Perzentile, Gewichte, Fu
 
 | Verfahren | AUROC | Genauigkeit | bal. Genauigkeit | Median Mensch | Median KI |
 |---|---|---|---|---|---|
-| Modell P(menschlich) | 0,996 ± 0,002 | 0,970 ± 0,010 | 0,969 ± 0,011 | 1,00 ± 0,00 | 0,01 ± 0,00 |
-| Menschlichkeits-Score | 0,781 ± 0,030 | 0,716 ± 0,031 | 0,715 ± 0,028 | 69,40 ± 0,93 | 57,70 ± 1,64 |
+| Modell P(menschlich) | 0,996 ± 0,002 | 0,970 ± 0,009 | 0,970 ± 0,010 | 1,00 ± 0,00 | 0,01 ± 0,00 |
+| Menschlichkeits-Score | 0,782 ± 0,030 | 0,721 ± 0,030 | 0,720 ± 0,027 | 69,19 ± 0,82 | 57,25 ± 1,59 |
 
 ## Schwellen
 
-- **Score-Schwelle 63,8**: Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI.
+- **Score-Schwelle 63,4**: Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI.
 - **Ziel für P(menschlich) 0,86**: P10 der menschlichen Out-of-fold-Wahrscheinlichkeiten, begrenzt auf [0,5; 0,95], auf 2 Stellen gerundet. Zusammen mit der Score-Schwelle ist das das Ziel des Coachs.
 - **Modell**: 12 Merkmale, L2-Strafe λ = 0,003162, standardisierte Merkmale auf ±3 begrenzt; k und λ nach der Ein-Standardfehler-Regel (erst wenige Merkmale, dann die stärkste Strafe, deren Log-Loss höchstens einen Standardfehler über dem besten liegt).
 
 ## Kalibrierung der Modell-Wahrscheinlichkeit (out-of-fold)
 
-Brier-Score 0,024 (klassenbalanciert 0,024), ECE über 10 Klassen 0,026 (klassenbalanciert 0,016). Klein = gut kalibriert; „klassenbalanciert“ gewichtet Mensch und KI gleich, wie das Modell geschätzt ist.
+Brier-Score 0,023 (klassenbalanciert 0,023), ECE über 10 Klassen 0,025 (klassenbalanciert 0,016). Klein = gut kalibriert; „klassenbalanciert“ gewichtet Mensch und KI gleich, wie das Modell geschätzt ist.
 
 | Gruppe | P5 | P10 | P25 | P50 | P75 | P90 |
 |---|---|---|---|---|---|---|
-| Mensch | 0,67 | 0,86 | 0,97 | 1,00 | 1,00 | 1,00 |
+| Mensch | 0,68 | 0,86 | 0,97 | 1,00 | 1,00 | 1,00 |
 | KI | 0,00 | 0,00 | 0,00 | 0,01 | 0,03 | 0,15 |
 
 | P(menschlich) | Abschnitte Mensch | Abschnitte KI | Ø Vorhersage | Anteil Mensch (balanciert) |
 |---|---|---|---|---|
-| 0,0–0,1 | 6 | 354 | 0,02 | 0,01 |
-| 0,1–0,2 | 6 | 21 | 0,16 | 0,09 |
-| 0,2–0,3 | 6 | 7 | 0,25 | 0,24 |
-| 0,3–0,4 | 7 | 4 | 0,36 | 0,39 |
-| 0,4–0,5 | 7 | 6 | 0,43 | 0,30 |
-| 0,5–0,6 | 14 | 1 | 0,55 | 0,84 |
-| 0,6–0,7 | 16 | 4 | 0,65 | 0,59 |
-| 0,7–0,8 | 27 | 4 | 0,75 | 0,71 |
-| 0,8–0,9 | 60 | 1 | 0,86 | 0,96 |
-| 0,9–1,0 | 967 | 2 | 0,99 | 0,99 |
+| 0,0–0,1 | 6 | 354 | 0,01 | 0,01 |
+| 0,1–0,2 | 4 | 19 | 0,15 | 0,07 |
+| 0,2–0,3 | 9 | 10 | 0,24 | 0,25 |
+| 0,3–0,4 | 6 | 4 | 0,36 | 0,35 |
+| 0,4–0,5 | 6 | 5 | 0,44 | 0,30 |
+| 0,5–0,6 | 11 | 2 | 0,54 | 0,67 |
+| 0,6–0,7 | 17 | 5 | 0,65 | 0,55 |
+| 0,7–0,8 | 32 | 2 | 0,76 | 0,85 |
+| 0,8–0,9 | 56 | 1 | 0,86 | 0,95 |
+| 0,9–1,0 | 969 | 2 | 0,99 | 0,99 |
 
 ## Goodhart-Sensitivität des Modells
 
@@ -50,20 +50,20 @@ Was passiert, wenn ein KI-Text nur eine Kennzahl auf den menschlichen Median bri
 
 | Merkmal | Median P nachher | Median-Änderung | KI-Abschnitte ≥ Ziel | allein über Ziel |
 |---|---|---|---|---|
-| Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich) | 0,186 | +0,164 | 6 % | nein |
-| Sätze-pro-Absatz-Variation (CV) | 0,029 | +0,015 | 2 % | nein |
-| KI-Floskeln & -Muster pro 1000 | 0,029 | +0,014 | 1 % | nein |
-| Begriffsaufnahme zw. Nachbarsätzen | 0,012 | +0,004 | 0 % | nein |
-| Satzklammer: Wörter zwischen Hilfsverb und Partizip/Infinitiv | 0,013 | +0,003 | 1 % | nein |
-| Semikolons pro 1000 | 0,016 | +0,003 | 1 % | nein |
+| Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich) | 0,167 | +0,150 | 7 % | nein |
+| KI-Floskeln & -Muster pro 1000 | 0,032 | +0,016 | 1 % | nein |
+| Sätze-pro-Absatz-Variation (CV) | 0,029 | +0,014 | 2 % | nein |
+| Begriffsaufnahme zw. Nachbarsätzen | 0,011 | +0,003 | 0 % | nein |
+| Satzklammer: Wörter zwischen Hilfsverb und Partizip/Infinitiv | 0,012 | +0,003 | 1 % | nein |
+| Semikolons pro 1000 | 0,013 | +0,003 | 0 % | nein |
 | Satzlängen-Dispersion (Var/Ø) | 0,011 | +0,003 | 0 % | nein |
-| Anteil mittellanger Sätze (14–26 W.) | 0,010 | +0,002 | 0 % | nein |
+| Anteil mittellanger Sätze (14–26 W.) | 0,008 | +0,002 | 0 % | nein |
 | Abkürzungen pro 1000 (z. B., bzw., d. h. …) | 0,009 | +0,001 | 0 % | nein |
 | Lexikalische Variation (MATTR-100) | 0,009 | +0,001 | 0 % | nein |
 | Anteil sehr langer Sätze (≥40 W.) | 0,007 | +0,001 | 0 % | nein |
 | Wörter pro Teilsatz | 0,006 | -0,000 | 0 % | nein |
 
-Die 3 Merkmale mit dem stärksten Zug Richtung KI gemeinsam (Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich), Sätze-pro-Absatz-Variation (CV), KI-Floskeln & -Muster pro 1000): Median P nachher 0,791, 36 % der KI-Abschnitte erreichen das Ziel; der mittlere KI-Abschnitt bleibt darunter.
+Die 3 Merkmale mit dem stärksten Zug Richtung KI gemeinsam (Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich), KI-Floskeln & -Muster pro 1000, Sätze-pro-Absatz-Variation (CV)): Median P nachher 0,803, 37 % der KI-Abschnitte erreichen das Ziel; der mittlere KI-Abschnitt bleibt darunter.
 
 ## Alle Kennzahlen
 
@@ -71,8 +71,8 @@ Die 3 Merkmale mit dem stärksten Zug Richtung KI gemeinsam (Funktionswort-Profi
 |---|---|---|---|---|---|---|---|
 | Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich) | -0,56 / 1,50 / 3,83 / 5,83 / 7,76 | -5,54 / -3,26 / -1,66 | 0,95 | nur Modell |  | 2,80 | Wie menschentypisch die 40 häufigsten Funktionswörter verteilt sind (Menschen: mehr „es“, „wie“, „auch“, „durch“; KI: mehr „als“, „sich“, „dass“), als Log-Likelihood-Quotient pro 1000 Wörter; > 0 = eher menschlich. Nur im Modell, kein Schreibziel: keine Einzelwörter einstreuen. |
 | Sätze-pro-Absatz-Variation (CV) | 0,30 / 0,39 / 0,48 / 0,59 / 0,70 | 0,23 / 0,30 / 0,36 | 0,86 | ✔ | 0,37 | 0,16 |  |
+| KI-Floskeln & -Muster pro 1000 | 0,00 / 0,72 / 1,93 / 3,38 / 4,95 | 3,61 / 5,84 / 8,07 | 0,84 | ✔ | 0,69 | 1,95 | Treffer der KI-Muster pro 1000 Token, gewichtet nach log2(KI-Rate / Mensch-Rate). |
 | Absatzlängen-Variation (CV) | 0,28 / 0,37 / 0,45 / 0,56 / 0,66 | 0,23 / 0,29 / 0,35 | 0,84 | ✔ | 0,35 | 0,15 |  |
-| KI-Floskeln & -Muster pro 1000 | 0,00 / 0,00 / 1,96 / 3,46 / 5,00 | 3,48 / 5,62 / 7,85 | 0,83 | ✔ | 0,66 | 1,99 | Treffer der KI-Muster pro 1000 Token, gewichtet nach log2(KI-Rate / Mensch-Rate). |
 | Begriffsaufnahme zw. Nachbarsätzen | 0,02 / 0,03 / 0,04 / 0,05 / 0,06 | 0,02 / 0,02 / 0,03 | 0,81 | ✔ | 0,21 | 0,01 | Jaccard-Überlappung der Inhaltswortstämme benachbarter Sätze. |
 | Vielfalt der Inhaltswörter | 0,82 / 0,85 / 0,88 / 0,90 / 0,92 | 0,90 / 0,92 / 0,93 | 0,80 | ✔ | 0,21 | 0,03 |  |
 | Sätze, die einen Begriff des Vorsatzes aufnehmen | 31 % / 41 % / 50 % / 63 % / 71 % | 26 % / 35 % / 42 % | 0,80 | ✔ | 0,20 | 11 % | Anteil der Sätze, die mindestens einen Inhaltswortstamm des Vorsatzes aufnehmen. |
@@ -172,15 +172,15 @@ Kennzahlen, die in menschlichen Texten stark korrelieren (|r| ≥ 0,7), zählen 
 
 Logistische Regression auf standardisierten Kennzahlen (positiv = spricht für menschlich):
 
-- Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich): +2.21
-- Sätze-pro-Absatz-Variation (CV): +1.34
-- KI-Floskeln & -Muster pro 1000: -1.09
-- Abkürzungen pro 1000 (z. B., bzw., d. h. …): +1.00
-- Satzklammer: Wörter zwischen Hilfsverb und Partizip/Infinitiv: +0.74
+- Funktionswort-Profil (LLR pro 1000 W., > 0 = menschlich): +2.19
+- Sätze-pro-Absatz-Variation (CV): +1.36
+- KI-Floskeln & -Muster pro 1000: -1.16
+- Abkürzungen pro 1000 (z. B., bzw., d. h. …): +1.02
 - Satzlängen-Dispersion (Var/Ø): +0.73
-- Begriffsaufnahme zw. Nachbarsätzen: +0.69
-- Semikolons pro 1000: -0.65
-- Anteil sehr langer Sätze (≥40 W.): +0.53
-- Anteil mittellanger Sätze (14–26 W.): -0.46
-- Lexikalische Variation (MATTR-100): -0.40
-- Wörter pro Teilsatz: -0.04
+- Satzklammer: Wörter zwischen Hilfsverb und Partizip/Infinitiv: +0.73
+- Begriffsaufnahme zw. Nachbarsätzen: +0.70
+- Semikolons pro 1000: -0.63
+- Anteil sehr langer Sätze (≥40 W.): +0.54
+- Anteil mittellanger Sätze (14–26 W.): -0.44
+- Lexikalische Variation (MATTR-100): -0.38
+- Wörter pro Teilsatz: -0.03

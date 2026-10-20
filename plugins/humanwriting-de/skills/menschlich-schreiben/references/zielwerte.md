@@ -11,8 +11,8 @@ Grundlage: 412 menschliche Hochschultexte vor 2022 (1116 Abschnitte à 800 Wört
 | Kennzahl | Zielbereich Mensch | Mensch Median | KI Median | Trennschärfe | Tendenz bei KI |
 |---|---|---|---|---|---|
 | Sätze-pro-Absatz-Variation (CV) | 0,39 – 0,59 | 0,48 | 0,30 | 0,86 | zu niedrig |
+| KI-Floskeln & -Muster pro 1000 | 0,72 – 3,38 | 1,93 | 5,84 | 0,84 | zu hoch |
 | Absatzlängen-Variation (CV) | 0,37 – 0,56 | 0,45 | 0,29 | 0,84 | zu niedrig |
-| KI-Floskeln & -Muster pro 1000 | 0,00 – 3,46 | 1,96 | 5,62 | 0,83 | zu hoch |
 | Begriffsaufnahme zw. Nachbarsätzen | 0,03 – 0,05 | 0,04 | 0,02 | 0,81 | zu niedrig |
 | Vielfalt der Inhaltswörter | 0,85 – 0,90 | 0,88 | 0,92 | 0,80 | zu hoch |
 | Sätze, die einen Begriff des Vorsatzes aufnehmen | 41 % – 63 % | 50 % | 35 % | 0,80 | zu niedrig |
@@ -57,8 +57,8 @@ Diese Kennzahlen gehen nur in die Modell-Einschätzung (P(menschlich)) ein, nich
 ## Was das fürs Schreiben heißt
 
 - **Sätze-pro-Absatz-Variation (CV)**: Menschen liegen typischerweise bei 0,39–0,59, KI-Texte bei 0,23–0,36. Beim Schreiben höher ansetzen als der KI-Reflex.
+- **KI-Floskeln & -Muster pro 1000**: Menschen liegen typischerweise bei 0,72–3,38, KI-Texte bei 3,61–8,07. Beim Schreiben niedriger ansetzen als der KI-Reflex. Treffer der KI-Muster pro 1000 Token, gewichtet nach log2(KI-Rate / Mensch-Rate).
 - **Absatzlängen-Variation (CV)**: Menschen liegen typischerweise bei 0,37–0,56, KI-Texte bei 0,23–0,35. Beim Schreiben höher ansetzen als der KI-Reflex.
-- **KI-Floskeln & -Muster pro 1000**: Menschen liegen typischerweise bei 0,00–3,46, KI-Texte bei 3,48–7,85. Beim Schreiben niedriger ansetzen als der KI-Reflex. Treffer der KI-Muster pro 1000 Token, gewichtet nach log2(KI-Rate / Mensch-Rate).
 - **Begriffsaufnahme zw. Nachbarsätzen**: Menschen liegen typischerweise bei 0,03–0,05, KI-Texte bei 0,02–0,03. Beim Schreiben höher ansetzen als der KI-Reflex. Jaccard-Überlappung der Inhaltswortstämme benachbarter Sätze.
 - **Vielfalt der Inhaltswörter**: Menschen liegen typischerweise bei 0,85–0,90, KI-Texte bei 0,90–0,93. Beim Schreiben niedriger ansetzen als der KI-Reflex.
 - **Sätze, die einen Begriff des Vorsatzes aufnehmen**: Menschen liegen typischerweise bei 41 %–63 %, KI-Texte bei 26 %–42 %. Beim Schreiben höher ansetzen als der KI-Reflex. Anteil der Sätze, die mindestens einen Inhaltswortstamm des Vorsatzes aufnehmen.

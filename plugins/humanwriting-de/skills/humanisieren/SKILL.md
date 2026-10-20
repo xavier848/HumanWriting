@@ -10,7 +10,7 @@ Ziel: ein Text, dessen messbare Stilmerkmale denen echter Hochschularbeiten ents
 Skripte (falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt ist: `find ~/.claude -path '*humanisieren/scripts/coach.py'`):
 - Coach: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/coach.py" DATEI --verlauf DATEI.coach.json`
 - Analyse (Detailwerte): `python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" DATEI`
-- Inhaltscheck: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/inhalt_check.py" ORIGINAL NEU`
+- Inhaltscheck: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/inhalt_check.py" ORIGINAL NEU --verlauf DATEI.coach.json` (mit `--verlauf` gelten Wörter, die der Coach selbst zum Ersetzen empfohlen hat, nicht als Verlust)
 
 ## Welcher Modus?
 
@@ -27,15 +27,18 @@ Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder 
    ```bash
    python3 ".../coach.py" text.md --verlauf text.coach.json
    ```
-   Der Bericht enthält Score, Modell-Einschätzung, die 3–4 wichtigsten Hebel (mit Wert und Zielbereich) und konkrete Stellen, Absatz für Absatz.
+   Der Bericht enthält Score, Modell-Einschätzung, die 3–4 wichtigsten Hebel (mit Wert und Zielbereich) und konkrete Stellen, Absatz für Absatz. Der Coach gibt nur so viele Aufträge, wie bis zum menschlichen Median nötig sind, nie Aufträge innerhalb wörtlicher Zitate, und keine Bündelungen, die eine Aussage einer fremden Quelle zuschreiben würden. Bei langen Texten beziehen sich die Stellen auf den Abschnitt, der am KI-nächsten ist.
 3. **Dem Nutzer zurückgeben:** die Hebel in eigenen Worten kurz erklären und die konkreten Stellen als Arbeitsliste ausgeben – mit Satznummer und Satzanfang, damit er sie findet. Pro Runde höchstens ~10–15 Aufträge, die wichtigsten zuerst.
    - Erklären *was* und *warum* („Absatz 3 hat fünf Sätze mit 17–21 Wörtern. Menschen mischen stärker: einen Satz deutlich kürzen oder zwei zu einem langen verbinden.“).
    - Keine fertigen Ersatzsätze für seinen Text liefern. Allgemeine Beispiele zur Technik aus `references/techniken.md` sind erlaubt (an fremden Beispielsätzen, nicht an seinem Text).
    - Bei Floskeln die Ersatzstrategie nennen („Ergebnis direkt nennen, ohne Ankündigung“), nicht die fertige Formulierung.
 4. **Nutzer überarbeitet selbst** und meldet sich (oder speichert die Datei). Dann Schritt 2 mit derselben `--verlauf`-Datei wiederholen: Der Bericht zeigt den Fortschritt (Score vorher → nachher, welche Kennzahlen besser oder schlechter wurden).
+   - Meldet der Bericht **„Überkorrektur“** oder **„Nebenwirkung“**, ist eine Kennzahl über den menschlichen Bereich hinaus auf die andere Seite gekippt (z. B. zu viele lange Sätze, Lesbarkeit zu schwer) oder als Nebenwirkung schlechter geworden. Der Coach setzt die verursachenden Hinweistypen dann aus und gibt Gegenaufträge („Satz X teilen“). Das dem Nutzer so erklären: Ziel ist die menschliche Verteilung, nicht ein Extrem.
+   - Hinweise mit dem Zusatz „schon in Runde N genannt“ darf der Nutzer überspringen, wenn sie nicht passen.
+   - **„Modell-Ziel erreicht, dem Score fehlen noch …“** heißt: Nur noch die genannten Hebel bearbeiten, alles andere ist erledigt.
    - Meldet der Bericht **„Mechanisch verlängert“** (Ø-Satzlänge um mehr als 10 % gestiegen, Wörter pro Teilsatz und Satzklammer aber nicht), zählt die Runde nicht als Fortschritt: Der Nutzer hat vermutlich Teilsätze angehängt. Dann auf Bündeln und nominales Verdichten verweisen (`references/techniken.md`, Abschnitt Satzlänge).
    - Wird eine Kennzahl besser, während andere schlechter werden, das offen benennen. Ziel ist der Gesamtstil, nicht eine einzelne Zahl.
-5. **Inhalt sichern:** Nach jeder Runde `inhalt_check.py` gegen die Ausgangsfassung laufen lassen und fehlende Zahlen, Quellen oder Zitate melden.
+5. **Inhalt sichern:** Nach jeder Runde `inhalt_check.py ORIGINAL NEU --verlauf text.coach.json` gegen die Ausgangsfassung laufen lassen und fehlende Zahlen, Quellen oder Zitate melden. Außerdem selbst darauf achten, ob beim Zusammenführen von Sätzen eine Aussage einer anderen Quelle zugeordnet oder eine Begründung umgedreht wurde – das erkennt das Skript nicht.
 6. **Fertig**, wenn der Coach „Ziel erreicht“ meldet (Modell-Wahrscheinlichkeit „menschlich“ und Score über Schwellen, die jeweils 90 % echter Hochschulabschnitte erreichen; beide zusammen schaffen rund 80 % der echten und unter 1 % der KI-Abschnitte) oder der Nutzer zufrieden ist. Einzelne rote Kennzahlen sind kein Grund weiterzumachen: Auch echte Arbeiten haben bei 800 Wörtern im Mittel etwa sechs rote Kennzahlen, weil einzelne Kennzahlen auf kurzen Texten stark streuen. Nicht jede rote Zahl „reparieren“ lassen.
 
 Fragen des Nutzers („Wie mache ich einen Satz länger, ohne Inhalt zu erfinden?“) mit den Techniken aus `references/techniken.md` beantworten, gern mit eigenen neutralen Beispielsätzen.

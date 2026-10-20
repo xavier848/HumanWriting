@@ -353,7 +353,7 @@
    "docs_mensch": 80
   },
   {
-   "ngramm": "nutzerinnen und nutzer",
+   "ngramm": "und nutzer",
    "z": 5.25,
    "ki_pro_1000": 0.13,
    "mensch_pro_1000": 0.001,
@@ -361,7 +361,7 @@
    "docs_mensch": 1
   },
   {
-   "ngramm": "und nutzer",
+   "ngramm": "nutzerinnen und nutzer",
    "z": 5.25,
    "ki_pro_1000": 0.13,
    "mensch_pro_1000": 0.001,
@@ -457,7 +457,7 @@
    "docs_mensch": 73
   },
   {
-   "ngramm": "im folgenden werden",
+   "ngramm": "folgenden werden",
    "z": 5.06,
    "ki_pro_1000": 0.201,
    "mensch_pro_1000": 0.027,
@@ -465,7 +465,7 @@
    "docs_mensch": 21
   },
   {
-   "ngramm": "folgenden werden",
+   "ngramm": "im folgenden werden",
    "z": 5.06,
    "ki_pro_1000": 0.201,
    "mensch_pro_1000": 0.027,
@@ -945,20 +945,20 @@
    "docs_mensch": 255
   },
   {
-   "ngramm": "da sie",
-   "z": 4.11,
-   "ki_pro_1000": 0.347,
-   "mensch_pro_1000": 0.126,
-   "docs_ki": 98,
-   "docs_mensch": 87
-  },
-  {
    "ngramm": "erfasst",
    "z": 4.11,
    "ki_pro_1000": 0.347,
    "mensch_pro_1000": 0.126,
    "docs_ki": 74,
    "docs_mensch": 83
+  },
+  {
+   "ngramm": "da sie",
+   "z": 4.11,
+   "ki_pro_1000": 0.347,
+   "mensch_pro_1000": 0.126,
+   "docs_ki": 98,
+   "docs_mensch": 87
   },
   {
    "ngramm": "sich ein",
@@ -1057,7 +1057,7 @@
    "docs_mensch": 7
   },
   {
-   "ngramm": "vor diesem hintergrund",
+   "ngramm": "diesem hintergrund",
    "z": 3.96,
    "ki_pro_1000": 0.18,
    "mensch_pro_1000": 0.04,
@@ -1065,7 +1065,7 @@
    "docs_mensch": 30
   },
   {
-   "ngramm": "diesem hintergrund",
+   "ngramm": "vor diesem hintergrund",
    "z": 3.96,
    "ki_pro_1000": 0.18,
    "mensch_pro_1000": 0.04,
@@ -1193,12 +1193,12 @@
    "docs_mensch": 6
   },
   {
-   "ngramm": "ausdrücklich",
+   "ngramm": "damit nicht",
    "z": 3.79,
    "ki_pro_1000": 0.118,
    "mensch_pro_1000": 0.017,
-   "docs_ki": 34,
-   "docs_mensch": 12
+   "docs_ki": 38,
+   "docs_mensch": 14
   }
  ],
  "mensch_typisch": [
@@ -2267,7 +2267,7 @@
    "docs_mensch": 145
   },
   {
-   "ngramm": "letzten jahren",
+   "ngramm": "den letzten jahren",
    "z": -2.91,
    "ki_pro_1000": 0.003,
    "mensch_pro_1000": 0.108,
@@ -2275,7 +2275,7 @@
    "docs_mensch": 81
   },
   {
-   "ngramm": "den letzten jahren",
+   "ngramm": "letzten jahren",
    "z": -2.91,
    "ki_pro_1000": 0.003,
    "mensch_pro_1000": 0.108,

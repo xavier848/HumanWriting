@@ -526,6 +526,176 @@ class NarrativeVerweiseUndFunktionswoerter(unittest.TestCase):
         self.assertEqual(self.warnungen(res, "Begriff verschwunden"), [])
 
 
+class CoachErsetzbar(unittest.TestCase):
+    """Regressionen aus der Coach-Evaluation: Was der Coach zum Ersetzen empfiehlt (Floskel-Auslöser, typische
+    Claude-Wörter, „ersetzbar“ im Verlauf), meldet der Inhaltscheck nicht als verschwundenen Begriff."""
+
+    TYPEN = ("Begriff verschwunden", "Fachwort ersetzt?")
+
+    def gemeldet(self, res):
+        return ", ".join(w["wert"] for w in res["warnungen"] if w["typ"] in self.TYPEN).lower()
+
+    def ohne_coach_daten(self):
+        """Kontrolle: ohne ki_muster.json/wortlisten.json prüft das Skript wie früher."""
+        alt = (inhalt_check.MUSTER_PFAD, inhalt_check.WORTLISTEN_PFAD)
+        inhalt_check.MUSTER_PFAD = inhalt_check.WORTLISTEN_PFAD = os.path.join(REPO, "gibt-es-nicht.json")
+        self.addCleanup(lambda: setattr(inhalt_check, "MUSTER_PFAD", alt[0]))
+        self.addCleanup(lambda: setattr(inhalt_check, "WORTLISTEN_PFAD", alt[1]))
+
+    ALT_CLAUDE = ("Die Nachfrage bildet den Rahmen. Der Preis bildet die Grenze. Kunden kaufen häufig online. "
+                  "Händler werben häufig mit Rabatten. Das lässt sich messen. Der Effekt lässt rasch nach. "
+                  "Hinzu kommt der Wettbewerb. Es kommt auf die Lage an.")
+    NEU_CLAUDE = ("Die Nachfrage steckt den Rahmen ab. Der Preis zieht die Grenze. Kunden kaufen oft online. "
+                  "Händler werben oft mit Rabatten. Das kann man messen. Der Effekt nimmt rasch ab. "
+                  "Dazu tritt der Wettbewerb. Entscheidend ist die Lage.")
+
+    def test_claude_woerter_kein_begriff_verschwunden(self):
+        res = inhalt_check.pruefe(self.ALT_CLAUDE, self.NEU_CLAUDE)
+        for wort in ("bildet", "häufig", "lässt", "kommt"):
+            with self.subTest(wort=wort):
+                self.assertNotIn(inhalt_check.stamm(wort), self.gemeldet(res))
+                self.assertIn(wort, res["nicht_gemeldet"])
+        self.assertIn("Nicht als Verlust gewertet", inhalt_check.bericht(res))
+
+    def test_ohne_coach_daten_wie_bisher(self):
+        self.ohne_coach_daten()
+        gemeldet = self.gemeldet(inhalt_check.pruefe(self.ALT_CLAUDE, self.NEU_CLAUDE))
+        for wort in ("bildet", "häufig", "lässt", "kommt"):
+            with self.subTest(wort=wort):
+                self.assertIn(inhalt_check.stamm(wort), gemeldet)
+
+    def test_fachnomen_aus_wortliste_bleiben_geschuetzt(self):
+        # „befund“ steht in der Claude-Wortliste; großgeschrieben mitten im Satz ist es ein Nomen und bleibt Begriff
+        res = inhalt_check.pruefe("Der Befund ist eindeutig. Den Befund bestätigen zwei weitere Studien.",
+                                  "Das Ergebnis ist eindeutig. Das Ergebnis bestätigen zwei weitere Studien.")
+        self.assertIn("befund", self.gemeldet(res))
+        # am Satzanfang Nomen, wenn das Wort auch mitten im Satz großgeschrieben steht; sonst Adverb („Häufig …“)
+        res = inhalt_check.pruefe("Befunde aus Japan fehlen. Neuere Befunde liegen nur für Europa vor.",
+                                  "Ergebnisse aus Japan fehlen. Neuere Ergebnisse liegen nur für Europa vor.")
+        self.assertIn("befund", self.gemeldet(res))
+        res = inhalt_check.pruefe("Häufig fehlen Daten. Häufig fehlt auch Personal.", "Oft fehlen Daten. Oft fehlt auch Personal.")
+        self.assertEqual(self.gemeldet(res), "")
+
+    def test_schluesselrolle_als_floskel(self):
+        alt = "Der Kommunikation kommt im Wandel eine Schlüsselrolle zu. Ohne sie scheitern viele Projekte."
+        neu = "Die Kommunikation entscheidet im Wandel über den Erfolg. Ohne sie scheitern viele Projekte."
+        res = inhalt_check.pruefe(alt, neu)
+        self.assertNotIn("schlüssel", self.gemeldet(res))
+        self.assertIn("schlüsselrolle", res["nicht_gemeldet"])
+        self.ohne_coach_daten()
+        self.assertIn("schlüsselrolle", self.gemeldet(inhalt_check.pruefe(alt, neu)))
+
+    def test_schluesselrolle_als_fachwort(self):
+        # wiederholt verwendet = Fachwort des Textes, kein Floskel-Einzelfund
+        res = inhalt_check.pruefe("Belbin beschreibt die Schlüsselrolle des Koordinators. Die Schlüsselrolle wechselt "
+                                  "im Projektverlauf.",
+                                  "Belbin beschreibt die Hauptrolle des Koordinators. Die Hauptrolle wechselt im "
+                                  "Projektverlauf.")
+        self.assertIn(inhalt_check.stamm("Schlüsselrolle"), self.gemeldet(res))
+        # in Anführungszeichen ist es das Wort der Quelle: kein Floskel-Auslöser, Hinweis bleibt
+        alt = "Die Autoren sprechen von einer „Schlüsselrolle“ der Kommunen beim Klimaschutz."
+        self.assertEqual(inhalt_check.floskel_kopfwoerter(alt), set())
+        res = inhalt_check.pruefe(alt, "Die Autoren sprechen von einer wichtigen Aufgabe der Kommunen beim Klimaschutz.")
+        self.assertNotIn("schlüsselrolle", res["nicht_gemeldet"])
+        self.assertTrue(any("Schlüsselrolle" in w["wert"] for w in res["warnungen"]))
+
+    def test_spannungsfeld_als_floskel(self):
+        res = inhalt_check.pruefe("Unternehmen bewegen sich im Spannungsfeld zwischen Kosten und Qualität.",
+                                  "Unternehmen können Kosten und Qualität nicht zugleich maximieren.")
+        self.assertNotIn("spannungsfeld", self.gemeldet(res))
+
+    def test_platzhalter_der_muster_bleiben_begriffe(self):
+        # Inhalt in „nicht X, sondern“ und das Objekt in „trägt maßgeblich zu … bei“ sind keine Floskel
+        res = inhalt_check.pruefe("Entscheidend ist nicht die Fertigungstechnik, sondern die Organisation der Abläufe.",
+                                  "Entscheidend ist die Organisation der Abläufe.")
+        self.assertIn("fertigungstechnik", self.gemeldet(res))
+        alt = "Klare Ziele tragen maßgeblich zur Mitarbeiterzufriedenheit bei."
+        kopf = {alt[a:b] for a, b in inhalt_check.floskel_kopfwoerter(alt)}
+        self.assertIn("maßgeblich", kopf)
+        self.assertNotIn("Mitarbeiterzufriedenheit", kopf)
+        res = inhalt_check.pruefe(alt, "Klare Ziele erhöhen die Motivation.")
+        self.assertIn("mitarbeiterzufriedenheit", self.gemeldet(res))
+        self.assertNotIn("maßgeb", self.gemeldet(res))
+
+    def test_muster_ohne_gewicht_nicht_ausgenommen(self):
+        # „zunehmend“ ist ein Muster mit Gewicht 0: der Coach empfiehlt es nicht, also bleibt die Warnung
+        res = inhalt_check.pruefe("Die Kosten steigen zunehmend. Die Nachfrage wächst zunehmend.",
+                                  "Die Kosten steigen. Die Nachfrage wächst.")
+        self.assertIn("zunehmend", self.gemeldet(res))
+
+    ALT_VERLAUF = ("Konsumenten vergleichen Preise im Netz. Viele Konsumenten warten auf Rabatte. Ein einzelner Konsument "
+                   "zählt wenig. Die Preisgestaltung folgt der Nachfrage.")
+    NEU_VERLAUF = ("Kunden vergleichen Preise im Netz. Viele Kunden warten auf Rabatte. Ein einzelner Kunde zählt wenig. "
+                   "Die Preissetzung folgt der Nachfrage.")
+
+    def test_verlauf_ersetzbar(self):
+        verlauf = {"datei": "text.md", "messungen": [{"score": 50, "ersetzbar": ["konsumenten"]},
+                                                     {"score": 60, "ersetzbar": ["Preisgestaltung"]}, {"score": 70}]}
+        ersetzbar = inhalt_check.ersetzbar_aus_verlauf(verlauf)
+        self.assertEqual(ersetzbar, {"konsumenten", "preisgestaltung"})
+        ohne = self.gemeldet(inhalt_check.pruefe(self.ALT_VERLAUF, self.NEU_VERLAUF))
+        self.assertIn("konsument", ohne)
+        self.assertIn("preisgestaltung", ohne)
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(self.ALT_VERLAUF, self.NEU_VERLAUF, ersetzbar)), "")
+
+    def test_verlauf_kompositum_bleibt_geschuetzt(self):
+        # „konsumenten“ im Verlauf (Synonym-Variante) erfasst flektierte Formen, aber kein Kompositum wie „Konsumentenrente“
+        # (früher über den auf 9 Zeichen gekürzten Stamm „konsument“ mit unterdrückt)
+        alt = ("Konsumenten vergleichen Preise. Viele Konsumenten warten auf Rabatte. Die Konsumentenrente sinkt bei "
+               "dynamischen Preisen. Ohne Preisbindung steigt die Konsumentenrente wieder.")
+        neu = ("Kunden vergleichen Preise. Viele Kunden warten auf Rabatte. Der Vorteil der Kunden sinkt bei dynamischen "
+               "Preisen. Ohne Preisbindung steigt der Vorteil wieder.")
+        res = inhalt_check.pruefe(alt, neu, {"konsumenten"})
+        self.assertIn("konsument", self.gemeldet(res))
+        self.assertNotIn("konsumentenrente", res["nicht_gemeldet"])
+        # flektierte Form derselben Grundform bleibt befreit
+        res = inhalt_check.pruefe("Die Konsumenten zögern. Ein Konsument wartet.", "Die Kunden zögern. Ein Kunde wartet.",
+                                  {"konsumenten"})
+        self.assertEqual(self.gemeldet(res), "")
+
+    def test_verlauf_platzhalter_aus_floskel_bleibt_begriff(self):
+        # Der Coach schreibt alle Inhaltswörter eines Floskel-Funds unter „ersetzbar“, auch den Platzhalter
+        # („sowohl die Kostenstruktur der Abteilungen als auch“, „kommt in diesem Prozess eine zentrale Rolle zu“).
+        # Ein Fachnomen, das dort nur Platzhalter ist, bleibt Begriff.
+        alt = ("Die Kostenstruktur betrifft sowohl die Kostenstruktur der Abteilungen als auch die Budgets. "
+               "Die Kostenstruktur ist keineswegs starr. Der Planung kommt in diesem Prozess eine zentrale Rolle zu.")
+        neu = ("Die Ausgabenplanung betrifft die Abteilungen und die Budgets. Die Ausgabenplanung ist nicht starr. "
+               "Die Planung steuert diesen Prozess.")
+        ersetzbar = {"kostenstruktur", "abteilungen", "keineswegs", "kommt", "prozess", "zentrale", "rolle"}
+        res = inhalt_check.pruefe(alt, neu, ersetzbar)
+        self.assertIn("kostenstr", self.gemeldet(res))
+        self.assertNotIn("kostenstruktur", res["nicht_gemeldet"])
+        # dasselbe Wort als echte Synonym-Variante (außerhalb einer Floskel) bleibt befreit
+        res = inhalt_check.pruefe("Die Kostenstruktur ist starr. Die Kostenstruktur wächst.",
+                                  "Die Ausgabenplanung ist starr. Die Ausgabenplanung wächst.", {"kostenstruktur"})
+        self.assertEqual(self.gemeldet(res), "")
+
+    def test_verlauf_cli(self):
+        import contextlib
+        import io
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            pfade = {}
+            for name, inhalt in (("alt.md", self.ALT_VERLAUF), ("neu.md", self.NEU_VERLAUF),
+                                 ("neu.coach.json", json.dumps({"messungen": [{"ersetzbar": ["konsumenten", "preisgestaltung"]}]}))):
+                pfade[name] = os.path.join(d, name)
+                with open(pfade[name], "w", encoding="utf-8") as f:
+                    f.write(inhalt)
+            for extra, erwartet_leer in (([], False), (["--verlauf", pfade["neu.coach.json"]], True)):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    rc = inhalt_check.main([pfade["alt.md"], pfade["neu.md"], "--format", "json"] + extra)
+                with self.subTest(verlauf=bool(extra)):
+                    self.assertEqual(rc, 0)
+                    self.assertEqual(self.gemeldet(json.loads(out.getvalue())) == "", erwartet_leer)
+
+    def test_harte_funde_bleiben_trotz_verlauf(self):
+        res = inhalt_check.pruefe("Müller (2019) zeigt, dass 45 % der Betriebe zögern.",
+                                  "Studien zeigen, dass 54 % der Betriebe zögern.", {"müller", "zeigt", "45"})
+        self.assertFalse(res["ok"])
+        self.assertEqual({e["typ"] for e in res["harte_verluste"]}, {"Quellenverweis", "Zahl"})
+
+
 class Zitate(unittest.TestCase):
     def test_gerade_anfuehrungszeichen_paaren_richtig(self):
         t = 'Der Begriff "KMU" ist ebenso unscharf wie "Mittelstand". Werner nennt es "die Fähigkeit, sich zu erholen".'

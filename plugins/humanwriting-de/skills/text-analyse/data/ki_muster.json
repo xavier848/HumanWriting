@@ -19,7 +19,7 @@
    "kategorie": "floskel",
    "gewicht": 1.11,
    "regex": "\\b(?:kommt|kommen|kam|kamen)\\s+(?:[\\w-]+\\s+){0,5}?eine\\s+(?:entscheidende|zentrale|wichtige|wesentliche|besondere|bedeutende|tragende|große)\\s+(?:Rolle|Bedeutung)\\s+zu\\b|\\beine\\s+(?:entscheidende|zentrale|wichtige|wesentliche|besondere|bedeutende|tragende|große)\\s+(?:Rolle|Bedeutung)\\s+zu(?:kommt|kommen|kam|kamen|gekommen)\\b",
-   "ersatz": "Wie oben: konkrete Wirkung oder Funktion benennen („X steuert …“, „X entscheidet über …“).",
+   "ersatz": "Konkrete Wirkung oder Funktion benennen („X steuert …“, „X entscheidet über …“) oder die Wichtigkeit belegen (Zahl, Quelle).",
    "rate_mensch_pro_1000": 0.008,
    "rate_ki_pro_1000": 0.04,
    "verhaeltnis_ki_mensch": 2.16
@@ -28,12 +28,12 @@
    "id": "von_bedeutung",
    "label": "„von entscheidender/zentraler Bedeutung“",
    "kategorie": "floskel",
-   "gewicht": 0.79,
+   "gewicht": 0.81,
    "regex": "\\bvon\\s+(entscheidender|zentraler|großer|besonderer|wesentlicher|herausragender|essenzieller|essentieller|elementarer|grundlegender|immenser)\\s+Bedeutung\\b",
    "ersatz": "„ist wichtig für …“ mit Begründung, oder die Bedeutung durch Fakten zeigen statt behaupten.",
-   "rate_mensch_pro_1000": 0.065,
+   "rate_mensch_pro_1000": 0.064,
    "rate_ki_pro_1000": 0.127,
-   "verhaeltnis_ki_mensch": 1.73
+   "verhaeltnis_ki_mensch": 1.75
   },
   {
    "id": "darueber_hinaus",
@@ -41,7 +41,7 @@
    "kategorie": "konnektor",
    "gewicht": 1.31,
    "regex": "\\bdarüber\\s+hinaus\\b",
-   "ersatz": "Meist ersatzlos streichen; sonst über das wiederholte Nomen inhaltlich anschließen (nicht durch einen anderen Konnektor ersetzen).",
+   "ersatz": "Streichen, wenn der Satz erkennbar etwas Neues anfügt (neuer Absatz, neues Thema); sonst „auch“ ins Mittelfeld setzen oder über das wiederholte Nomen anschließen, nicht durch einen anderen Konnektor ersetzen.",
    "rate_mensch_pro_1000": 0.279,
    "rate_ki_pro_1000": 0.718,
    "verhaeltnis_ki_mensch": 2.47
@@ -52,7 +52,7 @@
    "kategorie": "konnektor",
    "gewicht": 0.0,
    "regex": "\\b(?:(?-i:Des)\\s+weiteren|des\\s+(?-i:Weiteren))\\b|\\b(?-i:des\\s+weiteren)\\b(?!\\s+(?-i:[a-zäöüß]+en\\s+)?(?-i:[A-ZÄÖÜ])[\\wäöüß-]*(?:s|en|n)\\b)",
-   "ersatz": "Streichen; der Bezug ergibt sich meist aus der Reihenfolge.",
+   "ersatz": "Streichen, wenn die Reihenfolge den Bezug schon zeigt; sonst „auch“ ins Mittelfeld setzen oder über das wiederholte Nomen anschließen.",
    "rate_mensch_pro_1000": 0.17,
    "rate_ki_pro_1000": 0.0,
    "verhaeltnis_ki_mensch": 0.11
@@ -74,7 +74,7 @@
    "kategorie": "floskel",
    "gewicht": 1.63,
    "regex": "\\binsgesamt\\s+(?:zeigt\\s+sich|wird\\s+deutlich|verdeutlicht|unterstreicht|ergibt\\s+sich\\s+(?:\\w+\\s+){0,3}?(?:das|ein)\\s+(?:\\w+\\s+){0,2}?bild)\\b",
-   "ersatz": "Ergebnis direkt nennen, ohne Ankündigung.",
+   "ersatz": "Ergebnis direkt nennen. Dass es aus der vorangehenden Analyse folgt, mit einem konkreten Rückbezug zeigen (z. B. „Nach den Befunden aus Abschnitt 3 …“), nicht mit der Ankündigungsformel.",
    "rate_mensch_pro_1000": 0.004,
    "rate_ki_pro_1000": 0.056,
    "verhaeltnis_ki_mensch": 3.09
@@ -85,7 +85,7 @@
    "kategorie": "konstruktion",
    "gewicht": 1.8,
    "regex": "\\b(?:dies|(?<!,\\s)(?<!,)das|diese[rs]?\\s+\\w+)\\s+(?:zeigt|verdeutlicht|unterstreicht|macht\\s+deutlich|illustriert|belegt|veranschaulicht|betont|zeigt\\s+deutlich|verdeutlicht\\s+eindrucksvoll),?\\s+(?:dass|wie)\\b",
-   "ersatz": "Kommentarsatz streichen oder konkretes Subjekt: „Der Befund spricht dafür, dass …“, „Daraus folgt …“.",
+   "ersatz": "Konkretes Subjekt statt „dies“: den Befund nennen, aus dem gefolgert wird (z. B. „Der Rückgang der Fluktuation spricht dafür, dass …“). Den Satz nur streichen, wenn der dass-Satz bloß wiederholt, was schon dasteht; eine neue Folgerung bleibt.",
    "rate_mensch_pro_1000": 0.012,
    "rate_ki_pro_1000": 0.093,
    "verhaeltnis_ki_mensch": 3.49
@@ -116,12 +116,12 @@
    "id": "zusammenhang_hintergrund",
    "label": "„In diesem Zusammenhang / Vor diesem Hintergrund“",
    "kategorie": "konnektor",
-   "gewicht": 1.12,
+   "gewicht": 1.11,
    "regex": "\\b(in\\s+diesem\\s+zusammenhang|vor\\s+diesem\\s+hintergrund|in\\s+diesem\\s+kontext)\\b",
-   "ersatz": "Meist streichen; der Bezug ergibt sich aus dem Absatz. Sonst „Deshalb …“, „Dafür …“.",
+   "ersatz": "Durch den konkreten Bezug ersetzen („Für die Teamarbeit …“, „Deshalb …“, „Dafür …“). Ersatzlos streichen nur, wenn der Satz dasselbe Thema wie der vorige fortführt und der Bezug ohne Formel klar bleibt.",
    "rate_mensch_pro_1000": 0.204,
-   "rate_ki_pro_1000": 0.467,
-   "verhaeltnis_ki_mensch": 2.17
+   "rate_ki_pro_1000": 0.464,
+   "verhaeltnis_ki_mensch": 2.16
   },
   {
    "id": "nicht_zuletzt",
@@ -129,7 +129,7 @@
    "kategorie": "konnektor",
    "gewicht": 0.0,
    "regex": "\\bnicht\\s+zuletzt\\b",
-   "ersatz": "Streichen oder „auch“.",
+   "ersatz": "„auch“ (gleichrangig) oder „vor allem“ (betont), je nach gemeinter Gewichtung.",
    "rate_mensch_pro_1000": 0.069,
    "rate_ki_pro_1000": 0.077,
    "verhaeltnis_ki_mensch": 1.1
@@ -140,7 +140,7 @@
    "kategorie": "wort",
    "gewicht": 0.0,
    "regex": "\\b(ganzheitlich\\w*|vielschichtig\\w*|facettenreich\\w*|essenziell\\w*|essentiell\\w*|nahtlos\\w*|zielgerichtet\\w*|tiefgreifend\\w*|wegweisend\\w*|bahnbrechend\\w*|maßgeschneidert\\w*|praxisnah\\w*|zukunftsfähig\\w*|zukunftsorientiert\\w*)\\b",
-   "ersatz": "Durch präzises Adjektiv oder Fakt ersetzen (ganzheitlich → „der alle Abteilungen einbezieht“), oft ersatzlos streichen.",
+   "ersatz": "Durch ein präzises Adjektiv oder den Fakt ersetzen (ganzheitlich → „der alle Abteilungen einbezieht“, tiefgreifend → Ausmaß nennen). Streichen nur, wenn das Adjektiv nichts unterscheidet.",
    "rate_mensch_pro_1000": 0.202,
    "rate_ki_pro_1000": 0.158,
    "verhaeltnis_ki_mensch": 0.8
@@ -151,7 +151,7 @@
    "kategorie": "wort",
    "gewicht": 1.53,
    "regex": "\\bmaßgeblich\\w*\\b",
-   "ersatz": "„stark“, „deutlich“, Größenangabe aus der Quelle – oder streichen.",
+   "ersatz": "„stark“, „deutlich“, „vor allem“ oder die Größenangabe aus der Quelle. Nicht ersatzlos streichen: „maßgeblich“ sagt, wie stark etwas wirkt oder wer etwas vor allem geprägt hat.",
    "rate_mensch_pro_1000": 0.084,
    "rate_ki_pro_1000": 0.282,
    "verhaeltnis_ki_mensch": 2.89
@@ -217,7 +217,7 @@
    "kategorie": "floskel",
    "gewicht": 0.0,
    "regex": "\\bin\\s+der\\s+heutigen\\s+(zeit|welt|gesellschaft|arbeitswelt|wirtschaft|geschäftswelt)\\b|\\bin\\s+zeiten\\s+(von|der|des|zunehmender|wachsender)\\b|\\bin\\s+einer\\s+zunehmend\\s+\\w+en\\s+(welt|gesellschaft|arbeitswelt)\\b",
-   "ersatz": "Streichen oder konkrete Zeitangabe/Entwicklung nennen.",
+   "ersatz": "„In der heutigen Zeit“ streichen oder durch die konkrete Zeitangabe ersetzen (seit 2020, derzeit); bei „in Zeiten von X“ das X behalten („während der Pandemie“).",
    "rate_mensch_pro_1000": 0.042,
    "rate_ki_pro_1000": 0.0,
    "verhaeltnis_ki_mensch": 0.32
@@ -250,7 +250,7 @@
    "kategorie": "wort",
    "gewicht": 0.83,
    "regex": "\\bschlüssel(faktor|rolle|element|kompetenz|komponente|aspekt|frage|bereich|instrument)\\w*\\b",
-   "ersatz": "„wichtiger Faktor“ nur mit Beleg; besser konkrete Funktion beschreiben.",
+   "ersatz": "Konkrete Funktion beschreiben („X entscheidet über …“, „ohne X kein …“). Schreibt eine Quelle X diese Rolle zu, die Zuschreibung samt Quelle behalten und nur das Modewort ersetzen („gilt als wichtigstes …“, „ist laut … unverzichtbar für …“). Ist das Wort ein Fachbegriff der Quelle (z. B. Schlüsselkompetenz), unverändert lassen.",
    "rate_mensch_pro_1000": 0.019,
    "rate_ki_pro_1000": 0.05,
    "verhaeltnis_ki_mensch": 1.78
@@ -261,7 +261,7 @@
    "kategorie": "floskel",
    "gewicht": 0.57,
    "regex": "\\bim\\s+kern\\b(?!\\s+(?:der\\s+zelle|einer\\s+zelle|des\\s+atoms|der\\s+erde|des\\s+reaktors|der\\s+(?:innen)?stadt)\\b)|\\b(?:zentrale[rn]?|entscheidende[rn]?)\\s+(?:aspekt|faktor|baustein|bestandteil|hebel|erfolgsfaktor|treiber)\\w*\\b|\\bwesentliche[rn]?\\s+(?:aspekt|faktor|baustein|hebel|erfolgsfaktor|treiber)\\w*\\b",
-   "ersatz": "Streichen oder „Hauptpunkt“/„wichtigster Grund“ nur mit Begründung.",
+   "ersatz": "Sagen, wofür und wie stark es wirkt („der wichtigste Grund für …, weil …“, „erklärt den größten Teil von …“). „Im Kern“ kann wegfallen, wenn der Satz die Hauptsache ohnehin nennt; die Rangfolge (wichtigster, zentraler Faktor) nicht ersatzlos streichen.",
    "rate_mensch_pro_1000": 0.054,
    "rate_ki_pro_1000": 0.09,
    "verhaeltnis_ki_mensch": 1.48
@@ -281,23 +281,23 @@
    "id": "nicht_x_sondern",
    "label": "Korrektur-Konstruktion „nicht X, sondern Y“",
    "kategorie": "konstruktion",
-   "gewicht": 1.58,
-   "regex": "\\b(nicht|kein|keine|keinen|keinem)\\s+(\\w+\\s+){0,4}\\w+,\\s+sondern\\b",
-   "ersatz": "Gegenfolie streichen, wenn niemand X behauptet hat: nur „Y“ sagen.",
-   "rate_mensch_pro_1000": 0.331,
-   "rate_ki_pro_1000": 1.034,
-   "verhaeltnis_ki_mensch": 3.0
+   "gewicht": 1.55,
+   "regex": "\\b(nicht|kein|keine|keinen|keinem)\\s+(?!(?:mehr\\s+|einfach\\s+)?(?:nur|allein|bloß|lediglich)\\b)(\\w+\\s+){0,4}\\w+,\\s+sondern\\b",
+   "ersatz": "Nur wenn niemand X behauptet (unterstellte Gegenposition): X weglassen und Y direkt sagen. Gehört X zu einer Quellenaussage, wird X vorher im Text vertreten oder ist der Kontrast selbst die Aussage, X behalten und nur die Formel auflösen („Y statt X“ oder zwei Sätze).",
+   "rate_mensch_pro_1000": 0.256,
+   "rate_ki_pro_1000": 0.789,
+   "verhaeltnis_ki_mensch": 2.93
   },
   {
    "id": "nicht_nur_sondern",
-   "label": "„nicht nur …, sondern auch“",
+   "label": "„nicht nur/allein …, sondern (auch)“",
    "kategorie": "konstruktion",
-   "gewicht": 0.43,
-   "regex": "\\bnicht\\s+nur\\b[^.!?]{1,150}?\\bsondern\\s+(auch|vor\\s+allem|zugleich|ebenso)\\b",
-   "ersatz": "„A und B“ oder zwei Sätze.",
-   "rate_mensch_pro_1000": 0.225,
-   "rate_ki_pro_1000": 0.31,
-   "verhaeltnis_ki_mensch": 1.35
+   "gewicht": 0.57,
+   "regex": "\\bnicht\\s+(?:mehr\\s+|einfach\\s+)?(?:nur|allein|bloß|lediglich)\\b[^.!?]{1,150}?\\bsondern\\b",
+   "ersatz": "„A und B“, „neben A auch B“ oder zwei Sätze; beide Teile bleiben. Bei „sondern vor allem“ die Gewichtung behalten („vor allem B, daneben A“).",
+   "rate_mensch_pro_1000": 0.444,
+   "rate_ki_pro_1000": 0.669,
+   "verhaeltnis_ki_mensch": 1.48
   },
   {
    "id": "mehr_als_nur",
@@ -307,8 +307,63 @@
    "regex": "\\bmehr\\s+als\\s+nur\\b|\\bnicht\\s+(?:einfach|bloß|lediglich)\\s+(?:nur\\s+)?(?:ein|eine|einen|um)\\b|\\bweit\\s+mehr\\s+als\\b(?!\\s+(?:\\d|(?:zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|hundert|tausend)\\b|die\\s+hälfte|ein(?:e|en)?\\s+(?:drittel|viertel|fünftel|zehntel|million)|doppelt|zweimal|dreimal))",
    "ersatz": "Direkt sagen, was es ist.",
    "rate_mensch_pro_1000": 0.009,
-   "rate_ki_pro_1000": 0.012,
-   "verhaeltnis_ki_mensch": 1.12
+   "rate_ki_pro_1000": 0.006,
+   "verhaeltnis_ki_mensch": 0.9
+  },
+  {
+   "id": "greift_zu_kurz",
+   "label": "„… greift zu kurz“ (Gegenposition aufbauen und abweisen)",
+   "kategorie": "strohmann",
+   "gewicht": 1.28,
+   "regex": "\\b(?:greift|greifen|(?-i:griff|griffen|griffe))\\s+(?:[\\w-]+\\s+){0,4}?zu\\s+kurz\\b|\\bzu\\s+kurz\\s+(?:greift|greifen|griff|griffen|griffe|gegriffen|zu\\s+greifen)\\b",
+   "ersatz": "Die eigene These direkt nennen, ohne erst eine Sicht aufzubauen und als zu kurz gegriffen abzuweisen. Vertritt eine genannte Quelle diese Sicht, die Quelle behalten und konkret sagen, was ihr fehlt (welcher Fall, welcher Faktor).",
+   "rate_mensch_pro_1000": 0.002,
+   "rate_ki_pro_1000": 0.034,
+   "verhaeltnis_ki_mensch": 2.43
+  },
+  {
+   "id": "strohmann_aufbau",
+   "label": "Scheinbare Gegenposition: „Naheliegend wäre …“, „bei näherer Betrachtung …“",
+   "kategorie": "strohmann",
+   "gewicht": 1.74,
+   "regex": "\\bbei\\s+(?:genauerer|genauer|näherer|eingehender)\\s+betrachtung\\b(?!\\s+(?:der|des|dieser|dieses|jener|jenes|eines|einer|einzelner|aller|beider|zweier|mehrerer|verschiedener|solcher|unserer|unseres|ihrer|ihres|seiner|seines|deren|dessen|von|vom)\\b)|\\bnaheliegend\\s+(?:wäre|erscheint|scheint)\\b|\\b(?:die|der|das|eine|einen|ein|den|dem|einer)\\s+naheliegende[nrs]?\\s+(?:annahme|vermutung|lösung|alternative|erklärung|deutung|schluss|schlussfolgerung|gedanke\\w*|einwand|reaktion|interpretation|lesart|antwort|folgerung|weg)\\b",
+   "ersatz": "Die eigene These direkt nennen, ohne vorher eine naheliegende Sicht aufzubauen und dann zu kippen. Den Befund, der die Sache klärt, behalten; wird eine tatsächlich vertretene Position widerlegt, diese mit Quelle nennen.",
+   "rate_mensch_pro_1000": 0.004,
+   "rate_ki_pro_1000": 0.062,
+   "verhaeltnis_ki_mensch": 3.34
+  },
+  {
+   "id": "einwand_formel",
+   "label": "„Dem lässt sich entgegenhalten / einwenden, dass …“",
+   "kategorie": "strohmann",
+   "gewicht": 1.73,
+   "regex": "\\b(?:lässt|ließe|lassen|ließen)\\s+sich\\s+(?:[\\w-]+\\s+){0,3}?(?:entgegenhalten|einwenden)\\b|\\b(?:kann|könnte|muss|müsste)\\s+(?:[\\w-]+\\s+){0,3}?(?:entgegenhalten|einwenden)\\b|\\b(?:kann|könnte|muss|müsste)\\s+(?:[\\w-]+\\s+){0,3}?(?:entgegengehalten|eingewendet|eingewandt)\\s+werden\\b|\\b(?:entgegenhalten|einwenden)\\s+(?:lässt|ließe|lassen|ließen|kann|könnte)\\b",
+   "ersatz": "Das Gegenargument als eigene Aussage formulieren und belegen (wer vertritt es, woraus folgt es). Die Einleitungsformel weglassen, den Inhalt des dass-Satzes vollständig behalten.",
+   "rate_mensch_pro_1000": 0.006,
+   "rate_ki_pro_1000": 0.065,
+   "verhaeltnis_ki_mensch": 3.32
+  },
+  {
+   "id": "keineswegs",
+   "label": "„keineswegs“ (Widerspruch gegen eine unterstellte Annahme)",
+   "kategorie": "wort",
+   "gewicht": 1.34,
+   "regex": "\\bkeineswegs\\b",
+   "ersatz": "Durch „nicht“ ersetzen; die Verneinung bleibt. Wird eine tatsächlich verbreitete Annahme widerlegt, diese mit Quelle nennen.",
+   "rate_mensch_pro_1000": 0.04,
+   "rate_ki_pro_1000": 0.133,
+   "verhaeltnis_ki_mensch": 2.53
+  },
+  {
+   "id": "nicht_zwangslaeufig",
+   "label": "„nicht zwangsläufig / nicht zwingend“",
+   "kategorie": "wort",
+   "gewicht": 1.6,
+   "regex": "\\bnicht\\s+(?:zwangsläufig|zwingend)\\b",
+   "ersatz": "„nicht unbedingt“ oder „nicht immer“: gleiche Einschränkung, bei Menschen deutlich häufiger. Die Einschränkung nicht streichen, sonst wird aus „nicht in jedem Fall“ ein „nie“.",
+   "rate_mensch_pro_1000": 0.021,
+   "rate_ki_pro_1000": 0.105,
+   "verhaeltnis_ki_mensch": 3.03
   },
   {
    "id": "mit_anderen_worten",
@@ -327,7 +382,7 @@
    "kategorie": "konnektor",
    "gewicht": 0.0,
    "regex": "\\b(letztlich|letztendlich|im\\s+endeffekt)\\b",
-   "ersatz": "Streichen.",
+   "ersatz": "Streichen, wenn es nur betont; bezeichnet es das Ergebnis einer Entwicklung, „am Ende“ sagen.",
    "rate_mensch_pro_1000": 0.166,
    "rate_ki_pro_1000": 0.099,
    "verhaeltnis_ki_mensch": 0.64
@@ -338,8 +393,8 @@
    "kategorie": "konnektor",
    "gewicht": 0.0,
    "regex": "\\b(hierbei|hierdurch|hiermit|hierfür)\\b",
-   "ersatz": "„dabei“ sparsam, oft streichen oder konkreten Bezug („bei der Befragung“).",
-   "rate_mensch_pro_1000": 0.673,
+   "ersatz": "Konkreten Bezug nennen („bei der Befragung“, „durch die Umstellung“); streichen nur, wenn der Bezug ohne das Wort klar bleibt. Bei „hierdurch“ die Ursache behalten.",
+   "rate_mensch_pro_1000": 0.672,
    "rate_ki_pro_1000": 0.436,
    "verhaeltnis_ki_mensch": 0.66
   },
@@ -437,7 +492,7 @@
    "kategorie": "wort",
    "gewicht": 0.0,
    "regex": "\\bnachhaltig\\s+(stärk|präg|verbesser|beeinfluss|sicher|veränder|förder|steiger)\\w*\\b",
-   "ersatz": "„dauerhaft“, „langfristig“ oder streichen.",
+   "ersatz": "„dauerhaft“ oder „langfristig“; die Dauer gehört zur Aussage und wird nicht ersatzlos gestrichen.",
    "rate_mensch_pro_1000": 0.004,
    "rate_ki_pro_1000": 0.003,
    "verhaeltnis_ki_mensch": 0.94

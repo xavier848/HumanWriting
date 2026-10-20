@@ -15,11 +15,19 @@ et al. ↔ u. a., Reihenfolge im Mehrfachzitat), Schreibweise von Zahlen (1.250 
 Euro ↔ €, Mio. ↔ Millionen, N = 849 ↔ n = 849, drei ↔ 3) und die Stellung von
 Satzzeichen am Zitatende.
 
+Ebenso wenig gilt als Verlust, was der Coach zum Ersetzen empfiehlt: Auslöser-Wörter
+der KI-Floskeln (ki_muster.json, z. B. „maßgeblich“, „eine Schlüsselrolle zukommen“)
+und kleingeschriebene typische Claude-Wörter (wortlisten.json, z. B. „lässt“,
+„häufig“). Fachnomen (großgeschrieben mitten im Satz) bleiben geschützt. Mit
+--verlauf werden zusätzlich die Wörter übergangen, die coach.py in einer Messung
+unter "ersetzbar" gespeichert hat (samt Flexionsformen, nicht aber Komposita oder
+Nomen, die im Original nur als Platzhalter in einer Floskel stehen).
+
 Bedeutungsgleichheit einzelner Aussagen kann ein Skript nicht prüfen – das
 übernimmt das Modell anhand des Inhaltsinventars. Dieses Skript fängt die
 harten Fälle ab, bei denen Umschreiben am häufigsten Fehler einbaut.
 
-    python3 inhalt_check.py original.md neu.md [--format json]
+    python3 inhalt_check.py original.md neu.md [--format json] [--verlauf neu.coach.json]
 
 Exit-Code 0 = keine harten Verluste, 1 = Verluste/Erfindungen gefunden.
 """
@@ -27,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -93,6 +102,14 @@ STOP |= FUNKTIONSWOERTER
 # Funktionswörter, die großgeschrieben mitten im Satz Nomen sind („des Mangels“, „das Selbst“, „des Mittels“):
 # dort zählen sie weiter als Begriff, nur kleingeschrieben oder am Satzanfang nicht
 NOMEN_HOMOGRAPHE = {"mangels", "selbst", "mittels", "zwecks", "gerade", "nichts", "falls", "trotz"}
+
+# Vom Coach zum Ersetzen empfohlene Wörter (gleiche Daten wie coach.py): KI-Muster mit Gewicht > 0 und die Liste
+# typischer Claude-Wörter. Fehlen die Dateien, prüft das Skript wie zuvor.
+DATA = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "text-analyse", "data"))
+MUSTER_PFAD = os.path.join(DATA, "ki_muster.json")
+WORTLISTEN_PFAD = os.path.join(DATA, "wortlisten.json")
+PLATZHALTER = "xqxq"        # Ersatzwort für die Kopfwort-Probe, passt auf kein Muster
+_CACHE: dict = {}
 
 # --- Quellenverweise ---------------------------------------------------------
 JAHR = r"(?:1[5-9]\d{2}|20\d{2})[a-z]?(?![\wäöüß])|o\.\s?J\."
@@ -171,12 +188,17 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-def stamm(w: str) -> str:
+def grundform(w: str) -> str:
+    """Wort ohne Flexionsendung, ungekürzt: „Konsumenten“ = „Konsument“, aber nicht „Konsumentenrente“."""
     w = w.lower()
     for e in ("ungen", "ung", "heiten", "keiten", "heit", "keit", "ern", "en", "er", "es", "em", "e", "n", "s"):
         if len(w) - len(e) >= 4 and w.endswith(e):
-            return w[: -len(e)][:9]
-    return w[:9]
+            return w[: -len(e)]
+    return w
+
+
+def stamm(w: str) -> str:
+    return grundform(w)[:9]
 
 
 def kontext(t: str, pos, laenge: int = 0, breite: int = 70) -> str:
@@ -460,9 +482,129 @@ def _ist_begriff(t: str, m: re.Match) -> bool:
     return w.lower() in NOMEN_HOMOGRAPHE and w[0].isupper() and not _satzanfang(t, m.start())
 
 
-def begriffe(t: str) -> Counter:
+def begriffe(t: str, ohne: set | None = None) -> Counter:
+    """Stämme der Inhaltswörter; ohne = Startpositionen von Wörtern, die nicht als Begriff zählen (ersetzbare_stellen)."""
     t = quellen(t)[1]
-    return Counter(stamm(m.group(0)) for m in WORT_RE.finditer(t) if _ist_begriff(t, m))
+    return Counter(stamm(m.group(0)) for m in WORT_RE.finditer(t)
+                   if _ist_begriff(t, m) and not (ohne and m.start() in ohne))
+
+
+# ---------------------------------------------------------------------------
+# Vom Coach zum Ersetzen empfohlene Wörter
+# ---------------------------------------------------------------------------
+
+def _lade_json(pfad: str):
+    try:
+        with open(pfad, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def ki_muster(pfad: str | None = None) -> list:
+    """KI-Muster, die der Coach nennt (Gewicht > 0), kompiliert wie analyse.lade_muster."""
+    pfad = pfad or MUSTER_PFAD
+    if ("muster", pfad) not in _CACHE:
+        out = []
+        for m in (_lade_json(pfad) or {}).get("muster", []):
+            if (m.get("gewicht") or 0) <= 0:
+                continue
+            try:
+                out.append(re.compile(m["regex"], 0 if m.get("gross_klein") else re.IGNORECASE))
+            except (re.error, KeyError, TypeError):
+                continue
+        _CACHE[("muster", pfad)] = out
+    return _CACHE[("muster", pfad)]
+
+
+def ki_woerter(pfad: str | None = None) -> set:
+    """Wörter der Liste typischer Claude-Wörter (wortlisten.json, ki_typisch), auch aus Mehrwort-Einträgen."""
+    pfad = pfad or WORTLISTEN_PFAD
+    if ("woerter", pfad) not in _CACHE:
+        w = set()
+        for e in (_lade_json(pfad) or {}).get("ki_typisch", []):
+            w.update(x.lower() for x in WORT_RE.findall(str(e.get("ngramm", ""))))
+        _CACHE[("woerter", pfad)] = w
+    return _CACHE[("woerter", pfad)]
+
+
+def _ohne_zitate(t: str) -> str:
+    """Text in Anführungszeichen durch Leerzeichen ersetzen (gleiche Positionen): Zitate sind keine Floskeln."""
+    return WOERTLICH_PAAR_RE.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), t)
+
+
+def _floskel_spannen(t: str, muster: list | None = None) -> tuple[set, set]:
+    """(Auslöser, Platzhalter): Spannen (start, ende) der Wörter in KI-Muster-Treffern außerhalb von Anführungszeichen."""
+    muster = ki_muster() if muster is None else muster
+    maske = _ohne_zitate(t)
+    spannen, platz = set(), set()
+    for rx in muster:
+        for m in rx.finditer(maske):
+            a, b = max(0, m.start() - 300), min(len(maske), m.end() + 300)
+            fenster = maske[a:b]
+            for w in WORT_RE.finditer(maske, m.start(), m.end()):
+                if (w.start(), w.end()) in spannen:
+                    continue
+                d = len(PLATZHALTER) - (w.end() - w.start())
+                probe = fenster[:w.start() - a] + PLATZHALTER + fenster[w.end() - a:]
+                if not any(x.start() < m.end() - a + d and x.end() > m.start() - a for x in rx.finditer(probe)):
+                    spannen.add((w.start(), w.end()))
+                else:
+                    platz.add((w.start(), w.end()))
+    return spannen, platz - spannen
+
+
+def floskel_kopfwoerter(t: str, muster: list | None = None) -> set:
+    """Spannen (start, ende) der Auslöser-Wörter von KI-Muster-Treffern außerhalb von Anführungszeichen.
+
+    Auslöser ist ein Wort, ohne das der Treffer verschwindet („maßgeblich“, „Schlüsselrolle“, „spielt … zentrale
+    Rolle“). Platzhalter des Musters, etwa der Inhalt in „nicht X, sondern“ oder das Nomen in „Dieses Ergebnis
+    zeigt, dass“, bleiben Begriffe: Ersetzt man sie probeweise, trifft das Muster weiter."""
+    return _floskel_spannen(t, muster)[0]
+
+
+def ersetzbare_stellen(t: str, ersetzbar=(), muster: list | None = None, woerter: set | None = None) -> set:
+    """Startpositionen der Wörter in t, die der Coach zum Ersetzen empfiehlt; sie zählen nicht als Begriff.
+
+    - Wörter aus ersetzbar (vom Coach im Verlauf gespeichert, auch flektiert: gleiche Grundform, Komposita nicht), auch
+      großgeschrieben – außer Nomen, die im Original nur als Platzhalter in einer Floskel stehen (die „Kostenstruktur“
+      in „sowohl die Kostenstruktur … als auch“): Die hat der Coach aus dem Fund übernommen, nicht zum Ersetzen empfohlen
+    - typische Claude-Wörter (wortlisten.json), außer als Nomen (großgeschrieben mitten im Satz; am Satzanfang nur,
+      wenn das Wort auch mitten im Satz großgeschrieben vorkommt)
+    - Auslöser-Wörter von KI-Floskeln; als Nomen nur bei einmaligem Vorkommen im Text (eine „Schlüsselrolle“
+      als Floskel), wiederholt gilt das Nomen als Fachwort des Textes und bleibt geschützt"""
+    r = quellen(t)[1]
+    woerter = ki_woerter() if woerter is None else woerter
+    kopf, platz = _floskel_spannen(t, muster)
+    funde = list(WORT_RE.finditer(r))
+    anzahl = Counter(stamm(m.group(0)) for m in funde if _ist_begriff(r, m))
+    nomen_im_text = {m.group(0).lower() for m in funde if m.group(0)[0].isupper() and not _satzanfang(r, m.start())}
+    platz_nomen = {grundform(t[a:b]) for a, b in platz if t[a].isupper() and t[a:b].lower() in nomen_im_text}
+    frei = {grundform(x) for e in ersetzbar for x in WORT_RE.findall(str(e))} - platz_nomen
+    out = set()
+    for m in funde:
+        w = m.group(0)
+        wl = w.lower()
+        nomen = w[0].isupper() and wl in nomen_im_text
+        if grundform(w) in frei:
+            out.add(m.start())
+        elif not nomen and wl in woerter:
+            out.add(m.start())
+        elif (m.start(), m.end()) in kopf and (not nomen or anzahl[stamm(w)] <= 1):
+            out.add(m.start())
+    return out
+
+
+def ersetzbar_aus_verlauf(daten) -> set:
+    """Vereinigung aller "ersetzbar"-Listen eines Coach-Verlaufs ({"messungen": [{..., "ersetzbar": [...]}, …]})."""
+    listen = []
+    if isinstance(daten, dict):
+        listen.append(daten.get("ersetzbar") or [])
+        messungen = daten.get("messungen") or []
+    else:
+        messungen = daten if isinstance(daten, list) else []
+    listen += [m.get("ersetzbar") or [] for m in messungen if isinstance(m, dict)]
+    return {x.lower() for liste in listen if isinstance(liste, list) for e in liste for x in WORT_RE.findall(str(e))}
 
 
 def fussnoten(t: str) -> list[tuple[str, int]]:
@@ -610,7 +752,8 @@ def _vergleiche_zitate(alt, neu, res):
                                      "hinweis": "Neuer Begriff in Anführungszeichen – " + kontext(neu, z["pos"], z["laenge"], 50)})
 
 
-def pruefe(alt: str, neu: str) -> dict:
+def pruefe(alt: str, neu: str, ersetzbar=()) -> dict:
+    """ersetzbar: Wörter, die der Coach zum Ersetzen empfohlen hat (z. B. aus ersetzbar_aus_verlauf)."""
     alt = unicodedata.normalize("NFC", alt)
     neu = unicodedata.normalize("NFC", neu)
     res: dict = {"harte_verluste": [], "erfindungen": [], "warnungen": [], "kennzahlen": {}}
@@ -629,8 +772,11 @@ def pruefe(alt: str, neu: str) -> dict:
     for d in dict.fromkeys(dazu):
         res["warnungen"].append({"typ": "Abkürzung", "wert": d, "kontext_neu": kontext(neu, neu.find(d), len(d))})
 
-    # Fachbegriffe: mehrfach im Original, ganz verschwunden in der Überarbeitung
-    b_alt, b_neu = begriffe(alt), begriffe(neu)
+    # Fachbegriffe: mehrfach im Original, ganz verschwunden in der Überarbeitung. Wörter, die der Coach zum Ersetzen
+    # empfiehlt (Floskel-Auslöser, typische Claude-Wörter, Verlauf), zählen im Original nicht als Begriff.
+    ohne = ersetzbare_stellen(alt, ersetzbar)
+    b_roh, b_neu = begriffe(alt), begriffe(neu)
+    b_alt = begriffe(alt, ohne)
     verschwunden = [s for s, n in b_alt.most_common() if n >= 2 and b_neu[s] == 0]
     if verschwunden:
         res["warnungen"].append({"typ": "Begriff verschwunden", "wert": ", ".join(verschwunden[:25]),
@@ -639,13 +785,19 @@ def pruefe(alt: str, neu: str) -> dict:
     r_alt, r_neu = quellen(alt)[1], quellen(neu)[1]
     lang = [m.group(0) for m in re.finditer(r"(?<=[\wäöüß,;:)\]] )[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜa-zäöüß]+)*", r_alt)
             if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2 and m.group(0).lower() not in NICHT_AUTOR
-            and m.group(0).lower() not in STOP]
+            and m.group(0).lower() not in STOP and m.start() not in ohne]
     staemme_neu = {stamm(x) for x in WORT_RE.findall(r_neu)}
     ersetzt = [w for w in dict.fromkeys(lang) if stamm(w) not in staemme_neu]
     if ersetzt:
         res["warnungen"].append({"typ": "Fachwort ersetzt?", "wert": ", ".join(ersetzt[:15]),
                                  "hinweis": "Langes Fachwort aus dem Original fehlt in der Überarbeitung – Synonym oder gestrichene Aussage?"})
-    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_alt[s] == 0]
+    # zur Nachvollziehbarkeit: was ohne die Coach-Ausnahmen gemeldet worden wäre
+    gemeldet = set(verschwunden) | {stamm(w) for w in ersetzt}
+    res["nicht_gemeldet"] = sorted({m.group(0).lower() for m in WORT_RE.finditer(r_alt)
+                                    if m.start() in ohne and _ist_begriff(r_alt, m) and b_neu[stamm(m.group(0))] == 0
+                                    and stamm(m.group(0)) not in gemeldet
+                                    and (b_roh[stamm(m.group(0))] >= 2 or (len(m.group(0)) >= 13 and m.group(0)[0].isupper()))})
+    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_roh[s] == 0]
     if neu_haeufig:
         res["warnungen"].append({"typ": "Neuer häufiger Begriff", "wert": ", ".join(neu_haeufig[:15]),
                                  "hinweis": "Taucht neu und mehrfach auf – prüfen, ob dadurch Inhalt hinzugekommen ist."})
@@ -700,6 +852,8 @@ def bericht(res: dict) -> str:
         out.append("\n**Prüfen:**")
         for e in res["warnungen"]:
             out.append(f"- {e['typ']}: {e['wert']}" + (f" – {e['hinweis']}" if e.get("hinweis") else ""))
+    if res.get("nicht_gemeldet"):
+        out.append("\n_Nicht als Verlust gewertet (vom Coach zum Ersetzen empfohlen): " + ", ".join(res["nicht_gemeldet"][:20]) + "._")
     return "\n".join(out)
 
 
@@ -708,8 +862,16 @@ def main(argv=None) -> int:
     ap.add_argument("original")
     ap.add_argument("neu")
     ap.add_argument("--format", choices=["md", "json"], default="md")
+    ap.add_argument("--verlauf", help="Verlaufsdatei von coach.py (TEXT.coach.json): dort unter \"ersetzbar\" "
+                                      "gespeicherte Wörter gelten nicht als verschwundene Begriffe")
     args = ap.parse_args(argv)
-    res = pruefe(lesen(args.original), lesen(args.neu))
+    ersetzbar = set()
+    if args.verlauf:
+        daten = _lade_json(args.verlauf)
+        if not daten and not os.path.exists(args.verlauf):
+            print(f"Hinweis: Verlaufsdatei {args.verlauf} nicht gefunden – geprüft wird ohne Coach-Liste.", file=sys.stderr)
+        ersetzbar = ersetzbar_aus_verlauf(daten)
+    res = pruefe(lesen(args.original), lesen(args.neu), ersetzbar)
     if args.format == "json":
         json.dump(res, sys.stdout, ensure_ascii=False, indent=1)
         print()

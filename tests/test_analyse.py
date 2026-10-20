@@ -139,39 +139,4 @@ class Cli(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
-
-class Coach(unittest.TestCase):
-    def test_coach_laeuft_und_schreibt_verlauf(self):
-        import coach
-        text = ("## Einleitung\n\nDie Arbeitgebermarke ist für kleine Unternehmen wichtig. Darüber hinaus verdeutlicht dies, dass "
-                "die Mitarbeitenden profitieren; die Bindung steigt. Insgesamt zeigt sich ein klarer Effekt für die Unternehmen.\n\n"
-                "Die Studie untersucht drei Fälle aus dem Mittelstand. Sie nutzt Interviews mit Führungskräften und Beschäftigten.\n")
-        c = coach.coache(text * 3, None, 10)
-        self.assertIn("hinweise", c)
-        texte = " ".join(h["text"] for h in c["hinweise"])
-        self.assertIn("Mitarbeitende", texte)  # Nutzer-Vorgabe generisches Maskulinum wird immer gemeldet
-        self.assertIn("Semikolon", texte)
-
-    def test_zickzack_und_klammer(self):
-        import coach
-        # streng abwechselnd kurz/lang über mindestens vier Wechsel
-        self.assertTrue(coach.zickzack([6, 24, 7, 25, 6, 23, 8]))
-        # ähnlich lange Sätze hintereinander sind kein Zickzack
-        self.assertFalse(coach.zickzack([18, 19, 21, 17, 20, 18]))
-        self.assertEqual(coach.klammer_spannen("Die Daten wurden im Frühjahr 2019 online erhoben."), [3])  # Zahlen zählen nicht als Wort
-        self.assertEqual(coach.klammer_spannen("Die Befragung wurde durchgeführt."), [])
-
-    def test_mechanisch_verlaengert(self):
-        import coach
-        vorher = {"satzlaenge_mittel": 16.0, "woerter_pro_teilsatz": 8.0, "satzklammer_mittel": 5.0}
-        angehaengt = {"satzlaenge_mittel": 20.0, "woerter_pro_teilsatz": 7.5, "satzklammer_mittel": 5.0}
-        verdichtet = {"satzlaenge_mittel": 20.0, "woerter_pro_teilsatz": 9.0, "satzklammer_mittel": 5.0}
-        self.assertTrue(coach.mechanisch_verlaengert(vorher, angehaengt))
-        self.assertFalse(coach.mechanisch_verlaengert(vorher, verdichtet))
-        self.assertFalse(coach.mechanisch_verlaengert(vorher, {**angehaengt, "satzlaenge_mittel": 17.0}))
-        self.assertFalse(coach.mechanisch_verlaengert({}, angehaengt))
-        c = coach.coache("Die Unternehmen investieren in die Ausbildung. Sie wollen Fachkräfte binden.\n\n" * 8,
-                         {"messungen": [{"score": 50, "p_mensch": 0.5, "kennzahlen": {}, "roh": {"satzlaenge_mittel": 2.0,
-                                                                                               "woerter_pro_teilsatz": 99.0}}]}, 5)
-        self.assertTrue(c["fortschritt"]["mechanisch_verlaengert"])
-        self.assertIn("Mechanisch verlängert", coach.bericht(c))
+# Die Coach-Tests liegen in test_coach.py.
