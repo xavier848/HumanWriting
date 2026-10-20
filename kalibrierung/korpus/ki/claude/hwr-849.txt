@@ -1,0 +1,33 @@
+## Stichprobe, Messinstrumente und Analyseverfahren
+
+Im Folgenden werden die Zusammensetzung der Stichprobe, die eingesetzten Messinstrumente sowie die Verfahren zur Aggregation und Auswertung der Daten beschrieben.
+
+### Stichprobe
+
+Für die Untersuchung wurden 200 Organisationen angefragt, von denen 49 einer Teilnahme zustimmten; dies entspricht einer Zusagequote von rund 25 %. Sieben dieser Organisationen nahmen mit mehreren, maximal vier Teams teil, sodass zunächst Daten von 70 Teams vorlagen. Fünf Teams mussten aufgrund von Datenlücken ausgeschlossen werden. Ausschlusskriterien waren weniger als drei ausgefüllte Kommunikationsbögen, ein Rücklauf der Diversity-Bögen von unter 80 % sowie eine fehlende Leistungsbewertung. Die finale Stichprobe umfasst somit 65 Teams.
+
+Die Teams bestanden im Durchschnitt aus 7,31 Mitgliedern (SD = 3,72; Spannweite 3–17). Das Durchschnittsalter lag bei 39,3 Jahren (SD = 6,6), die durchschnittliche Teamzugehörigkeit bei 2,84 Jahren (SD = 3,09). Der Frauenanteil betrug in den Teamleitungen 18,1 % und in den Teams 24,6 %. Insgesamt gingen 217 Prozessbögen in die Auswertung ein, im Mittel 3,34 pro Team.
+
+### Vorgehen und Aggregation
+
+Die Datenerhebung folgte dem Prinzip des Informant-Samplings, bei dem die Befragten nicht ihr eigenes Verhalten, sondern das Team als Ganzes beurteilen (Van de Ven & Ferry, 1980). Die Teammitglieder fungieren damit als Informanten über Merkmale ihrer Gruppe, was der Analyseebene der Untersuchung entspricht. Es wurden ausschließlich publizierte Skalen verwendet, die auf einer fünfstufigen Likert-Skala von 1 („trifft gar nicht zu“) bis 5 („trifft völlig zu“) zu beantworten waren. Englischsprachige Items wurden von zwei Muttersprachlern im Verfahren der Hin- und Rückübersetzung ins Deutsche übertragen (Brislin, 1980).
+
+Da die Konstrukte auf Teamebene analysiert werden, mussten die individuellen Angaben aggregiert werden. Um die Ähnlichkeit der Urteile innerhalb der Teams zu prüfen, wurde die Interrater-Übereinstimmung rwg berechnet (James et al., 1984). Zusätzlich wurden die Intraklassenkorrelationen bestimmt: ICC1 gibt den Anteil der Varianz an, der auf Unterschiede zwischen den Gruppen zurückgeht, ICC2 die Reliabilität der Teammittelwerte (Bliese, 2000). Erst wenn die Urteile innerhalb der Teams hinreichend übereinstimmen und sich zugleich systematisch zwischen den Teams unterscheiden, ist eine Aggregation auf Teamebene gerechtfertigt.
+
+Inhaltlich bestand die Aufgabe der untersuchten Teams in der Einführung und Anwendung neuer, nützlicher Ideen, Prozesse und Produkte. Es handelt sich somit um innovative Tätigkeiten im Sinne von West und Farr (1990).
+
+### Messinstrumente
+
+Funktionale Diversity wurde erfasst, indem die Teammitglieder ihre Abteilungszugehörigkeit angaben. Zur Orientierung wurden Beispiele wie Marketing, Forschung und Entwicklung, Controlling oder Produktion genannt; zusätzlich wurde die Anzahl der im Team vertretenen Funktionen erhoben. Bei acht Teams traten Inkonsistenzen auf, die durch einen Abgleich mit der jeweiligen Teamleitung bereinigt wurden. Dieses Vorgehen unterscheidet sich von der Erfassung von Expertise-Diversity anhand fester Kategorien, wie sie etwa van der Vegt und Bunderson (2005) verwenden. Angesichts der Vielfalt der beteiligten Organisationen erschien eine offene Abfrage hier jedoch als beste Lösung. Die kategorialen Angaben wurden anschließend mithilfe des Teachman-Index zu einem Diversity-Maß zusammengefasst (Teachman, 1980). Der Index berücksichtigt sowohl die Anzahl der vertretenen Kategorien als auch die Verteilung der Teammitglieder auf diese Kategorien und nimmt umso höhere Werte an, je gleichmäßiger sich die Mitglieder auf unterschiedliche Funktionen verteilen.
+
+Teamvertrauen wurde mit der Skala von Simons und Peterson (2000) gemessen. Die vier Items beziehen sich auf den Respekt vor der Kompetenz der anderen Teammitglieder, Authentizität, Aufrichtigkeit sowie Standhaftigkeit bei Meinungsverschiedenheiten. Item III wurde aus der Skala entfernt. Die Kennwerte betragen rwg = .91, ICC1 = .28, ICC2 = .64 und Cronbachs α = .70.
+
+Elaboration wurde mit vier Items nach Kearney et al. (2009) erfasst. Diese beziehen sich darauf, ob im Team unterschiedliche Perspektiven abgewogen, die Beiträge aller Mitglieder berücksichtigt und Wissen geteilt werden und ob Teamlösungen als besser eingeschätzt werden als Einzelarbeit. Die Kennwerte liegen bei rwg = .92, ICC1 = .27, ICC2 = .63 und α = .83.
+
+Teamleistung wurde über ein Fremdurteil erhoben. Vorgesetzte bzw. Kollegen der Teamleitung bewerteten die Leistung des Teams im Vergleich zu ähnlichen Gruppen auf einer Skala von 1 bis 5. Die Items Effizienz, Qualität, Gesamtleistung und Produktivität stammen von van der Vegt und Bunderson (2005), die Items Zielerreichung und Termintreue von van der Vegt et al. (2006). Eine Faktorenanalyse ergab einen ersten Faktor, der 58 % der Varianz erklärt; die interne Konsistenz liegt bei α = .85.
+
+Als Kontrollvariablen wurden zwei Merkmale berücksichtigt. Die Dauer der Teamzugehörigkeit variiert in der Stichprobe stark und kann sowohl die Leistung als auch die Teamprozesse beeinflussen (Earley & Mosakowski, 2000). Die Aufgabeninterdependenz wurde mit vier Items nach van der Vegt und Janssen (2003) erfasst; Item II, das sich auf Einzelaufgaben bezieht, wurde entfernt. Die Kennwerte betragen α = .70, rwg = .93, ICC1 = .29 und ICC2 = .65.
+
+### Analyseverfahren
+
+Die Hypothesen wurden mittels multipler hierarchischer Regressionsanalysen geprüft (Aiken & West, 1991). Im ersten Schritt wurden die Kontrollvariablen aufgenommen, in den folgenden Schritten die jeweiligen Prädiktoren. Um kurvilineare Zusammenhänge von funktionaler Diversity, Teamvertrauen und Elaboration mit der Teamleistung zu testen, wurde neben dem linearen auch ein quadratischer Term in die Regressionsgleichung aufgenommen: Teamleistung = b0 + b1 · Teamzugehörigkeit + b2 · Interdependenz + b3 · X + b4 · X² + e, wobei X für den jeweiligen Prädiktor steht. Ein signifikanter Koeffizient b4 weist auf einen kurvilinearen Zusammenhang hin. Aiken und West (1991) empfehlen, die Prädiktoren vor der Bildung quadratischer Terme zu zentrieren, um Multikollinearität zwischen linearem und quadratischem Term zu verringern.

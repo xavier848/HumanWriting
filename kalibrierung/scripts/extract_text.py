@@ -27,6 +27,7 @@ import re
 import statistics
 import subprocess
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter
 from dataclasses import dataclass, field
@@ -40,7 +41,10 @@ END_WOERTER = (
     r"Ehrenwörtliche\s+Erklärung|Selbst(st)?ändigkeitserklärung|Erklärung(\s+zur\s+\w+)?|Versicherung\s+über\s+.*|"
     r"Abkürzungsverzeichnis|Abkürzungen|Glossar|Danksagung|Über\s+die\s+Autor(in|en|innen)?|Zu\s+den\s+Autor(in|en|innen)?"
 )
-END_HEADINGS = re.compile(rf"^\s*(?:[0-9IVX]+(\.\d+)*\.?\s*)?({END_WOERTER})\s*:?\s*$", re.IGNORECASE)
+END_HEADINGS = re.compile(
+    rf"^\s*(?:[0-9IVX]+(\.\d+)*\.?\s*)?(?:{END_WOERTER}|(?:Anhang|Anlagen?|Appendix)\s*(?:[A-Z0-9]{{1,3}}\b)?\s*[:–-]?.*)\s*:?\s*$",
+    re.IGNORECASE,
+)
 END_IM_ABSATZ = re.compile(
     r"^\s*(?:[0-9IVX]+\.?\s*)?(Literaturverzeichnis|Quellenverzeichnis|Literatur|Quellen|Bibliographie|Bibliografie|References)\s+"
     r"[A-ZÄÖÜ][\wäöüß'-]+,\s",
@@ -123,6 +127,7 @@ class Gruppe:
 
 
 def normalisiere_text(t: str) -> str:
+    t = unicodedata.normalize("NFC", t)
     for a, b in LIGATUREN.items():
         t = t.replace(a, b)
     return re.sub(r"[-]", "", t)  # Private-Use-Zeichen (Wingdings-Aufzählungszeichen)
@@ -187,7 +192,8 @@ def join_lines(texts: list[str]) -> str:
             stamm = out.rstrip(TRENNSTRICHE)
             nxt = line.split(" ", 1)[0]
             prev_word = stamm.rsplit(" ", 1)[-1]
-            if nxt and nxt[0].islower() and nxt not in HYPHEN_KEEP_NEXT and len(prev_word) > 1:
+            silbe = prev_word.islower() and len(prev_word) <= 3  # "so- wie", "den- noch"
+            if nxt and nxt[0].islower() and (nxt not in HYPHEN_KEEP_NEXT or silbe) and len(prev_word) > 1:
                 out = stamm + line  # Silbentrennung: "Unter-" + "nehmen"
             elif nxt[:1].isupper() and len(prev_word) > 1:
                 out = stamm + "-" + line  # Bindestrich-Kompositum: "Marketing-" + "Strategie"
@@ -280,6 +286,21 @@ def prose_problem(par: str) -> str | None:
         return "lizenz"
     if LITERATUR_EINTRAG.match(par) or len(re.findall(r"\(\d{4}[a-z]?\)\s*[:.,]", par)) >= 2:
         return "literatur"
+    if re.match(r"^\[\d{1,3}\]\s", par) or re.match(r"^[A-ZÄÖÜ][\w .&/-]{1,90}\(\d{4}[a-z]?\)\.\s", par):
+        return "literatur"
+    if re.search(r"(Abgerufen|Zugriff|Zugegriffen|Stand)\s+(am|:)\s*\d", par) and URL.search(par):
+        return "literatur"
+    if len(re.findall(r"\b(ebenda|ebd\.|a\.\s?a\.\s?O\.)", par)) >= 3:
+        return "fussnotentext"
+    if re.search(r"[\U0001D400-\U0001D7FF]", par) or len(re.findall(r"[∑∈≤≥→∏√∫≈≠±×÷]", par)) >= 3:
+        return "formel"
+    if len(re.findall(r"\s-\s", par)) >= 3 or len(re.findall(r"\b(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)\s+\d{4}\s*:", par)) >= 3:
+        return "liste"
+    einzelne = re.findall(r"(?<![\w.])[b-hj-np-tv-zäöü](?![\w.])", par)
+    if len(einzelne) >= 3:
+        return "artefakte"  # Kerning-/Doppelschicht-Reste: "un d", "mit t d dem"
+    if re.match(r"^(Mein(e)?\s+(herzlich\w*|besonder\w*|groß\w*)?\s*Dank|Ich\s+möchte\s+mich\b.*\bbedanken|Ich\s+(bedanke\s+mich|danke)\b|Vielen\s+Dank|An\s+dieser\s+Stelle\s+(möchte|danke)|Danken\s+möchte|Ich\s+versichere|Hiermit\s+(erkläre|versichere)|Hinweis\s+im\s+Sinne\s+des\s+Gleichbehandlungs|Aus\s+Gründen\s+der\s+(besseren\s+)?Lesbarkeit)", par):
+        return "vorspann"
     if TRANSKRIPT.match(par) or re.search(r"#\d{2}:\d{2}", par):
         return "transkript"
     if re.match(r"^[„\"»]", par) and re.search(r"[“\"«]\s*(\([^)]*\))?\s*[.]?$", par[-80:]):
@@ -361,7 +382,7 @@ def extract(path: str) -> tuple[str, dict]:
     grenze = max(10, int(len(items) * 0.5))
     for i, (kind, t) in enumerate(items[:grenze]):
         if kind == "H" and START_HEADINGS.match(t) and len(t.split()) <= 8:
-            if any(k == "P" and len(x.split()) > 25 for k, x in items[i + 1 : i + 8]):
+            if any(k == "P" and prose_problem(x) is None for k, x in items[i + 1 : i + 8]):
                 start = i + 1
                 break
     # Ende: erste End-Überschrift nach dem Start (das Inhaltsverzeichnis liegt davor); ohne Start nach 15 %
@@ -373,7 +394,8 @@ def extract(path: str) -> tuple[str, dict]:
             if END_IM_ABSATZ.match(t) and prosa_bisher > 3:
                 end = i
                 break
-            prosa_bisher += 1
+            if prose_problem(t) is None:
+                prosa_bisher += 1
         if kind == "H" and END_HEADINGS.match(t) and prosa_bisher > 3:
             end = i
             break
@@ -419,6 +441,8 @@ def extract(path: str) -> tuple[str, dict]:
             continue
         p = INLINE_FOOTNOTE.sub("", p)
         p = re.sub(r"\s+([.,;:!?])", r"\1", p)
+        p = re.sub(r"\b([A-ZÄÖÜ]) ([A-ZÄÖÜ]{3,})\b", r"\1\2", p)  # Kapitälchen im Fließtext
+        p = re.sub(r"^(Abstract|Zusammenfassung|Kurzfassung|Einleitung|Einführung|Vorwort|Fazit|Ausblick|Danksagung)\s+(?=[A-ZÄÖÜ][a-zäöü])", "", p)
         grund = prose_problem(p)
         if grund:
             dropped[grund] += 1
