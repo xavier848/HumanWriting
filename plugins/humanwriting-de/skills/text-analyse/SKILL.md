@@ -33,7 +33,8 @@ Der Bericht enthält:
    - 🔴 außerhalb, „KI-typisch“ = näher am KI-Median als am Mensch-Median
    - „↑ erhöhen / ↓ senken“ zeigt die Richtung zum Zielbereich.
 4. **Satzlängen-Verteilung** als Histogramm und **Satzlängen im Verlauf** (Rhythmus sichtbar machen).
-5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `gleichfoermig` (Teil einer Dreierfolge fast gleich langer Sätze), `konnektor_anfang`, `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel).
+5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `konnektor_anfang`, `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel). Die Markierung `gleichfoermig` (Folge fast gleich langer Sätze) ist nur ein Hinweis auf die Stelle: Ähnlich lange Sätze hintereinander sind auch bei Menschen normal. Entscheidend ist die Verteilung insgesamt, nicht einzelne Folgen.
+6. **Unsicher** (Zusatz an einer Kennzahl): Der Wert liegt so nah an der Grenze des Zielbereichs, dass er innerhalb der typischen Messunsicherheit schwankt. Solche Kennzahlen nicht als Hebel nennen.
 
 Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut Score und Modell auf zurückgehaltenen Texten funktionieren, steht in `references/kennzahlen.md`.
 
@@ -41,6 +42,7 @@ Welche Kennzahlen trennscharf sind, wie die Referenzkorpora aussehen und wie gut
 
 - Score, Modell-Einschätzung und die roten/gelben Kennzahlen mit Wert, Zielbereich und KI-Median nennen – in der Art „Satzlängen-Variation 0,31 (Menschen 0,45–0,62, KI 0,33) → zu gleichförmig“.
 - Die 3–5 wichtigsten Hebel benennen (nach Gewicht sortiert) und die konkreten Sätze zitieren, die sie verursachen.
+- Kennzahlen, die stark miteinander zusammenhängen (z. B. Satzlängen-Variation, -Streuung und Anteil mittellanger Sätze), als **einen** Hebel behandeln. Das Gewicht im Score ist dafür schon gedeckelt.
 - Bei weniger als ~300 Wörtern oder 15 Sätzen ausdrücklich auf die Unsicherheit hinweisen.
 - Wenn der Nutzer Verbesserung möchte: Skill **humanisieren** verwenden.
 

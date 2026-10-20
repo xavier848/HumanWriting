@@ -34,32 +34,51 @@ DATA = analyse.DATA
 HEBEL_VON = {
     **dict.fromkeys(["satzlaenge_cv", "satzlaenge_sd", "satzlaenge_dispersion", "satzlaenge_schiefe", "anteil_mittlere_saetze",
                      "anteil_lange_saetze", "anteil_sehr_lange_saetze", "anteil_kurze_saetze", "anteil_sehr_kurze_saetze",
-                     "rhythmus_sprung_rel", "rhythmus_autokorrelation", "anteil_gleichfoermige_laeufe", "satzlaenge_mittel"], "satzlaenge"),
+                     "rhythmus_r1_log", "rhythmus_autokorrelation", "satzlaenge_mittel"], "satzlaenge"),
+    **dict.fromkeys(["satzklammer_mittel", "nominalketten_pro_100"], "satzklammer"),
+    "konnektoren_pro_1000": "konnektoren",
+    "fw_profil_llr_pro_1000": "funktionswoerter",
     **dict.fromkeys(["saetze_pro_absatz_cv", "absatzlaenge_cv", "anteil_einsatz_absaetze", "saetze_pro_absatz", "absatzlaenge_mittel"], "absaetze"),
-    **dict.fromkeys(["nachbarsatz_ueberlappung", "anteil_saetze_mit_wortaufnahme", "mattr_100", "mtld", "inhaltswort_mattr_50", "yule_k"], "begriffe"),
+    **dict.fromkeys(["nachbarsatz_ueberlappung", "anteil_saetze_mit_wortaufnahme", "mattr_100", "mattr_50", "mtld", "inhaltswort_mattr_50",
+                     "yule_k", "mattr_klumpung_100"], "begriffe"),
     **dict.fromkeys(["woerter_pro_teilsatz", "kommas_pro_1000", "kommas_pro_satz", "anteil_saetze_mit_nebensatz", "anteil_einfache_saetze",
-                     "teilsaetze_pro_satz", "menzerath_korrelation"], "nebensaetze"),
+                     "teilsaetze_pro_satz", "teilsatz_verhaeltnis_21"], "nebensaetze"),
     "semikolon_pro_1000": "semikolon",
     "doppelpunkt_pro_1000": "doppelpunkt",
     **dict.fromkeys(["ki_muster_pro_1000", "sondern_pro_1000", "nicht_nur_sondern_pro_1000", "sowohl_als_auch_pro_1000", "dreierlisten_pro_1000"], "floskeln"),
     **dict.fromkeys(["anteil_funktionswoerter", "anteil_kurze_woerter", "anteil_einsilbig", "wortlaenge_cv", "anteil_lange_woerter",
-                     "silben_mittel", "anteil_mehrsilbig_3plus", "wortlaenge_mittel", "nominalstil_pro_100"], "wortwahl"),
-    **dict.fromkeys(["anfuehrungen_pro_1000", "ich_wir_pro_1000", "man_pro_1000", "klammern_pro_1000", "fragen_pro_1000"], "stimme"),
+                     "silben_mittel", "silben_q21", "anteil_mehrsilbig_3plus", "wortlaenge_mittel", "nominalstil_pro_100"], "wortwahl"),
+    **dict.fromkeys(["anfuehrungen_pro_1000", "ich_wir_pro_1000", "man_pro_1000", "klammern_pro_1000", "fragen_pro_1000",
+                     "abkuerzungen_pro_1000"], "stimme"),
 }
 
 HEBEL_TEXT = {
-    "satzlaenge": ("Satzlängen mischen", "Menschen schreiben neben mittellangen Sätzen auch deutlich längere (30+ Wörter, mit Nebensätzen) und einzelne kurze. KI-Texte bleiben im mittleren Band."),
+    "satzlaenge": ("Lange, dichte Sätze zulassen", "Menschen streuen stärker – vor allem durch lange, nominal verdichtete Sätze (30–50 Wörter) beim Argumentieren. KI-Texte bleiben im mittleren Band und wechseln oft streng kurz/lang ab."),
+    "satzklammer": ("Satzklammer füllen, nominal verdichten", "Bei Menschen stehen zwischen Hilfsverb und Partizip/Infinitiv mehr Wörter (Ø ~7 statt ~5), und es gibt mehr Nominal- und Genitivgruppen. Claude lagert Angaben in eigene Sätze oder Nebensätze aus."),
+    "konnektoren": ("Weniger Konnektoren", "Claude nutzt deutlich mehr Satzverknüpfer (zugleich, zudem, darüber hinaus, hingegen, jedoch …) als Menschen. Streichen, nicht verschieben."),
+    "funktionswoerter": ("Funktionswort-Profil (Tendenz)", "Das Profil kleiner Wörter ist das stärkste Einzelsignal: Menschen schreiben häufiger mit „es“, „wie“, „auch“, „durch“, Claude häufiger mit „als“, „sich“, „dass“. Nur indirekt steuerbar."),
     "absaetze": ("Absätze ungleich lang machen", "Menschliche Absätze schwanken stark (mal 2, mal 7 Sätze). KI-Absätze sind fast gleich lang."),
     "begriffe": ("Begriffe wieder aufgreifen statt variieren", "Menschen wiederholen den Schlüsselbegriff des Vorsatzes. KI wechselt zu Synonymen oder knüpft nur mit „Dies“ an – das macht den Wortschatz künstlich vielfältig."),
     "nebensaetze": ("Weniger Nebensatz-Ketten", "KI-Sätze reihen viele kurze Teilsätze mit Kommas. Menschliche Teilsätze sind länger, und es gibt mehr Sätze ganz ohne Komma."),
     "semikolon": ("Semikolons ersetzen", "In menschlichen Hochschultexten kommen Semikolons kaum vor (Median 0). Claude setzt sie regelmäßig."),
     "doppelpunkt": ("Doppelpunkte reduzieren", "Doppelpunkte mitten im Satz sind bei Claude häufiger als bei Menschen."),
     "floskeln": ("KI-Floskeln und -Konstruktionen ersetzen", "Diese Wendungen kommen in Claude-Texten mehrfach häufiger vor als in echten Hochschularbeiten."),
-    "wortwahl": ("Wortwahl einfacher und natürlicher", "Menschen nutzen mehr kurze Allerweltswörter („es gibt“, „so“, „auch“, „aber“, „man“) und weniger Nominalketten."),
+    "wortwahl": ("Wortwahl einfacher und natürlicher", "Menschen nutzen mehr kurze Allerweltswörter („es gibt“, „so“, „auch“, „aber“, „man“) und gängige Abkürzungen (z. B., bzw.)."),
     "stimme": ("Eigene Stimme zeigen", "Menschliche Arbeiten zitieren öfter wörtlich, verwenden Klammern und manchmal „ich/wir“ oder „man“."),
 }
 
 PARTIZIP_RE = re.compile(r"\b(Mitarbeitende|Teilnehmende|Studierende|Lehrende|Forschende|Lernende|Beratende|Pflegende|Wählende|Kundinnen und Kunden)[nr]?\b|\b\w+[*:_]innen\b|\b[a-zäöü]+Innen\b")
+# wie analyse.py (konnektoren_pro_1000); „darüber hinaus“ läuft als KI-Muster
+_KONN = getattr(analyse, "KONNEKTOREN", None)
+KONNEKTOREN = [k for k in _KONN if isinstance(k, str)] if isinstance(_KONN, (list, tuple, set, frozenset)) else []
+KONNEKTOREN = sorted(KONNEKTOREN, key=len, reverse=True) or ["zudem", "außerdem", "ferner", "des weiteren", "weiterhin", "folglich", "somit", "demnach",
+               "infolgedessen", "allerdings", "jedoch", "dennoch", "gleichwohl", "nichtsdestotrotz", "insbesondere", "letztlich",
+               "letztendlich", "zugleich", "gleichzeitig", "schließlich", "hingegen", "wiederum"]
+KONNEKTOR_RE = re.compile(r"\b(" + "|".join(re.escape(k) for k in KONNEKTOREN) + r")\b", re.IGNORECASE)
+HILFSVERBEN = set("""ist sind war waren sei seien wäre wären hat haben hatte hatten hätte hätten wird werden wurde wurden würde würden
+kann können konnte konnten könnte könnten muss müssen musste mussten müsste müssten soll sollen sollte sollten will wollen wollte
+wollten darf dürfen durfte durften dürfte dürften""".split())
+KLAMMER_ENDE_HILFS = {"werden", "worden", "sein", "haben", "können", "müssen", "sollen", "dürfen", "wollen", "lassen", "gewesen", "geworden"}
 ANKNUEPF_RE = re.compile(r"^(dies|diese[rsmn]?|sie|er|hierbei|hierdurch|dabei|dadurch)\b", re.IGNORECASE)  # rein anaphorische Anschlüsse
 # In den Korpora bei Menschen deutlich häufiger als bei Claude (Kalibrierung, log-odds): einfache Stil- und Funktionswörter
 MENSCHLICHE_STILWOERTER = ["es gibt", "so", "auch", "aber", "man", "sehr", "doch", "schon", "denn", "außerdem", "viele", "aufgrund"]
@@ -94,6 +113,54 @@ def lade_json(name: str) -> dict:
         return json.load(f)
 
 
+def klammer_spannen(satz_text: str) -> list[int]:
+    """Satzklammer-Spannen eines Satzes (Wörter zwischen finitem Hilfsverb und Partizip/Infinitiv), wie in analyse.py (HW08)."""
+    spannen = []
+    for teil in re.split(r"[,;:()–—]", satz_text):
+        tw = [t for t in analyse.tokens(teil) if analyse.ist_wort(t)]
+        aux = next((i for i, t in enumerate(tw) if t.lower() in HILFSVERBEN), None)
+        if aux is None:
+            continue
+        j = len(tw) - 1
+        while j > aux and tw[j].lower() in KLAMMER_ENDE_HILFS:
+            j -= 1
+        w = tw[j] if tw else ""
+        if j - aux >= 2 and w[:1].islower() and len(w) >= 4 and w.lower() not in analyse.FUNKTIONSWOERTER \
+                and w.lower() not in HILFSVERBEN and re.search(r"(en|t|iert|ert|elt)$", w):
+            spannen.append(j - aux - 1)
+    return spannen
+
+
+def zickzack(laengen: list[int]) -> list[tuple[int, int]]:
+    """Bereiche (von, bis; 0-basiert) mit mindestens 4 Längenwechseln in Folge mit wechselndem Vorzeichen und |Differenz| ≥ 0,3·Ø."""
+    if len(laengen) < 5:
+        return []
+    schwelle = 0.3 * (sum(laengen) / len(laengen))
+    d = [laengen[i + 1] - laengen[i] for i in range(len(laengen) - 1)]
+    bereiche, start = [], None
+    for i in range(len(d)):
+        ok = abs(d[i]) >= schwelle and (i == 0 or start is None or d[i] * d[i - 1] < 0)
+        if ok and start is None:
+            start = i
+        elif not ok and start is not None:
+            if i - start >= 4:
+                bereiche.append((start, i))
+            start = i if abs(d[i]) >= schwelle else None
+    if start is not None and len(d) - start >= 4:
+        bereiche.append((start, len(d)))
+    return bereiche
+
+
+def mechanisch_verlaengert(vorher: dict, jetzt: dict) -> bool:
+    """Plausibilitätsregel: Ø-Satzlänge +10 %, aber weder Wörter pro Teilsatz noch Satzklammer-Spanne gestiegen."""
+    if not vorher.get("satzlaenge_mittel") or not jetzt.get("satzlaenge_mittel"):
+        return False
+    if jetzt["satzlaenge_mittel"] <= 1.1 * vorher["satzlaenge_mittel"]:
+        return False
+    return not any(vorher.get(k) is not None and jetzt.get(k) is not None and jetzt[k] > vorher[k]
+                   for k in ("woerter_pro_teilsatz", "satzklammer_mittel"))
+
+
 def schluesselbegriff(satz_text: str) -> str | None:
     """Wahrscheinlichster Hauptbegriff eines Satzes: längstes großgeschriebenes Nomen, nicht am Satzanfang."""
     toks = analyse.tokens(satz_text)
@@ -104,8 +171,10 @@ def schluesselbegriff(satz_text: str) -> str | None:
 
 def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> dict:
     muster = analyse.lade_muster()
-    erg = analyse.analysiere_text(text, muster)
     baselines = analyse.lade_baselines()
+    ts = (baselines or {}).get("textsorten", {}).get("hochschule", {})
+    fw_profil = ts.get("fw_profil")
+    erg = analyse.analysiere_text(text, muster, fw_profil=fw_profil) if fw_profil else analyse.analysiere_text(text, muster)
     bew = analyse.bewerte(erg, baselines)
     saetze = erg["saetze"]
     m = erg["metriken"]
@@ -118,6 +187,9 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
     if bew.get("verfuegbar"):
         for z in bew["kennzahlen"]:
             if not z["bewertet"] or z["status"] == "gruen":
+                continue
+            # Gelb, aber innerhalb der Messunsicherheit an der Grenze: kein Arbeitsauftrag
+            if z["status"] == "gelb" and z.get("unsicher"):
                 continue
             # Abweichungen weg von der KI-Seite ("menschlicher als der Median") sind kein Arbeitsauftrag des Coachs
             if z["ki_p50"] is not None:
@@ -162,14 +234,49 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                 for a, b in zip(liste, liste[1:]):
                     if 10 <= a["woerter"] <= 24 and 10 <= b["woerter"] <= 24 and 28 <= a["woerter"] + b["woerter"] <= 50 \
                             and ";" not in a["text"] and not a["text"].rstrip().endswith(("?", "!")):
-                        hinweis("satzlaenge", nr_abs, a["nr"], f"{zitat(a)} und Satz {b['nr']} ({a['woerter']} + {b['woerter']} Wörter) zu einem langen Satz mit Nebensatz verbinden (weil/da/wobei/Relativsatz).", 1.0)
+                        hinweis("satzlaenge", nr_abs, a["nr"], f"{zitat(a)} und Satz {b['nr']} ({a['woerter']} + {b['woerter']} Wörter) zu einem langen Satz bündeln – nominal verdichten (Präpositional-/Genitivgruppen), keine angehängten „und“-Teilsätze.", 1.0)
                         break
-            # Kürzen: Kernaussage aus einem langen Satz mit mehreren Kommas herauslösen
-            if braucht_kurze or braucht_lange:
+            # Abtrennen nur, wenn wirklich kurze Sätze fehlen – höchstens einmal im Text
+            if braucht_kurze and not any(h["hebel"] == "satzlaenge" and "Zwischenergebnis" in h["text"] for h in hinweise):
                 for s in liste:
                     if s["woerter"] >= 22 and s["text"].count(",") >= 2:
-                        hinweis("satzlaenge", nr_abs, s["nr"], f"{zitat(s)}: Kernaussage als eigenen kurzen Satz (unter 10 Wörter) herauslösen.", 0.8)
+                        hinweis("satzlaenge", nr_abs, s["nr"], f"{zitat(s)}: Falls darin ein echtes Zwischenergebnis steckt, dieses als kurzen Satz formulieren.", 0.5)
                         break
+
+    laengen_alle = [s["woerter"] for s in saetze]
+    for von, bis in zickzack(laengen_alle):
+        a, b = saetze[von], saetze[min(bis, len(saetze) - 1)]
+        folge = " · ".join(str(x) for x in laengen_alle[von:bis + 1])
+        hinweis("satzlaenge", a["absatz"], a["nr"], f"Satz {a['nr']}–{b['nr']} wechseln streng kurz/lang ab ({folge} Wörter). Längen in Phasen ordnen (Erklärpassage lang, Folgerung kurz) statt Satz für Satz zu wechseln.", 0.9)
+
+    # --- Satzklammer / Verdichtung ---------------------------------------------
+    if "satzklammer" in hebel:
+        hinweis("satzklammer", None, None, "Angaben zu Zeit, Ort, Art, Grund und Mittel ins Mittelfeld zwischen Hilfsverb und Partizip holen, statt sie in eigene Sätze oder Nebensätze auszulagern („Die Daten wurden im Frühjahr 2019 online unter 240 Beschäftigten erhoben.“).", 1.0)
+        n = 0
+        for i, s in enumerate(saetze):
+            sp = klammer_spannen(s["text"])
+            if sp and max(sp) <= 2:
+                nachbar = saetze[i + 1] if i + 1 < len(saetze) and saetze[i + 1]["absatz"] == s["absatz"] else None
+                zusatz = f" – Angaben aus Satz {nachbar['nr']} hineinholen, falls sie dazugehören" if nachbar and nachbar["woerter"] <= 14 else ""
+                hinweis("satzklammer", s["absatz"], s["nr"], f"{zitat(s)}: Satzklammer fast leer{zusatz}.", 0.8)
+                n += 1
+                if n >= 4:
+                    break
+
+    # --- Konnektoren ---------------------------------------------------------
+    if "konnektoren" in hebel:
+        n = 0
+        for s in saetze:
+            treffer = KONNEKTOR_RE.findall(s["text"])
+            if treffer:
+                hinweis("konnektoren", s["absatz"], s["nr"], f"{zitat(s)}: „{treffer[0]}“ streichen, wenn der Bezug klar ist, oder über das wiederholte Nomen anschließen (nicht nur verschieben).", 0.9)
+                n += 1
+                if n >= 6:
+                    break
+
+    # --- Funktionswörter (nur Tendenz) -------------------------------------------
+    if "funktionswoerter" in hebel:
+        hinweis("funktionswoerter", None, None, "Funktionswort-Profil KI-nah. Als Tendenz beim eigenen Formulieren: öfter „es“-Konstruktionen („es gibt“, „es zeigt sich“), „wie“-Vergleiche, „auch“, „durch“; seltener „sich“-, „als“- und „dass“-Konstruktionen. Keine Wörter einstreuen – das folgt meist aus Verdichten und Konnektoren-Streichen.", 0.8)
 
     # --- Absätze ---------------------------------------------------------------
     if "absaetze" in hebel and len(absaetze) >= 2:
@@ -202,9 +309,12 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                     elif begriff and gezaehlt < 6:
                         hinweis("begriffe", nr_abs, b["nr"], f"{zitat(b)} teilt kein Inhaltswort mit Satz {a['nr']}. Prüfen, ob ein Synonym für „{begriff}“ o. Ä. steht – dann den gleichen Begriff verwenden.", 0.6)
                         gezaehlt += 1
-        haeufig = Counter(t for s in saetze for t in analyse.tokens(s["text"])
-                          if t[:1].isupper() and analyse.ist_wort(t) and t.lower() not in analyse.FUNKTIONSWOERTER and len(t) > 4)
-        top = [w for w, n in haeufig.most_common(6) if n >= 2]
+        kern = erg["info"].get("kernbegriffe") or []
+        top = [k.get("form") or k.get("wortform") or k.get("stamm") for k in kern if isinstance(k, dict)][:6]
+        if not top:
+            haeufig = Counter(t for s in saetze for t in analyse.tokens(s["text"])
+                              if t[:1].isupper() and analyse.ist_wort(t) and t.lower() not in analyse.FUNKTIONSWOERTER and len(t) > 4)
+            top = [w for w, n in haeufig.most_common(6) if n >= 2]
         if top:
             hinweis("begriffe", None, None, "Hauptbegriffe des Textes: " + ", ".join(f"„{w}“" for w in top) + ". Diese konsequent so benennen, keine Synonyme einstreuen.", 0.7)
 
@@ -254,7 +364,7 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
     # --- Wortwahl / Stimme ---------------------------------------------------------
     if "wortwahl" in hebel:
         beispiele = ", ".join(f"„{w}“" for w in MENSCHLICHE_STILWOERTER)
-        hinweis("wortwahl", None, None, f"Einfachere Wörter zulassen und Nominalketten auflösen. In echten Arbeiten deutlich häufiger als bei Claude: {beispiele}.", 0.7)
+        hinweis("wortwahl", None, None, f"Einfachere Allerweltswörter zulassen. In echten Arbeiten deutlich häufiger als bei Claude: {beispiele}.", 0.7)
     if "stimme" in hebel:
         hinweis("stimme", None, None, "Wo es passt: eine Quelle wörtlich zitieren, eine Präzisierung in Klammern setzen, und bei eigenen Entscheidungen „ich“ (bzw. „in dieser Arbeit“) verwenden.", 0.4)
 
@@ -287,7 +397,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                 auswahl.append(stapel[h].pop(0))
 
     stand = {"score": bew.get("score"), "p_mensch": bew.get("p_mensch"),
-             "kennzahlen": {z["id"]: {"wert": z["wert"], "status": z["status"]} for z in bew.get("kennzahlen", []) if z["bewertet"]}}
+             "kennzahlen": {z["id"]: {"wert": z["wert"], "status": z["status"]} for z in bew.get("kennzahlen", []) if z["bewertet"]},
+             "roh": {k: m.get(k) for k in ("satzlaenge_mittel", "woerter_pro_teilsatz", "satzklammer_mittel")}}
     fortschritt = None
     if verlauf and verlauf.get("messungen"):
         vorher = verlauf["messungen"][-1]
@@ -296,9 +407,12 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
         schlechter = [k for k, v in stand["kennzahlen"].items() if k in vorher["kennzahlen"]
                       and ["rot", "gelb", "gruen"].index(v["status"]) < ["rot", "gelb", "gruen"].index(vorher["kennzahlen"][k]["status"])]
         fortschritt = {"score_vorher": vorher.get("score"), "p_mensch_vorher": vorher.get("p_mensch"), "besser": besser, "schlechter": schlechter,
-                       "messung_nr": len(verlauf["messungen"]) + 1}
+                       "messung_nr": len(verlauf["messungen"]) + 1, "mechanisch_verlaengert": False}
+        fortschritt["mechanisch_verlaengert"] = mechanisch_verlaengert(vorher.get("roh", {}), stand["roh"])
 
     rot = [z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "rot"]
+    ziel_p = ts.get("ziel_p_mensch", 0.5)
+    ziel_score = ts.get("score_schwelle", 80)
     gruen = sorted([z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "gruen"], key=lambda z: -(z["gewicht"] or 0))
     return {"info": erg["info"], "bewertung": {k: bew.get(k) for k in ("score", "p_mensch", "verfuegbar")},
             "hebel": [{"id": h, "name": HEBEL_TEXT[h][0], "warum": HEBEL_TEXT[h][1], "prioritaet": round(hebel[h]["prioritaet"], 2),
@@ -306,7 +420,9 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                       for h in reihenfolge],
             "hinweise": auswahl, "anzahl_hinweise_gesamt": len(eindeutig),
             "rot": len(rot), "gut": [z["name"] for z in gruen[:4]], "stand": stand, "fortschritt": fortschritt,
-            "ziel_erreicht": bew.get("verfuegbar") and not rot and (bew.get("score") or 0) >= 80}
+            "ziel_p_mensch": ziel_p, "ziel_score": ziel_score,
+            "ziel_erreicht": bool(bew.get("verfuegbar") and not rot and (bew.get("score") or 0) >= ziel_score
+                                  and (bew.get("p_mensch") is None or bew["p_mensch"] >= ziel_p))}
 
 
 def fmt(x):
@@ -328,8 +444,10 @@ def bericht(c: dict) -> str:
         out.append(f"\n**Fortschritt (Messung {f['messung_nr']}):** Score {f['score_vorher']} → {b['score']} ({'+' if d >= 0 else ''}{d})"
                    + (f" · besser: {', '.join(analyse.NAMEN.get(k, k) for k in f['besser'])}" if f["besser"] else "")
                    + (f" · schlechter: {', '.join(analyse.NAMEN.get(k, k) for k in f['schlechter'])}" if f["schlechter"] else ""))
+    if c["fortschritt"] and c["fortschritt"].get("mechanisch_verlaengert"):
+        out.append("\n> ⚠️ **Mechanisch verlängert:** Die Sätze sind länger geworden, aber Teilsätze und Satzklammern nicht – vermutlich angehängte Teilsätze. Das zählt nicht als Fortschritt; stattdessen nominal verdichten.")
     if c["ziel_erreicht"]:
-        out.append("\n✅ **Ziel erreicht:** keine bewertete Kennzahl rot, Score ≥ 80. Die Hinweise unten sind optionaler Feinschliff.")
+        out.append(f"\n✅ **Ziel erreicht:** keine bewertete Kennzahl rot, Score ≥ {c['ziel_score']}, Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich. Die Hinweise unten sind optionaler Feinschliff.")
     if c["hebel"]:
         out.append("\n### Die wichtigsten Hebel\n")
         for i, h in enumerate(c["hebel"][:4], 1):

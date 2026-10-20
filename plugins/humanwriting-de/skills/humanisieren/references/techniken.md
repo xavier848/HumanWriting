@@ -2,86 +2,90 @@
 
 Jede Technik verändert nur die Form. Inhalt, Zahlen, Quellen, Zitate und Fachbegriffe bleiben gleich. Pro Runde 3–4 Hebel, nur an den markierten Stellen.
 
+Grundsatz aus den Daten: **Gleichmäßigkeit ist das Kernsignal von KI-Text.** Einzelne Kennzahlen mechanisch zu treiben (kurze Sätze einstreuen, Längen abwechseln, Konnektoren verschieben) hilft nicht und macht Texte oft noch KI-typischer. Hintergrund: `../../menschlich-schreiben/references/hintergrund.md`.
+
 ## Satzlänge und Rhythmus
 
-**Satzlängen-Variation (CV) ↑, Längensprung ↑, gleichförmige Läufe ↓, Anteil kurzer/langer Sätze ↑**
+**Satzlängen-Variation (CV) ↑, Streuung ↑, Anteil langer Sätze (≥30/≥40 W.) ↑, mittellange Sätze ↓**
 
-KI-Entwürfe bestehen meist aus Ketten mittellanger Sätze (12–22 Wörter). Ziel: kräftige Ausreißer nach oben und unten.
+KI-Entwürfe bestehen aus mittellangen Sätzen (12–24 Wörter) mit vielen kurzen Teilsätzen. Menschen erreichen ihre größere Streuung über **den langen Rand**: argumentierende Passagen in langen, dichten Sätzen.
 
-1. **Verbinden:** Zwei inhaltlich eng verbundene mittellange Sätze zu einem langen Satz mit Nebensatz zusammenziehen (Relativsatz, *weil/da/indem/sodass/wobei*-Satz, Partizipialgruppe).
-   - vorher: „KMU verfügen über flache Hierarchien. Diese ermöglichen schnelle Entscheidungen.“
-   - nachher: „KMU verfügen über flache Hierarchien, in denen Entscheidungen schneller fallen als in Konzernen mit mehreren Freigabeebenen.“ *(nur zulässig, wenn der Vergleich im Original steht – sonst: „…, in denen Entscheidungen schnell fallen.“)*
-2. **Abtrennen:** Aus einem mittellangen Satz einen Kern als kurzen Satz herauslösen, besonders Feststellungen, Einschränkungen, Zwischenergebnisse.
-   - vorher: „Die EVP muss authentisch sein, da Bewerber Abweichungen zwischen Versprechen und Realität schnell bemerken.“
-   - nachher: „Die EVP muss authentisch sein. Bewerber bemerken Abweichungen zwischen Versprechen und Arbeitsalltag schnell.“
-3. **In Dreierfolgen brechen:** Bei jeder Markierung `gleichfoermig` einen der drei Sätze deutlich kürzen (≤ 8 Wörter) oder mit dem Nachbarn verbinden.
-4. Kurze Sätze nicht als Effekthascherei („Ein Fehler.“), sondern als vollständige Aussage.
+1. **Bündeln:** Zwei bis drei inhaltlich zusammengehörige Sätze ähnlicher Länge zu einem langen Satz zusammenführen – dort, wo argumentiert, begründet oder abgewogen wird.
+2. **Nominal verdichten statt anhängen:** Den langen Satz durch Präpositional- und Genitivgruppen bauen, nicht durch angehängte „und“-Teilsätze.
+   - „…, weil die Kosten steigen.“ → „… wegen der steigenden Kosten …“
+   - „Die Unternehmen investieren. Sie wollen Fachkräfte binden.“ → „Zur Bindung von Fachkräften investieren die Unternehmen …“
+3. **Satzklammer füllen:** Zwischen Hilfsverb und Partizip/Infinitiv darf viel stehen („Die Daten wurden *im Rahmen einer Online-Befragung unter 240 Beschäftigten mittelständischer Betriebe im Frühjahr 2019* erhoben.“). Siehe Satzbau.
+4. **Kurze Sätze sparsam und echt:** Einen kurzen Satz nur für ein echtes Zwischenergebnis oder eine Einschränkung, höchstens einmal pro Absatz – nicht als Rhythmus-Effekt.
+5. **Nicht streng abwechseln.** Kein Muster kurz–lang–kurz–lang. Ähnlich lange Sätze dürfen aufeinander folgen: lieber eine Erklärpassage aus zwei, drei langen Sätzen und danach eine kurze Folgerung.
 
-**Satzlänge Ø zu hoch/zu niedrig:** gezielt die längsten Sätze teilen bzw. die kürzesten verbinden. Erst Variation, dann Mittelwert korrigieren.
+**Satzlänge Ø zu niedrig:** wie oben bündeln und verdichten. **Zu hoch:** die längsten Sätze an einer inhaltlichen Wende teilen.
 
-**Autokorrelation zu hoch** (lange Sätze folgen auf lange): Länge abwechseln, lange und kurze Sätze verzahnen.
-
-## Wortschatz und Begriffe
-
-**Wortschatzvielfalt (MATTR/MTLD) ↓, Begriffsaufnahme zw. Nachbarsätzen ↑, Sätze mit Wortaufnahme ↑**
-
-KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen.
-1. Für jeden Fachgegenstand **einen** Hauptbegriff festlegen und Synonyme darauf zurückführen („Employer Branding“, „Arbeitgebermarkenbildung“, „Arbeitgeberpositionierung“ → durchgehend „Employer Branding“).
-2. Satzanschlüsse über das wiederholte Nomen statt über Pronomen/„Dies“: „Dies erhöht die Bindung.“ → „Die klare EVP erhöht die Bindung.“
-3. Füll-Synonyme streichen („relevant, bedeutsam und wichtig“ → „wichtig“).
-
-Wenn die Vielfalt **zu niedrig** ist (selten): stumpfe Wiederholungen von Allerweltswörtern (*sehr, wichtig, Bereich*) durch präzisere Wörter ersetzen, nicht die Fachbegriffe.
-
-## Satzanfänge
-
-**Konnektor-Satzanfang ↓**
-- Konnektor streichen, wenn der logische Bezug ohnehin klar ist (häufigster Fall).
-- Konnektor ins Mittelfeld schieben: „Zudem steigt die Fluktuation.“ → „Die Fluktuation steigt zudem.“
-- Durch inhaltlichen Anschluss ersetzen: „Darüber hinaus wirkt die Marke nach innen.“ → „Nach innen wirkt die Marke auf die Bindung.“
-
-**„Dies zeigt/verdeutlicht …“-Anfänge ↓**: Kommentarsatz streichen, wenn er nur wiederholt; sonst konkretes Subjekt einsetzen: „Dies verdeutlicht, dass …“ → „Der Befund spricht dafür, dass …“ oder Inhalt direkt in den Vorsatz ziehen.
-
-**Gleicher Satzanfang wie Vorsatz ↓ / Top-3-Anfänge ↓**: Satzglieder umstellen (Objekt, Adverbial oder Nebensatz an den Anfang).
-
-**Artikel-Anfänge (Der/Die/Das)**: je nach Richtung umstellen (Vorfeld mit Adverbial/Präpositionalgruppe) bzw. mehr Subjekt-Anfänge.
+**Rhythmus (Autokorrelation der Satzlängen) zu niedrig/negativ** (Längen springen ständig hin und her): Längen in Phasen ordnen – Erklärpassagen lang, Folgerungen kurz – statt Satz für Satz abzuwechseln.
 
 ## Satzbau
 
-**Nebensatz-Anteil / Teilsätze pro Satz ↑**: Verbinden-Technik (siehe oben); kausale/konzessive Beziehungen explizit als Nebensatz („weil“, „obwohl“, „wenn“).
-**Anteil Sätze ohne Komma ↑**: einfache Hauptsätze bilden (Abtrennen-Technik).
-**Passiv ↑/↓**: Passivsätze in Aktiv umformen bzw. bei Verfahrensbeschreibungen („Die Daten wurden … erhoben“) Passiv zulassen. Nur, wo das Agens im Original steht oder eindeutig ist.
-**Nominalstil ↑/↓**: Nominalisierungen auflösen („die Durchführung der Befragung erfolgte“ → „die Befragung fand … statt“) bzw. in Fachtexten Nominalgruppen zulassen.
+**Satzklammer-Spanne ↑** (Wörter zwischen Hilfsverb und Partizip/Infinitiv; Mensch ~7, Claude ~5): Angaben zu Zeit, Ort, Art, Grund, Mittel ins Mittelfeld holen, statt sie in eigene Sätze oder Nebensätze auszulagern.
+- „Die Befragung wurde durchgeführt. Sie fand 2019 online statt.“ → „Die Befragung wurde 2019 online durchgeführt.“
+- „Das Modell kann helfen, wenn man es früh einsetzt.“ → „Das Modell kann bei frühem Einsatz helfen.“
+
+**Wörter pro Teilsatz ↑, Kommas ↓, Teilsatz-Verhältnis (2 zu 1 Teilsatz) ↓:** Kurze Nebensätze und Einschübe in Nominal- oder Präpositionalgruppen verwandeln (siehe „nominal verdichten“); Ketten wie „…, die …, wobei …, sodass …“ auflösen.
+
+**Nebensatz-Anteil zu hoch:** einzelne Nebensätze in Präpositionalgruppen umwandeln („da die Nachfrage sinkt“ → „bei sinkender Nachfrage“).
+
+**Passiv:** In Verfahrensbeschreibungen („Die Daten wurden … erhoben“) ist Passiv normal und menschlich. Nicht krampfhaft ins Aktiv setzen.
+
+**Nominalstil und Genitivketten:** Menschliche Hochschultexte haben *mehr* Nominal- und Genitivketten als Claude („die Bewertung der Maßnahmen des Betriebs“). Nicht auflösen, nur wenn ein Satz unverständlich wird.
+
+## Wortschatz und Begriffe
+
+**Lexikalische Variation (MATTR/MTLD) ↓, Begriffsaufnahme zw. Nachbarsätzen ↑, Sätze mit Wortaufnahme ↑**
+
+KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen.
+1. Die **Kernbegriffe** des Textes (der Coach listet sie) wörtlich wieder aufgreifen. Für jeden Fachgegenstand **einen** Hauptbegriff, Synonyme darauf zurückführen.
+2. Satzanschlüsse über das wiederholte Nomen statt über „Dies“/„Diese“: „Dies erhöht die Bindung.“ → „Die klare EVP erhöht die Bindung.“
+3. Füll-Synonyme streichen („relevant, bedeutsam und wichtig“ → „wichtig“).
+
+## Konnektoren und Satzanfänge
+
+**Konnektoren pro 1000 ↓** (Claude ~10, Mensch ~7 pro 1000 Wörter; besonders *zugleich, darüber hinaus, hingegen, zudem, jedoch*):
+- Konnektor **streichen**, wenn der logische Bezug klar ist (häufigster Fall).
+- Oder den Anschluss über das **wiederholte Nomen** herstellen.
+- **Nicht** ins Satzinnere verschieben – Claude stellt Konnektoren schon zu über 80 % ins Satzinnere; das ändert die Dichte nicht.
+
+**„Dies zeigt/verdeutlicht …“-Anfänge ↓**: Kommentarsatz streichen, wenn er nur wiederholt; sonst konkretes Subjekt einsetzen.
+
+**Gleicher Satzanfang wie Vorsatz ↓**: Satzglieder umstellen (Objekt, Adverbial oder Nebensatz an den Anfang).
+
+## Funktionswörter
+
+**Funktionswort-Profil** (stärkstes Einzelsignal, aber nur indirekt steuerbar): Menschen schreiben häufiger mit *es* („es gibt“, „es zeigt sich“), *wie*-Vergleichen, *auch*, *durch*; Claude häufiger mit *als*, *sich*, *dass*. Das ist eine **Tendenz** für die eigene Formulierung, keine Anweisung, einzelne Wörter einzustreuen. Wer natürlich formuliert, nominal verdichtet und Konnektoren streicht, verschiebt das Profil von selbst.
 
 ## Zeichensetzung
 
-**Gedankenstriche ↓ (auf 0)**: Einschub in Kommas oder Klammern setzen, Pointe als eigener Satz, Erläuterung mit Doppelpunkt oder „also“.
-**Semikolon/Klammern ↑**: Zwei eng verbundene Hauptsätze mit Semikolon verbinden; Präzisierungen in Klammern („(n = 849)“, „(vgl. Kapitel 3)“).
-**Doppelpunkt-Pointen** („Das Ergebnis: …“) → vollständiger Satz.
-**Fragesätze**: In Hochschultexten selten; nur als echte Forschungsfrage verwenden.
+**Semikolons ↓ (auf 0)**: In menschlichen Hochschultexten Median 0, bei Claude ~2 pro 1000 Wörter. Durch Punkt ersetzen oder mit „und“/„weil“ verbinden.
+**Gedankenstriche ↓**: Einschub in Kommas oder Klammern setzen, Pointe als eigener Satz.
+**Doppelpunkte ↓**: Doppelpunkt-Pointen („Das Ergebnis: …“) als vollständigen Satz schreiben.
+**Klammern und wörtliche Zitate**: in menschlichen Arbeiten häufiger – Präzisierungen in Klammern („(n = 849)“, „(vgl. Kapitel 3)“) sind normal.
 
 ## KI-Muster
 
 **KI-Floskeln & -Muster ↓**: Floskel durch die schlichte, konkrete Aussage ersetzen – nie durch ein Synonym der Floskel. Ersatzvorschläge pro Muster in `../../menschlich-schreiben/references/ki-muster.md`.
-- „spielt eine zentrale Rolle für X“ → sagen, *was* es für X bewirkt: „beeinflusst X“, „ist Voraussetzung für X“, „erklärt einen Teil von X“.
 - „nicht nur A, sondern auch B“ → „A und B“ oder zwei Sätze.
 - „Es ist nicht X, sondern Y“ → „Y.“ (die Gegenfolie streichen, wenn niemand X behauptet hat).
 
-**Dreier-Aufzählungen ↓**: auf zwei oder vier Elemente ändern (nur wenn das Original genau diese Elemente hergibt), ausformulieren oder auf zwei Sätze verteilen.
-
-**„sowohl … als auch“ / „nicht nur … sondern“ ↓**: in „und“ auflösen.
-
 ## Absätze
 
-**Absatzlängen-Variation ↑ / Sätze-pro-Absatz-Variation ↑**: Zwei kurze, thematisch verbundene Absätze zusammenlegen oder einen langen an einer inhaltlichen Wende teilen. Keine Inhalte verschieben, die Reihenfolge der Aussagen bleibt.
+**Absatzlängen-Variation ↑ / Sätze-pro-Absatz-Variation ↑**: Zwei kurze, thematisch verbundene Absätze zusammenlegen oder einen langen an einer inhaltlichen Wende teilen. Eine zentrale Aussage darf ein eigener Ein- oder Zwei-Satz-Absatz sein. Reihenfolge der Aussagen bleibt.
 **Zusammenfassende Schlusssätze** („Somit wird deutlich …“) streichen, wenn sie nur wiederholen.
 
 ## Personenbezeichnungen
 
 Partizip- und Genderformen („Mitarbeitende“, „Teilnehmende“, „Mitarbeiter*innen“) auf das generische Maskulinum umstellen („Mitarbeiter“, „Teilnehmer“), sofern die Aufgabenstellung nichts anderes verlangt. Wörtliche Zitate bleiben unverändert.
 
-## Wortlänge und Silben
+## Wortlänge, Silben, Abkürzungen
 
-Wortlänge, Silbenzahl und Lesbarkeitsindizes folgen meist von selbst aus den Hebeln oben. Direkt nur, wenn sie rot sind:
-- zu lang/zu viele Mehrsilber: Nominalketten auflösen („Mitarbeiterbindungsmaßnahmen“ → „Maßnahmen zur Mitarbeiterbindung“), Fremdwort-Dopplungen streichen.
-- zu kurz: meist Folge von zu vielen Funktionswörtern/Füllwörtern; Füllwörter streichen.
-Fachbegriffe nie zugunsten der Wortlänge ändern.
+Folgen meist von selbst aus den Hebeln oben. Fachbegriffe nie zugunsten der Wortlänge ändern. Gängige Abkürzungen (z. B., d. h., bzw., u. a., vgl.) sind in menschlichen Hochschultexten häufiger als bei Claude und dürfen stehen bleiben.
+
+## Plausibilitätsregel
+
+Steigt die Ø-Satzlänge um mehr als 10 %, ohne dass Wörter pro Teilsatz und Satzklammer-Spanne mitsteigen, wurde nur mechanisch verlängert (angehängte Teilsätze). Das zählt nicht als Fortschritt – stattdessen verdichten.
