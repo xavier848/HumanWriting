@@ -13,7 +13,7 @@ Ein Muster nie durch ein Synonym des Musters ersetzen (aus „spielt eine zentra
 | „Insgesamt zeigt sich / wird deutlich“ | 0.004 | 0.056 | 3.09 | 1.63 | Ergebnis direkt nennen, ohne Ankündigung. |
 | Korrektur-Konstruktion „nicht X, sondern Y“ | 0.331 | 1.034 | 3.0 | 1.58 | Gegenfolie streichen, wenn niemand X behauptet hat: nur „Y“ sagen. |
 | „maßgeblich“ | 0.084 | 0.282 | 2.89 | 1.53 | „stark“, „deutlich“, Größenangabe aus der Quelle – oder streichen. |
-| „Darüber hinaus“ | 0.279 | 0.718 | 2.47 | 1.31 | Meist ersatzlos streichen; sonst „außerdem“/„auch“ ins Satzinnere stellen oder inhaltlich anschließen. |
+| „Darüber hinaus“ | 0.279 | 0.718 | 2.47 | 1.31 | Meist ersatzlos streichen; sonst über das wiederholte Nomen inhaltlich anschließen (nicht durch einen anderen Konnektor ersetzen). |
 | „In diesem Zusammenhang / Vor diesem Hintergrund“ | 0.204 | 0.467 | 2.17 | 1.12 | Meist streichen; der Bezug ergibt sich aus dem Absatz. Sonst „Deshalb …“, „Dafür …“. |
 | „kommt eine zentrale Rolle/Bedeutung zu“ | 0.008 | 0.04 | 2.16 | 1.11 | Wie oben: konkrete Wirkung oder Funktion benennen („X steuert …“, „X entscheidet über …“). |
 | „verdeutlicht“ | 0.136 | 0.31 | 2.11 | 1.08 | „zeigt“ oder direkt die Aussage. |
@@ -41,14 +41,14 @@ Ein Muster nie durch ein Synonym des Musters ersetzen (aus „spielt eine zentra
 | Satzinterne Pointe mit Doppelpunkt („Das Ergebnis: …“) | 0.004 | 0.0 | 0.82 | 0.0 | Ganzen Satz bilden: „Im Ergebnis sinkt die Fluktuation.“ |
 | KI-Modeadjektive (ganzheitlich, vielschichtig, facettenreich …) | 0.202 | 0.158 | 0.8 | 0.0 | Durch präzises Adjektiv oder Fakt ersetzen (ganzheitlich → „der alle Abteilungen einbezieht“), oft ersatzlos streichen. |
 | „Es ist wichtig/entscheidend, …“ | 0.007 | 0.0 | 0.75 | 0.0 | Direkt die Forderung/Aussage: „KMU sollten …“, „Entscheidend ist …“ nur einmal im Text. |
-| „einerseits … andererseits / auf der einen Seite“ | 0.215 | 0.149 | 0.72 | 0.0 | Abwägung ohne Formel: zwei Sätze, der zweite mit „aber“/„allerdings“ im Satzinneren. |
+| „einerseits … andererseits / auf der einen Seite“ | 0.215 | 0.149 | 0.72 | 0.0 | Abwägung ohne Formel: zwei Sätze, der Gegensatz ergibt sich aus dem Inhalt; höchstens ein „aber“. |
 | „Hierbei / Hierdurch“ | 0.673 | 0.436 | 0.66 | 0.0 | „dabei“ sparsam, oft streichen oder konkreten Bezug („bei der Befragung“). |
 | „gilt es / es gilt, …“ | 0.069 | 0.037 | 0.65 | 0.0 | „muss“, „sollte“ mit Subjekt. |
 | „letztlich/letztendlich“ | 0.166 | 0.099 | 0.64 | 0.0 | Streichen. |
 | „eine Vielzahl von/an“ | 0.084 | 0.031 | 0.49 | 0.0 | „viele“ oder konkrete Anzahl. |
 | „Mit anderen Worten / Kurz gesagt“ | 0.028 | 0.0 | 0.42 | 0.0 | Streichen; den vorigen Satz so schreiben, dass er keiner Umformulierung bedarf. |
 | „in der heutigen Zeit/Welt“ | 0.042 | 0.0 | 0.32 | 0.0 | Streichen oder konkrete Zeitangabe/Entwicklung nennen. |
-| „Des Weiteren“ | 0.17 | 0.0 | 0.11 | 0.0 | Streichen oder „außerdem“ im Satzinneren. |
+| „Des Weiteren“ | 0.17 | 0.0 | 0.11 | 0.0 | Streichen; der Bezug ergibt sich meist aus der Reihenfolge. |
 
 ## Datenbasierte Wortliste: von KI überdurchschnittlich genutzt
 

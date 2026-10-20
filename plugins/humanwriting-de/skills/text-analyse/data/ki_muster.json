@@ -41,7 +41,7 @@
    "kategorie": "konnektor",
    "gewicht": 1.31,
    "regex": "\\bdarüber\\s+hinaus\\b",
-   "ersatz": "Meist ersatzlos streichen; sonst „außerdem“/„auch“ ins Satzinnere stellen oder inhaltlich anschließen.",
+   "ersatz": "Meist ersatzlos streichen; sonst über das wiederholte Nomen inhaltlich anschließen (nicht durch einen anderen Konnektor ersetzen).",
    "rate_mensch_pro_1000": 0.279,
    "rate_ki_pro_1000": 0.718,
    "verhaeltnis_ki_mensch": 2.47
@@ -52,7 +52,7 @@
    "kategorie": "konnektor",
    "gewicht": 0.0,
    "regex": "\\b(?:(?-i:Des)\\s+weiteren|des\\s+(?-i:Weiteren))\\b|\\b(?-i:des\\s+weiteren)\\b(?!\\s+(?-i:[a-zäöüß]+en\\s+)?(?-i:[A-ZÄÖÜ])[\\wäöüß-]*(?:s|en|n)\\b)",
-   "ersatz": "Streichen oder „außerdem“ im Satzinneren.",
+   "ersatz": "Streichen; der Bezug ergibt sich meist aus der Reihenfolge.",
    "rate_mensch_pro_1000": 0.17,
    "rate_ki_pro_1000": 0.0,
    "verhaeltnis_ki_mensch": 0.11
@@ -393,7 +393,7 @@
    "kategorie": "konstruktion",
    "gewicht": 0.0,
    "regex": "\\bauf\\s+der\\s+einen\\s+seite\\b|\\beinerseits\\b",
-   "ersatz": "Abwägung ohne Formel: zwei Sätze, der zweite mit „aber“/„allerdings“ im Satzinneren.",
+   "ersatz": "Abwägung ohne Formel: zwei Sätze, der Gegensatz ergibt sich aus dem Inhalt; höchstens ein „aber“.",
    "rate_mensch_pro_1000": 0.215,
    "rate_ki_pro_1000": 0.149,
    "verhaeltnis_ki_mensch": 0.72

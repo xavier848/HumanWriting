@@ -85,7 +85,8 @@ AUSGESCHRIEBEN = {"zum beispiel": "z. B.", "das heißt": "d. h.", "beziehungswei
 AUSGESCHRIEBEN_RE = re.compile(r"\b(" + "|".join(AUSGESCHRIEBEN) + r")\b", re.IGNORECASE)
 ANKNUEPF_RE = re.compile(r"^(dies|diese[rsmn]?|sie|er|hierbei|hierdurch|dabei|dadurch)\b", re.IGNORECASE)  # rein anaphorische Anschlüsse
 # In den Korpora bei Menschen deutlich häufiger als bei Claude (Kalibrierung, log-odds): einfache Stil- und Funktionswörter
-MENSCHLICHE_STILWOERTER = ["es gibt", "so", "auch", "aber", "man", "sehr", "doch", "schon", "denn", "außerdem", "viele", "aufgrund"]
+# ohne Konnektoren wie „außerdem“: deren Dichte soll sinken (konnektoren_pro_1000)
+MENSCHLICHE_STILWOERTER = ["es gibt", "so", "auch", "aber", "man", "sehr", "doch", "schon", "denn", "viele"]
 
 
 def anfang(text: str, n: int = 7) -> str:
@@ -197,11 +198,11 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
         for z in bew["kennzahlen"]:
             b = z.get("beitrag")
             h = HEBEL_VON.get(z["id"])
-            if h and b is not None and b < -0.25:
+            # grüne Ampel = im normalen menschlichen Bereich: kein Auftrag, auch wenn das Modell leicht Richtung KI zieht
+            if h and b is not None and b < -0.25 and (z["status"] != "gruen" or z.get("nur_modell")):
                 eintrag = hebel.setdefault(h, {"prioritaet": 0.0, "kennzahlen": []})
                 eintrag["prioritaet"] += 0.5 * -b
-                if z["status"] != "gruen" or z.get("nur_modell"):
-                    eintrag["kennzahlen"].append(z)
+                eintrag["kennzahlen"].append(z)
         for z in bew["kennzahlen"]:
             if not z["bewertet"] or z["status"] == "gruen":
                 continue
@@ -244,9 +245,9 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
         for nr_abs, liste in absaetze.items():
             laengen = [s["woerter"] for s in liste]
             mittlere = [s for s in liste if 12 <= s["woerter"] <= 26]
-            if len(liste) >= 3 and len(mittlere) >= len(liste) - 1 and max(laengen) < 30:
+            if len(liste) >= 4 and len(mittlere) >= len(liste) - 1 and max(laengen) < 30:
                 folge = " · ".join(str(x) for x in laengen)
-                hinweis("satzlaenge", nr_abs, None, f"Absatz {nr_abs} hat nur mittellange Sätze ({folge} Wörter). Ein deutlich längerer oder kürzerer Satz fehlt.", 1.2)
+                hinweis("satzlaenge", nr_abs, None, f"Absatz {nr_abs} hat nur mittellange Sätze ({folge} Wörter). Ein langer, verdichteter Satz fehlt – etwa zwei zusammengehörige Sätze bündeln.", 1.2)
             # Verbinden: zwei benachbarte mittellange Sätze, zusammen 28–50 Wörter
             if braucht_lange:
                 for a, b in zip(liste, liste[1:]):
@@ -329,7 +330,8 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15) -> di
                         gezaehlt += 1
         kern = erg["info"].get("kernbegriffe") or []
         formen = [k.get("form") or k.get("stamm") for k in kern if isinstance(k, dict)]
-        top = ([f for f in formen if f and f[:1].isupper()] or formen)[:6]
+        formen = [f for f in formen if f and not PARTIZIP_RE.search(f)]  # Gender-Partizipien nicht als Leitbegriff empfehlen
+        top = ([f for f in formen if f[:1].isupper()] or formen)[:6]
         if not top:
             haeufig = Counter(t for s in saetze for t in analyse.tokens(s["text"])
                               if t[:1].isupper() and analyse.ist_wort(t) and t.lower() not in analyse.FUNKTIONSWOERTER and len(t) > 4)
