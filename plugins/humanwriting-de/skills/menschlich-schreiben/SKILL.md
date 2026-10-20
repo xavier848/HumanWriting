@@ -57,7 +57,10 @@ Der Text soll nach dem Nutzer klingen, nicht nach einem generischen Autor. `refe
 - ⚪-Wörter normal verwenden; ⚠️-Wörter erlaubt, aber nicht häufen.
 - Nie Wörter erzwingen, nur damit sie vorkommen.
 
-### 9. Inhaltlich konkret bleiben
+### 9. Personenbezeichnungen: generisches Maskulinum
+Der Nutzer wünscht das generische Maskulinum („die Mitarbeiter“, „die Teilnehmer“, „die Studenten“). Keine Partizipformen wie „Mitarbeitende“, „Teilnehmende“, „Studierende“ und kein Gendersternchen – Partizipformen sind zudem ein messbares KI-Signal (Claude nutzt sie mehrfach so oft wie die Studierenden im Korpus). Ausnahme: Aufgabenstellung oder Prüfungsordnung verlangen ausdrücklich etwas anderes, oder es wird wörtlich zitiert.
+
+### 10. Inhaltlich konkret bleiben
 - Behauptungen mit Quelle, Zahl, Beispiel oder Begründung versehen statt mit Wertungsadjektiven.
 - Einschränkungen und Gegenpositionen dort nennen, wo sie fachlich hingehören, nicht als symmetrische Abwägungsformel.
 - **Keine erfundenen Quellen, Zahlen oder Zitate.** Fehlt eine Quelle, Platzhalter `[Quelle]` setzen und den Nutzer darauf hinweisen.
@@ -68,4 +71,5 @@ Der Text soll nach dem Nutzer klingen, nicht nach einem generischen Autor. `refe
 - [ ] Keine Gedankenstriche, keine Floskeln aus `references/ki-muster.md`
 - [ ] In jedem Absatz mindestens ein kurzer und ein langer Satz
 - [ ] Fachbegriffe durchgehend gleich benannt
+- [ ] Generisches Maskulinum, keine Partizipformen („Mitarbeitende“)
 - [ ] Analyse-Skript ausgeführt, keine bewertete Kennzahl rot

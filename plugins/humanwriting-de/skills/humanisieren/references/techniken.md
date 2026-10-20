@@ -75,6 +75,10 @@ Wenn die Vielfalt **zu niedrig** ist (selten): stumpfe Wiederholungen von Allerw
 **Absatzlängen-Variation ↑ / Sätze-pro-Absatz-Variation ↑**: Zwei kurze, thematisch verbundene Absätze zusammenlegen oder einen langen an einer inhaltlichen Wende teilen. Keine Inhalte verschieben, die Reihenfolge der Aussagen bleibt.
 **Zusammenfassende Schlusssätze** („Somit wird deutlich …“) streichen, wenn sie nur wiederholen.
 
+## Personenbezeichnungen
+
+Partizip- und Genderformen („Mitarbeitende“, „Teilnehmende“, „Mitarbeiter*innen“) auf das generische Maskulinum umstellen („Mitarbeiter“, „Teilnehmer“), sofern die Aufgabenstellung nichts anderes verlangt. Wörtliche Zitate bleiben unverändert.
+
 ## Wortlänge und Silben
 
 Wortlänge, Silbenzahl und Lesbarkeitsindizes folgen meist von selbst aus den Hebeln oben. Direkt nur, wenn sie rot sind:
