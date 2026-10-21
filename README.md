@@ -57,9 +57,11 @@ Eine englische Variante kommt als eigenes Plugin (`humanwriting-en`), damit jede
 | v2 | 0,41 | 1/5 | 24 | 0,89 |
 | v3 | 0,34 | 0/5 | 12 | 0,94 |
 | v4 | 0,35 | 0/5 | 8 | 0,95 |
+| v5 | 0,25 | 0/5 | 6 | 0,97 |
 
 - v1 erreichte das Ziel durch **Überkorrektur**: zu viele lange Sätze, schwerere Lesbarkeit, Inhaltsverschiebungen. Ab v2 gibt der Coach nur so viele Aufträge, wie bis zum menschlichen Median nötig sind, simuliert jeden Auftrag vorab und meldet Überkorrektur.
 - Danach verbessert der Coach Claude-Texte deutlich (Logit-Summe −10,7 → −5,8), bringt sie mit Einzelkorrekturen aber **nicht** auf menschliches Niveau. Der größte Rest ist das **Funktionswort-Profil** (Verteilung kleiner Wörter wie „als“, „sich“, „es“, „werden“). Es entsteht beim Formulieren selbst und lässt sich durch Umbauen einzelner Sätze kaum verschieben. Der Coach sagt das ehrlich, statt weiter an Einzelstellen zu drehen.
+- v5 ist die präziseste und ehrlichste Fassung (nichts hinzuerfunden, Diagnose unterscheidet „Grenze des Coaches“ von „Grenze der Einzelkorrekturen“). Drei ihrer Sperren haben wirksame Hebel ersatzlos abgeschaltet; sie sind im aktuellen Stand wieder auf das v4-Niveau gelockert (nicht erneut simuliert).
 - **Echte Texte** bekommen wenig: Auf menschlichen Abschnitten zeigt der Coach im Schnitt rund 2 Hinweise (KI-Abschnitte rund 13), am Ziel nur noch Vorgaben wie Semikolon oder Gender; nie Hinweise in wörtlichen Zitaten.
 
 Fazit: Der Coach ist für **selbst geschriebene Texte** gebaut. Einen Claude-Entwurf statistisch „menschlich“ zu machen, gelingt durch Nachbessern nicht ohne Überkorrektur – und das Text-Wasserzeichen bleibt ohnehin.
