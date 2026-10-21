@@ -240,7 +240,9 @@ class CoachLauf(unittest.TestCase):
     def test_gegenfolie_additiv(self):
         g = [h for h in self.alle if h["typ"] == "gegenfolie" and h["satz"] == self.satz_nr("Eine klare Positionierung")]
         self.assertTrue(g)
-        self.assertIn("neben X auch Y", g[0]["text"])
+        # v5: X endet auf eine Eigenschaft („… wichtig“) – „neben“ verlangte eine Nominalisierung, deshalb „X und … auch Y“
+        self.assertIn("„X und … auch Y“", g[0]["text"])
+        self.assertNotIn("„neben X auch Y“", g[0]["text"])
         self.assertNotIn("streichen", g[0]["text"])
 
     def test_konkrete_stellen_und_keine_claude_woerter(self):

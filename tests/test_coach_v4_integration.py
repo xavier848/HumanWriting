@@ -83,10 +83,10 @@ class SatzlaengenSpielraum(unittest.TestCase):
         self.assertLessEqual(raum + n_b, sl["kontingent"])  # nie über den menschlichen Median hinaus
         txt = coach.bericht(c)
         if raum:
-            self.assertIn("selbst nur zwei Sätze derselben Quelle", txt)
+            self.assertIn("Optional, kein Auftrag: zwei weitere Sätze derselben Quelle", txt)  # v5: Status klar
             self.assertNotIn("nicht mehr bündeln als unten genannt", txt)
         else:
-            self.assertNotIn("selbst nur zwei Sätze derselben Quelle", txt)
+            self.assertNotIn("Sätze derselben Quelle zur selben Sache verbinden", txt)
 
     def test_ohne_spielraum_keine_selbsthilfe_buendeln(self):
         L = lauf_bis_satzlaengen(gleichmaessig(8, 5))
@@ -98,7 +98,9 @@ class SatzlaengenSpielraum(unittest.TestCase):
         for z in d["beitraege"]:
             if z["id"] in coach.LAENGEN_SELBST:
                 self.assertIsNone(z["selbsthilfe"])
-                self.assertEqual(z["rest_logit"], 0.0)
+                # v5: kein Spielraum ist eine Grenze des Coaches – das Potenzial bleibt und zählt als „ohne Auftrag“
+                self.assertEqual(z["wie"], "kein_raum")
+                self.assertAlmostEqual(z["rest_logit"], z["potenzial_logit"] - z["erreichbar_logit"], places=2)
         txt = "\n".join(coach.diagnose_text(d))
         self.assertNotIn("zwei zusammengehörige mittellange Sätze", txt)
 
@@ -137,12 +139,17 @@ class BuendelnHauptsatz(unittest.TestCase):
         sb = next(s for s in L.saetze if s["text"] == b)
         self.assertEqual(analyse.stamm("Zusammenhänge"), analyse.stamm("zusammenarbeiten"))  # Kürzung auf 8 Buchstaben
         self.assertFalse(coach.nomen_bezug(L, sa, sb))
-        # echte Komposita mit gekürztem Stamm zählen weiter
+        # v5: ein gemeinsames Bestimmungswort allein („Therapie-“) ist kein Bezug (v4-Kritik: ssoar-21977 „Reproduktionszeiten“ –
+        # „Reproduktionsgedanke“); Komposita mit gemeinsamem Grundwort zählen weiter
         a2 = "Die Vermittlung an Therapieeinrichtungen stand anfangs im Vordergrund der Arbeit."
         b2 = "Bis zum Therapiebeginn vergingen jedoch häufig lange Wartezeiten für die Betroffenen."
         L2 = coach.Lauf(FUELLER + "\n\n" + a2 + " " + b2 + " " + FUELLER, None)
-        self.assertTrue(coach.nomen_bezug(L2, next(s for s in L2.saetze if s["text"] == a2),
-                                          next(s for s in L2.saetze if s["text"] == b2)))
+        self.assertFalse(coach.nomen_bezug(L2, next(s for s in L2.saetze if s["text"] == a2),
+                                           next(s for s in L2.saetze if s["text"] == b2)))
+        b3 = "Auch die Beratungseinrichtungen der Stadt meldeten in dieser Zeit lange Wartezeiten."
+        L3 = coach.Lauf(FUELLER + "\n\n" + a2 + " " + b3 + " " + FUELLER, None)
+        self.assertTrue(coach.nomen_bezug(L3, next(s for s in L3.saetze if s["text"] == a2),
+                                          next(s for s in L3.saetze if s["text"] == b3)))
 
 
 class WirkungVerdichtung(unittest.TestCase):

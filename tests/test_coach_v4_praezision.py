@@ -94,7 +94,8 @@ class Begriffsaufnahme(unittest.TestCase):
         self.assertEqual(r("Kunden", "Konsumenten", set())[0], "synonym")
         self.assertEqual(r("Systemlandschaften", "IT-Landschaft", set())[0], "grundwort")
         self.assertEqual(r("Preissetzung", "Preisgestaltung", set())[0], "bestimmungswort")  # synonyme Grundwörter
-        self.assertEqual(r("Datenqualität", "Datenbasis", {"daten"})[0], "bestimmungswort")  # „Daten“ steht im Text
+        # v5: ein gemeinsames Bestimmungswort zählt nur mit synonymem Grundwort, auch wenn „Daten“ im Text steht
+        self.assertIsNone(r("Datenqualität", "Datenbasis", {"daten"}))
         self.assertIsNone(r("Datenqualität", "Datenbasis", set()))
         self.assertIsNone(r("Unternehmen", "Unterstützung", set()))  # Verbpräfix
         self.assertIsNone(r("Beschäftigte", "Beschreibung", set()))
@@ -153,7 +154,7 @@ class FunktionswortStellen(unittest.TestCase):
             "Die Beratung gilt als teuer", "Die Beratung kostet viel Geld")
         L = coach.Lauf(text, None)
         coach._hebel_priorisieren(L)
-        self.assertIn("Keine weitere umbaubare Konstruktion gefunden", coach._fw_hebeltext(L, False))
+        self.assertIn("Im Text keine umbaubare Konstruktion mehr", coach._fw_hebeltext(L, False))
 
     def test_stellenloser_hebel_zeigt_stellenliste(self):
         c = coach.coache(ALS_TEXT.replace("Der Bericht dient als Grundlage", "Der Bericht ist die Grundlage"), None, 0)

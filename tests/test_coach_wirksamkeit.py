@@ -133,7 +133,7 @@ class Waechter(unittest.TestCase):
         return {"messungen": [{"score": 50, "p_mensch": 0.1, "kennzahlen": {}, "roh": roh, "hinweise": list(hinweise)}]}
 
     def test_unbewertete_lesbarkeit_sperrt_nur_bei_rot(self):
-        with mit_metriken(flesch_amstad=15.0):  # gelb auf der Gegenseite (P10 11,9 – P25 18,4)
+        with mit_metriken(flesch_amstad=15.0, nominalstil_pro_100=6.0):  # gelb auf der Gegenseite (P10 11,9 – P25 18,4)
             c = coach.coache(KI_TEXT, self.verlauf(flesch_amstad=25.0), 40)
         self.assertFalse([u for u in c["fortschritt"]["ueberkorrektur"] if u["id"] == "flesch_amstad"])
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
@@ -154,7 +154,7 @@ class Waechter(unittest.TestCase):
 
     def test_schiefe_sperrt_buendeln_nur_ohne_fehlende_lange_saetze(self):
         befolgt = {"typ": "buendeln", "anfang": "satz der nicht mehr da ist", "laenge": 20, "weitere": ["auch nicht mehr da"]}
-        with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.05):  # rot auf der KI-Seite, aber kaum lange Sätze
+        with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.05, nominalstil_pro_100=6.0):  # rot, kaum lange Sätze
             c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6, hinweise=[befolgt]), 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
         with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.2):
@@ -163,7 +163,7 @@ class Waechter(unittest.TestCase):
 
     def test_nebenwirkung_nur_bei_befolgtem_auftrag(self):
         # ohne befolgten Bündel-Auftrag in der Vorrunde wird die Nebenwirkung gemeldet, aber nichts ausgesetzt
-        with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.2):
+        with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.2, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6), 40)
         uk = [u for u in c["fortschritt"]["ueberkorrektur"] if u["id"] == "satzlaenge_schiefe"]
         self.assertEqual(len(uk), 1)
@@ -184,10 +184,10 @@ class Waechter(unittest.TestCase):
 
     def test_rhythmus_sperrt_buendeln_nicht_mehr(self):
         self.assertNotIn("ki", coach.WAECHTER["rhythmus_r1_log"])
-        with mit_metriken(rhythmus_r1_log=-0.3):
+        with mit_metriken(rhythmus_r1_log=-0.3, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, self.verlauf(rhythmus_r1_log=0.0), 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
-        self.assertIn("simuliert", coach.bericht(c))
+        self.assertIn("vorab so geprüft", coach.bericht(c))  # v5: kein „simuliert“ (interner Jargon) im Nutzertext
 
     def test_wenig_passiv_keine_relativsatz_umbauten(self):
         # viele Relativsätze, kein Passiv
@@ -450,8 +450,12 @@ class Stagnation(unittest.TestCase):
         self.assertEqual(bool(d["fw_text"]), d["fw_dominant"])
         if d["fw_dominant"]:
             self.assertIn("in eigenen Worten neu zu schreiben", txt)
-        if not d["realistisch"]:
-            self.assertIn("voraussichtlich nicht erreichbar", txt)
+        # v5: „Grenze der Einzelkorrekturen“ erst unter 70 % der Lücke, dazwischen „knapp, Schätzung unsicher“
+        if d["grenze"] == "einzelkorrekturen":
+            self.assertIn("Grenze der Einzelkorrekturen", txt)
+        elif d["grenze"] == "knapp":
+            self.assertIn("Knapp – Schätzung unsicher", txt)
+        self.assertNotIn("Grenze des Textes", txt)
 
     def test_diagnose_bei_wenigen_hinweisen_statt_schweigen(self):
         c = coach.coache(KI_TEXT, None, 2)
@@ -487,36 +491,38 @@ class ModellHebel(unittest.TestCase):
         self.assertTrue(abk)
         S = {s["nr"]: s for s in saetze_von(text)}
         for h in abk:
-            satz_ = S[h["satz"]]["text"]
+            texte = [S[n]["text"] for n in h["saetze"]]  # v5: eine Familie kann mehrere Sätze umfassen (Auftrag ohne Einzelsatz)
             for f in h["funde"]:
-                self.assertFalse(satz_.startswith(f[:1].upper() + f[1:]), h["text"])  # nie am Satzanfang
+                self.assertFalse(any(t.startswith(f[:1].upper() + f[1:]) for t in texte), h["text"])  # nie am Satzanfang
                 self.assertNotIn("Vergleiche", f)
                 if f == "das heißt":
-                    self.assertIn(", das heißt", satz_)
+                    self.assertTrue(any(", das heißt" in t for t in texte))
             self.assertNotIn("in der Regel", h["text"])  # „i. d. R.“ wirkt im Fließtext gestelzt
         self.assertNotIn("Abkürzungen pro 1000 (z. B., bzw., d. h. …)", c["gut"])  # Modellbeitrag −0,45: nicht „schon gut“
         ref = analyse.lade_baselines()["textsorten"]["hochschule"]["metriken"]["abkuerzungen_pro_1000"]["mensch"]
         tok = sum(len(analyse.tokens(s["text"])) for s in S.values())
         treffer = sum(len(h["funde"]) for h in abk)
-        self.assertLessEqual(treffer, int(ref["p50"] * tok / 1000))  # nie über den menschlichen Median hinaus
+        # v5: begonnen wird nur unter dem Median; eine Familie wird ganz genannt, solange das Ergebnis höchstens bei P75 liegt
+        self.assertLessEqual(treffer, int(ref["p75"] * tok / 1000))
         kurz = coach.coache(ABK_TEXT, None, 40, roh=True)  # ~130 Wörter: schon eine Abkürzung läge über dem Median
         self.assertFalse([h for h in kurz["hinweise_roh"] if h["typ"] == "abkuerzung"])
 
     def test_alle_treffer_im_satz_einheitlich(self):
         satz = "Die Firma hat rund 500 Beschäftigte in der Region und etwa 120 weitere im Ausland an zwei Standorten."
         text = satz + "\n\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2
-        c = coach.coache(text, None, 40, roh=True)  # ~910 Wörter: Kontingent 1, der Satz hat 2 Treffer → keiner (keine Mischform)
-        self.assertFalse([h for h in c["hinweise_roh"] if h["typ"] == "abkuerzung"])
-        L = coach.Lauf(text, None)  # Kontingent 2 (Median künstlich angehoben): beide Treffer in einem Auftrag
-        coach._hebel_priorisieren(L)
-        r = L.ref["abkuerzungen_pro_1000"]
-        L.ref = dict(L.ref, abkuerzungen_pro_1000=dict(r, mensch=dict(r["mensch"], p50=3.0)))
-        coach._abkuerzungen(L)
-        abk = [h for h in L.hinweise if h["typ"] == "abkuerzung"]
+        # ~910 Wörter: Kontingent 1, die Familie „ca.“ hat 2 Treffer – v5: ganz genannt, weil das Ergebnis unter P75 bleibt
+        c = coach.coache(text, None, 40, roh=True)
+        abk = [h for h in c["hinweise_roh"] if h["typ"] == "abkuerzung"]
         self.assertEqual(len(abk), 1, [h["text"] for h in abk])
         self.assertEqual(abk[0]["funde"], ["rund", "etwa"])
         self.assertIn("„rund“ und „etwa“ als „ca.“", abk[0]["text"])
         self.assertIn("einheitlich", abk[0]["text"])
+        L = coach.Lauf(text, None)  # P75 künstlich gesenkt: die ganze Familie läge darüber → keiner (keine Mischform)
+        coach._hebel_priorisieren(L)
+        r = L.ref["abkuerzungen_pro_1000"]
+        L.ref = dict(L.ref, abkuerzungen_pro_1000=dict(r, mensch=dict(r["mensch"], p75=1.5)))
+        coach._abkuerzungen(L)
+        self.assertFalse([h for h in L.hinweise if h["typ"] == "abkuerzung"])
 
     def test_hebel_auch_im_gruenen_bereich(self):
         c = coach.coache(ABK_TEXT + "\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2, None, 40)

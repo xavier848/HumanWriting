@@ -447,7 +447,7 @@ class Konnektoren(unittest.TestCase):
     def test_jedoch_ab_drei_und_hoechstens_zwei(self):
         text = (self.TEXT.replace("Die Kosten sinken somit", "Die Kosten sinken jedoch") + "\n\n"
                 + "Die Teams arbeiten hingegen gern im Büro und hingegen selten daheim. Die Leitung plant hingegen neue Räume.")
-        with mit_metriken(konnektoren_pro_1000=20.0, anteil_konnektor_satzanfang=0.2):
+        with mit_metriken(konnektoren_pro_1000=10.0, anteil_konnektor_satzanfang=0.2):  # über P75, unter P90: Regel wie v4
             c = coach.coache(text + "\n\n" + gleichmaessig(3, 5), None, 60, roh=True)
         k = [x for x in c["hinweise_roh"] if x["typ"] == "konnektor"]
         self.assertIn("jedoch", {x["fund"].lower() for x in k})  # 3× im selben Absatz

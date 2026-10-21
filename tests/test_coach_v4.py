@@ -61,7 +61,11 @@ class SatzlaengenAmModell(unittest.TestCase):
             self.assertTrue(coach.BUENDEL_SUMME[0] <= a_ + b_ <= coach.BUENDEL_SUMME[1])
             self.assertIn("höchstens ~40 Wörtern", h["text"])
             self.assertGreater(h["sim_wert"], 0)  # nur Kandidaten mit positivem Wert der Zielfunktion
-            self.assertIsNone(h.get("variante"))  # es gibt Bündelpaare: kein Längenaufbau
+            self.assertIn(h.get("variante"), (None, "umgedreht"))  # es gibt Bündelpaare: kein Längenaufbau
+            if h.get("variante") == "umgedreht":  # v5: kurzer Satz a vor langem Satz b – a wird einleitende Angabe in b
+                S = {x["nr"]: x for x in analyse.analysiere_text(text)["saetze"]}
+                self.assertTrue(a_ <= coach.UMKEHR_A_MAX and b_ >= coach.UMKEHR_B_MIN or coach.ankuendigung_a(S[h["satz"]]["text"], a_))
+                self.assertIn("einleitende Angabe", h["text"])
         self.assertEqual(coach.buendel_laenge(16, 15), coach.LANG_AB)  # verlangt ≥ 30 Wörter
         self.assertEqual(coach.buendel_laenge(23, 23), round(coach.VERDICHTUNG * 46))
 
@@ -123,10 +127,13 @@ class NebensatzRegeln(unittest.TestCase):
         self.assertTrue(coach.relativsatz_praep("Die Studie nutzt die Daten", "die in der zweiten Welle der Befragung erhoben wurden"))
 
     def test_dass_satz_bis_vierzehn_woerter(self):
-        a = self.auftrag("Die Daten der Befragung zeigen, dass die Kosten im zweiten Jahr der Einführung in kleinen Betrieben steigen.")
-        self.assertIsNotNone(a)  # 12 Wörter im dass-Satz, Kette „Anstieg der Kosten“
-        self.assertIsNone(self.auftrag("Die Daten der Befragung zeigen, dass die Kosten im zweiten Jahr der Einführung in allen kleinen und "
-                                       "mittleren Betrieben der Region deutlich steigen."))  # > 14 Wörter
+        a = self.auftrag("Die Daten der Befragung zeigen, dass die Kosten im zweiten Jahr fast überall sehr deutlich und spürbar steigen.")
+        self.assertIsNotNone(a)  # 13 Wörter im dass-Satz, Kette „Anstieg der Kosten im zweiten Jahr“ (drei Nomen)
+        self.assertIsNone(self.auftrag("Die Daten der Befragung zeigen, dass die Kosten in den letzten drei oder vier Jahren sehr viel "
+                                       "stärker als erwartet gestiegen sind."))  # > 14 Wörter
+        # v5: projiziertes Ergebnis „den Anstieg der Kosten im zweiten Jahr der Einführung in kleinen Betrieben“ – Kette aus 5 Nomen
+        self.assertIsNone(self.auftrag("Die Daten der Befragung zeigen, dass die Kosten im zweiten Jahr der Einführung in kleinen Betrieben "
+                                       "steigen."))
 
     def test_keine_nominalisierung_bei_koordination_kopula_kette_konjunktiv(self):
         for satz_text in ("Die Teams arbeiten schneller, da die Leitung als Partner und nicht als Kontrolle auftritt.",
@@ -197,15 +204,15 @@ class Wirkungszuschreibung(unittest.TestCase):
         befolgt = {"typ": "buendeln", "anfang": coach.schluessel_anfang(verbund["text"]), "laenge": 9, "weitere": ["auch weg"]}
         verlauf = {"messungen": [{"score": 50, "p_mensch": 0.1, "kennzahlen": {}, "roh": {"teilsatz_verhaeltnis_21": 0.6},
                                   "hinweise": [befolgt]}]}
-        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.03):
+        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.03, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, verlauf, 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])  # lange Sätze unter P25: Bündeln bleibt
-        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.12):
+        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.12, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, verlauf, 40)
         self.assertIn("buendeln", c["fortschritt"]["ausgesetzt"])  # befolgt und als Ursache plausibel
         befolgt_unbekannt = dict(befolgt, anfang="satz der nicht mehr da ist")
         verlauf["messungen"][0]["hinweise"] = [befolgt_unbekannt]
-        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.12):
+        with mit_metriken(teilsatz_verhaeltnis_21=1.3, anteil_lange_saetze=0.12, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, verlauf, 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])  # Verbundsatz nicht nachprüfbar: keine Zuschreibung
 
@@ -258,7 +265,7 @@ class DiagnoseGrenzen(unittest.TestCase):
         self.assertEqual(d["erreichbar_logit"], 0.0)
         self.assertGreater(d["stellenlos_logit"], d["luecke_logit"])
         txt = "\n".join(coach.diagnose_text(d))
-        self.assertIn("Mit den Stellen, die der Coach noch sicher findet, reicht es nicht", txt)
+        self.assertIn("Mit den Aufträgen dieser Runde reicht es nicht", txt)
         self.assertIn("Grenze des Coaches", txt)
         self.assertIn("zwischen Hilfsverb und Partizip", txt)  # Selbsthilfe-Technik
         self.assertNotIn("in eigenen Worten neu zu schreiben", txt)
@@ -268,7 +275,7 @@ class DiagnoseGrenzen(unittest.TestCase):
                               {"id": "satzklammer_mittel", "name": "Satzklammer", "beitrag": -0.3}], p=0.1)
         d = coach._diagnose(dominant, [], 0.86)
         self.assertTrue(d["fw_dominant"])
-        self.assertEqual(d["grenze"], "text")
+        self.assertEqual(d["grenze"], "einzelkorrekturen")  # v5: „Grenze der Einzelkorrekturen“ (früher „Grenze des Textes“)
         fw = next(z for z in d["beitraege"] if z["id"] == "fw_profil_llr_pro_1000")
         self.assertGreater(fw["potenzial_logit"], 0)  # Erfahrungswert statt fest 0
         self.assertLessEqual(fw["potenzial_logit"], coach.FW_RICHTWERT_LOGIT + 1e-9)
@@ -315,14 +322,17 @@ class BerichtUndVerlauf(unittest.TestCase):
         self.assertIn("Diagnose wie in Messung 1", txt)
         self.assertNotIn("Warum das Modellziel noch fehlt", txt)
 
-    def test_laenge_halten_bei_kuerzung_ins_mittelband(self):
+    def test_kein_laenge_halten_bei_kuerzung_ins_mittelband(self):
+        # v5: kein „Länge halten“ mehr (nach der Kürzung nur durch Auffüllen erfüllbar); ohne Rückbezug im Text entscheidet die
+        # Simulation – bleibt der Auftrag, steht die geschätzte Kürzung für die Wirkungsprüfung im Hinweis
         ank = ("Zusammenfassend lässt sich festhalten, dass die Firma mit diesem Vorgehen neue Wege für den Kontakt mit jungen Leuten "
                "in der ganzen Region findet und dafür auch klar plant.")
         self.assertTrue(coach.MITTEL_BIS < len(ank.split()) < coach.LANG_AB)
         c = coach.coache(gleichmaessig(8, 5) + "\n\n" + ank, None, 80, roh=True)
-        h = next(x for x in c["hinweise_roh"] if x["typ"] == "fw_ankuendigung")
-        self.assertIn("Länge halten", h["text"])
-        self.assertLessEqual(h["sim"][0], coach.MITTEL_BIS)  # die geschätzte Kürzung wird für die Wirkungsprüfung gespeichert
+        self.assertFalse([x for x in c["hinweise_roh"] if "Länge halten" in x["text"]])
+        h = next((x for x in c["hinweise_roh"] if x["typ"] == "fw_ankuendigung"), None)
+        if h is not None:
+            self.assertLessEqual(h["sim"][0], coach.MITTEL_BIS)
 
 
 if __name__ == "__main__":
