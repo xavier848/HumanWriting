@@ -169,7 +169,9 @@ class Hilfsfunktionen(unittest.TestCase):
         ki = [{"woerter": w} for w in [18, 20, 17, 22, 19, 21, 16, 23] * 5]
         d = coach.satzlaengen_diagnose(ki, ref, ziel, None)
         self.assertEqual(d["modus"], "buendeln")
-        self.assertEqual(d["kontingent"], round(ref["anteil_lange_saetze"]["mensch"]["p50"] * 40))
+        p50 = ref["anteil_lange_saetze"]["mensch"]["p50"]
+        # k Bündelungen: (0 + k) / (40 − k) soll am nächsten beim Median liegen (jede Bündelung kostet einen Satz)
+        self.assertEqual(d["kontingent"], round(p50 * 40 / (1 + p50)))
         ueber = [{"woerter": w} for w in [35, 38, 33, 12, 9, 36, 31, 34, 11, 40] * 3]
         d = coach.satzlaengen_diagnose(ueber, ref, ziel, None)
         self.assertEqual(d["modus"], "teilen")
@@ -279,7 +281,8 @@ class Satzlaengen(unittest.TestCase):
         erg = analyse.analysiere_text(text)
         laenge = {s["nr"]: s["woerter"] for s in erg["saetze"]}
         for h in b:
-            self.assertGreaterEqual(laenge[h["satz"]] + laenge[h["satz"] + 1], 34)
+            self.assertGreaterEqual(laenge[h["satz"]] + laenge[h["satz"] + 1], coach.BUENDEL_SUMME[0])
+            self.assertLessEqual(laenge[h["satz"]] + laenge[h["satz"] + 1], coach.BUENDEL_SUMME[1])
 
     def ueber_text(self):
         absaetze = []

@@ -129,8 +129,8 @@ class AbsatzSimulation(unittest.TestCase):
 
 
 class Waechter(unittest.TestCase):
-    def verlauf(self, **roh):
-        return {"messungen": [{"score": 50, "p_mensch": 0.1, "kennzahlen": {}, "roh": roh, "hinweise": []}]}
+    def verlauf(self, hinweise=(), **roh):
+        return {"messungen": [{"score": 50, "p_mensch": 0.1, "kennzahlen": {}, "roh": roh, "hinweise": list(hinweise)}]}
 
     def test_unbewertete_lesbarkeit_sperrt_nur_bei_rot(self):
         with mit_metriken(flesch_amstad=15.0):  # gelb auf der Gegenseite (P10 11,9 – P25 18,4)
@@ -153,12 +153,34 @@ class Waechter(unittest.TestCase):
         self.assertIn("buendeln", c["fortschritt"]["ausgesetzt"])
 
     def test_schiefe_sperrt_buendeln_nur_ohne_fehlende_lange_saetze(self):
+        befolgt = {"typ": "buendeln", "anfang": "satz der nicht mehr da ist", "laenge": 20, "weitere": ["auch nicht mehr da"]}
         with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.05):  # rot auf der KI-Seite, aber kaum lange Sätze
-            c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6), 40)
+            c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6, hinweise=[befolgt]), 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
         with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.2):
+            c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6, hinweise=[befolgt]), 40)
+        self.assertIn("buendeln", c["fortschritt"]["ausgesetzt"])  # befolgt, ältere Messung ohne Längenfolge: zuordenbar
+
+    def test_nebenwirkung_nur_bei_befolgtem_auftrag(self):
+        # ohne befolgten Bündel-Auftrag in der Vorrunde wird die Nebenwirkung gemeldet, aber nichts ausgesetzt
+        with mit_metriken(satzlaenge_schiefe=0.05, anteil_lange_saetze=0.2):
             c = coach.coache(KI_TEXT, self.verlauf(satzlaenge_schiefe=0.6), 40)
-        self.assertIn("buendeln", c["fortschritt"]["ausgesetzt"])
+        uk = [u for u in c["fortschritt"]["ueberkorrektur"] if u["id"] == "satzlaenge_schiefe"]
+        self.assertEqual(len(uk), 1)
+        self.assertEqual(uk[0]["aussetzen"], [])
+        self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
+        self.assertIn("keinem befolgten Auftrag", coach.bericht(c))
+
+    def test_simulierte_wirkung_entscheidet_die_zuordnung(self):
+        # Agile R3 (v3-Kritik): Bündeln S1+S2 senkt den Anteil mittellanger Sätze, gestiegen ist er durch eine Kürzung woanders
+        alt = [23, 16, 28, 20, 18, 22, 30, 12, 19, 21]
+        L = coach.Lauf(KI_TEXT, {"messungen": [{"laengen": alt, "hinweise": []}]})
+        h = {"typ": "buendeln", "pos": 0, "laengen_alt": [23, 16], "sim": [36]}
+        eff = coach.sim_wirkung(L, [h], "anteil_mittlere_saetze")
+        self.assertLess(eff, 0)
+        self.assertFalse(coach._verursacht(L, "buendeln", [h], "anteil_mittlere_saetze", +0.01))
+        self.assertTrue(coach._verursacht(L, "buendeln", [h], "anteil_mittlere_saetze", -0.05))
+        self.assertGreater(coach.sim_wirkung(L, [h], "lix"), 0)  # längere Sätze: LIX steigt
 
     def test_rhythmus_sperrt_buendeln_nicht_mehr(self):
         self.assertNotIn("ki", coach.WAECHTER["rhythmus_r1_log"])
@@ -256,22 +278,42 @@ class RhythmusInDerSimulation(unittest.TestCase):
         self.assertEqual(coach.wechsel([8, 30, 8, 30, 8]), 3)
         self.assertEqual(coach.wechsel([8, 20, 8, 30, 30]), 0)
 
-    def test_gewinn_wertet_rhythmus_ab_und_sperrt_rot(self):
-        ref = analyse.lade_baselines()["textsorten"]["hochschule"]["metriken"]
-        w = {"sch": 0.6, "cv": 0.43, "disp": 3.7, "rh": -0.05}
-        alt = coach.Guete(0.30, 0.0, 0.0, 0.0, 0.0, w)
-        besser = coach.Guete(0.26, 0.0, 0.0, 0.0, 0.0, dict(w))
-        schlechter = coach.Guete(0.26, 0.0, 0.0, 0.0, 0.1, dict(w, rh=-0.11))  # gelb
-        rot = coach.Guete(0.26, 0.0, 0.0, 0.0, 0.5, dict(w, rh=-0.2))  # unter P10
-        L = [18, 19, 20, 21]
-        g_besser = coach.laengen_gewinn(alt, besser, L, L, ref)
-        g_schlechter = coach.laengen_gewinn(alt, schlechter, L, L, ref)
-        self.assertIsNotNone(g_besser)
-        self.assertTrue(g_schlechter is None or g_schlechter < g_besser)  # abgewertet
-        self.assertIsNone(coach.laengen_gewinn(alt, rot, L, L, ref))  # würde den Rhythmus rot machen
-        self.assertIsNone(coach.laengen_gewinn(alt, coach.Guete(0.31, 0, 0, 0, 0, w), L, L, ref))  # L1 nicht besser
-        # neue Kurz-Lang-Wechsel kosten
-        self.assertLess(coach.laengen_gewinn(alt, besser, L, [8, 30, 8, 30], ref) or 0, g_besser)
+    def test_laengenmodell_zielfunktion_und_harte_grenzen(self):
+        b = analyse.lade_baselines()["textsorten"]["hochschule"]
+        ref = b["metriken"]
+        lm = coach.LaengenModell(ref, b)
+        ki = [12, 18, 22, 15, 25, 19, 14, 21, 17, 24, 16, 20, 23, 13, 26, 18, 27, 11, 19, 22] * 2  # KI-typisch: kaum lange Sätze
+        # Bündeln zweier mittellanger Sätze zu einem langen: Modellmerkmale (mittellange Sätze, Dispersion) verbessern sich
+        neu = [34] + ki[2:]
+        wert, teile = lm.bewerte(ki, neu)
+        self.assertIsNotNone(wert)
+        self.assertGreater(teile["logit"], 0)
+        self.assertGreater(wert, 0)
+        # die Werte entsprechen analyse.py
+        w = coach.laengen_werte(ki)
+        self.assertAlmostEqual(w["satzlaenge_dispersion"], coach.dispersion(ki), places=6)
+        # L1 ist nur ein weicher Term: auch wenn L1 schlechter wird, entscheidet das Modell
+        self.assertLessEqual(abs(teile["l1"]), coach.L1_GEWICHT * 2)
+        # harte Grenze: über P75 auf der Gegenseite (zu viele lange Sätze)
+        lang = [34, 36, 31, 33, 38, 18, 20, 32, 35, 19] * 4
+        wert2, teile2 = lm.bewerte([18, 20] + lang, [34] + lang)
+        self.assertIsNone(wert2)
+        self.assertEqual(teile2["grenze"], "anteil_lange_saetze")
+        # Rhythmus: Kurz-Lang-Wechsel werden abgewertet
+        L0 = [18, 19, 20, 21] * 10
+        w_glatt, _ = lm.bewerte(L0, [18, 19, 20, 21, 20] * 8)
+        w_zick, t_zick = lm.bewerte(L0, [8, 30, 8, 30, 20] * 8)
+        self.assertLess(t_zick["rhythmus"], 0)
+
+    def test_lesbarkeit_nie_rot_auf_der_gegenseite(self):
+        b = analyse.lade_baselines()["textsorten"]["hochschule"]
+        ref = b["metriken"]
+        p90 = ref["lix"]["mensch"]["p90"]
+        ki = [12, 18, 22, 15, 25, 19, 14, 21, 17, 24, 16, 20, 23, 13, 26, 18, 27, 11, 19, 22] * 2
+        lm = coach.LaengenModell(ref, b, {"lix": p90 - 0.5}, analyse.mittel(ki))  # LIX knapp unter P90
+        wert, teile = lm.bewerte(ki, [40] + ki[2:])  # Ø-Satzlänge steigt: LIX ginge über die Puffergrenze
+        self.assertIsNone(wert)
+        self.assertEqual(teile["grenze"], "lix")
 
 
 FW_TEXT = """## Planung im Betrieb
@@ -428,6 +470,7 @@ class Stagnation(unittest.TestCase):
 
 
 ABK_ANHANG = gleichmaessig(5, 5, 30)
+ABK_ANHANG2 = gleichmaessig(5, 5, 60)
 ABK_TEXT = """## Arbeitszeit im Betrieb
 
 Viele Betriebe bieten heute flexible Modelle an, zum Beispiel Gleitzeit oder Teilzeit für junge Eltern. Zum Beispiel nutzt die Firma ein Konto für Überstunden und plant die Schichten neu. Die Teams wählen ihre Zeiten in der Regel selbst und stimmen sich dabei kurz ab. Die Vergleiche mit anderen Firmen zeigen deutliche Unterschiede bei den Modellen. Die Leitung prüft unter anderem die Kosten und die Wirkung auf die Stimmung im Team.
@@ -438,25 +481,45 @@ Die Firma hat rund 500 Beschäftigte an drei Standorten in der Region und im Aus
 
 class ModellHebel(unittest.TestCase):
     def test_abkuerzungen_inhaltsneutral_und_begrenzt(self):
-        c = coach.coache(ABK_TEXT + "\n" + ABK_ANHANG, None, 40, roh=True)
+        text = ABK_TEXT + "\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2
+        c = coach.coache(text, None, 40, roh=True)
         abk = [h for h in c["hinweise_roh"] if h["typ"] == "abkuerzung"]
-        self.assertTrue(2 <= len(abk) <= 3, [h["text"] for h in abk])
-        S = {s["nr"]: s for s in saetze_von(ABK_TEXT + "\n" + ABK_ANHANG)}
+        self.assertTrue(abk)
+        S = {s["nr"]: s for s in saetze_von(text)}
         for h in abk:
             satz_ = S[h["satz"]]["text"]
-            self.assertFalse(satz_.startswith(h["fund"][:1].upper() + h["fund"][1:]), h["text"])  # nie am Satzanfang
-            self.assertNotIn("Vergleiche", h["fund"])
-            if h["fund"] == "das heißt":
-                self.assertIn(", das heißt", satz_)
+            for f in h["funde"]:
+                self.assertFalse(satz_.startswith(f[:1].upper() + f[1:]), h["text"])  # nie am Satzanfang
+                self.assertNotIn("Vergleiche", f)
+                if f == "das heißt":
+                    self.assertIn(", das heißt", satz_)
+            self.assertNotIn("in der Regel", h["text"])  # „i. d. R.“ wirkt im Fließtext gestelzt
         self.assertNotIn("Abkürzungen pro 1000 (z. B., bzw., d. h. …)", c["gut"])  # Modellbeitrag −0,45: nicht „schon gut“
         ref = analyse.lade_baselines()["textsorten"]["hochschule"]["metriken"]["abkuerzungen_pro_1000"]["mensch"]
         tok = sum(len(analyse.tokens(s["text"])) for s in S.values())
-        self.assertLessEqual(len(abk), int(ref["p75"] * tok / 1000))  # nie über P75 hinaus
-        kurz = coach.coache(ABK_TEXT, None, 40, roh=True)  # ~130 Wörter: schon eine Abkürzung läge über P75
+        treffer = sum(len(h["funde"]) for h in abk)
+        self.assertLessEqual(treffer, int(ref["p50"] * tok / 1000))  # nie über den menschlichen Median hinaus
+        kurz = coach.coache(ABK_TEXT, None, 40, roh=True)  # ~130 Wörter: schon eine Abkürzung läge über dem Median
         self.assertFalse([h for h in kurz["hinweise_roh"] if h["typ"] == "abkuerzung"])
 
+    def test_alle_treffer_im_satz_einheitlich(self):
+        satz = "Die Firma hat rund 500 Beschäftigte in der Region und etwa 120 weitere im Ausland an zwei Standorten."
+        text = satz + "\n\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2
+        c = coach.coache(text, None, 40, roh=True)  # ~910 Wörter: Kontingent 1, der Satz hat 2 Treffer → keiner (keine Mischform)
+        self.assertFalse([h for h in c["hinweise_roh"] if h["typ"] == "abkuerzung"])
+        L = coach.Lauf(text, None)  # Kontingent 2 (Median künstlich angehoben): beide Treffer in einem Auftrag
+        coach._hebel_priorisieren(L)
+        r = L.ref["abkuerzungen_pro_1000"]
+        L.ref = dict(L.ref, abkuerzungen_pro_1000=dict(r, mensch=dict(r["mensch"], p50=3.0)))
+        coach._abkuerzungen(L)
+        abk = [h for h in L.hinweise if h["typ"] == "abkuerzung"]
+        self.assertEqual(len(abk), 1, [h["text"] for h in abk])
+        self.assertEqual(abk[0]["funde"], ["rund", "etwa"])
+        self.assertIn("„rund“ und „etwa“ als „ca.“", abk[0]["text"])
+        self.assertIn("einheitlich", abk[0]["text"])
+
     def test_hebel_auch_im_gruenen_bereich(self):
-        c = coach.coache(ABK_TEXT + "\n" + ABK_ANHANG, None, 40)
+        c = coach.coache(ABK_TEXT + "\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2, None, 40)
         h = next((x for x in c["hebel"] if x["id"] == "abkuerzungen"), None)
         self.assertIsNotNone(h)
         z = h["kennzahlen"][0]

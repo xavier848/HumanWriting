@@ -73,7 +73,9 @@ class EinAuftragJeSatz(unittest.TestCase):
         nr = nr_von(text, "Daraus lässt sich ableiten")
         am = [x for x in c["hinweise_roh"] if x["satz"] == nr and x["typ"] in ("nebensatz", "fw_lassen", "fw_ankuendigung")]
         self.assertEqual([x["typ"] for x in am], ["fw_ankuendigung"])
-        self.assertIn("„daher“ oder „also“", am[0]["text"])  # die Folgerung bleibt erkennbar
+        self.assertIn("nicht streichen", am[0]["text"])  # die Folgerung bleibt eine Folgerung
+        self.assertIn("folgt", am[0]["text"])
+        self.assertNotIn("„daher“ oder „also“", am[0]["text"])
         self.assertNotIn("kann … werden", am[0]["text"])
 
     def test_funktionswort_weicht_dem_muster(self):
@@ -363,7 +365,7 @@ class Buendeln(unittest.TestCase):
         L = self.lauf(a + " " + b + "\n\n" + KI_TEXT)
         return coach.buendel_paar_ok(L, L.saetze[0], L.saetze[1])
 
-    # 22 Wörter; die Folgesätze haben 15–16 Wörter (zusammen 37–38, im Bündel-Bereich 34–42)
+    # 22 Wörter; die Folgesätze haben 15–16 Wörter (zusammen 37–38, im Bündel-Bereich 30–46)
     A = ("Die neue Richtlinie verlangt von allen großen Unternehmen in der Europäischen Union ab dem nächsten Jahr einen jährlichen "
          "Bericht über ihre Ziele.")
 
@@ -381,7 +383,7 @@ class Buendeln(unittest.TestCase):
 
     def test_obergrenze_und_auftragstext(self):
         lang = ("Der Bericht enthält dazu Angaben zu Lieferketten, Energie, Wasser, Abfall, Personal, Vielfalt, Weiterbildung, Gesundheit "
-                "und Sicherheit in allen Tochterfirmen im In- und Ausland.")
+                "und Sicherheit in allen Tochterfirmen und Werken im In- und Ausland samt ihren Lieferanten.")
         self.assertGreater(len(self.A.split()) + len(lang.split()), coach.BUENDEL_MAX)
         self.assertFalse(self.paar(self.A, lang))
         c = coach.coache(gleichmaessig(8, 5), None, 40, roh=True)
@@ -435,12 +437,24 @@ class Konnektoren(unittest.TestCase):
 
     def test_nur_ki_typische_oder_gehaeufte(self):
         text, k = self.hinweise(anteil_konnektor_satzanfang=0.2)
-        self.assertIn("zugleich", k)
-        self.assertIn("jedoch", k)  # 2× im selben Absatz
-        self.assertIn("steht in Absatz", k["jedoch"]["text"])
+        self.assertIn("zugleich", k)  # bei Claude mehr als 4× so häufig: auch einzeln
+        self.assertNotIn("jedoch", k)  # nur 2× im Absatz: „jedoch“ erst ab 3
+        self.assertNotIn("zudem", k)  # Verhältnis ≈ 2, einzeln: nicht gemeldet
         self.assertNotIn("außerdem", k)  # bei Menschen häufiger
         self.assertNotIn("somit", k)  # Verhältnis ≈ 1, nicht gehäuft
         self.assertIn("7,0×", k["zugleich"]["text"])
+
+    def test_jedoch_ab_drei_und_hoechstens_zwei(self):
+        text = (self.TEXT.replace("Die Kosten sinken somit", "Die Kosten sinken jedoch") + "\n\n"
+                + "Die Teams arbeiten hingegen gern im Büro und hingegen selten daheim. Die Leitung plant hingegen neue Räume.")
+        with mit_metriken(konnektoren_pro_1000=20.0, anteil_konnektor_satzanfang=0.2):
+            c = coach.coache(text + "\n\n" + gleichmaessig(3, 5), None, 60, roh=True)
+        k = [x for x in c["hinweise_roh"] if x["typ"] == "konnektor"]
+        self.assertIn("jedoch", {x["fund"].lower() for x in k})  # 3× im selben Absatz
+        self.assertLessEqual(len(k), coach.MAX_KONNEKTOR)
+        with mit_metriken(konnektoren_pro_1000=7.0, anteil_konnektor_satzanfang=0.2):  # unter P75: gar nicht
+            c = coach.coache(text + "\n\n" + gleichmaessig(3, 5), None, 60, roh=True)
+        self.assertFalse([x for x in c["hinweise_roh"] if x["typ"] == "konnektor"])
 
     def test_keine_satzanfaenge_unter_dem_median(self):
         _, k = self.hinweise(anteil_konnektor_satzanfang=0.05)
