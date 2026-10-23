@@ -294,17 +294,23 @@ class Satzlaengen(unittest.TestCase):
         return "\n\n".join(absaetze)
 
     def test_ueberkorrigiert_kein_buendeln_aber_teilen(self):
+        # v7: ohne Verlauf-Beleg kein Teilen-Auftrag – lange Sätze jenseits P90 auf der Gegenseite sind „menschlicher als typisch“
+        # (Info, kein Auftrag); Bündeln bleibt gesperrt
         text = self.ueber_text()
         c = coache_still(text, None, 40, roh=True)
         self.assertEqual(c["satzlaengen"]["modus"], "teilen")
         self.assertFalse([h for h in c["hinweise_roh"] if h["typ"] in ("buendeln", "klammer_zusatz")])
-        self.assertTrue([h for h in c["hinweise_roh"] if h["typ"] == "teilen"])
+        self.assertFalse([h for h in c["hinweise_roh"] if h["typ"] == "teilen"])
+        self.assertIn("anteil_lange_saetze", {z["id"] for z in c["menschlicher_als_typisch"]})
+        self.assertIn("Menschlicher als typisch (kein Auftrag)", coach.bericht(c))
 
     def test_ueberkorrektur_waechter(self):
         text = self.ueber_text()
+        # befolgter Bündel-Auftrag der Vorrunde (Satzanfang nicht mehr da): die Überkorrektur stammt aus Coach-Aufträgen
         verlauf = {"messungen": [{"score": 40, "p_mensch": 0.01, "kennzahlen": {},
                                   "roh": {"anteil_lange_saetze": 0.05, "satzlaenge_mittel": 18.5, "anteil_mittlere_saetze": 0.62,
-                                          "satzlaenge_median": 18.0}}]}
+                                          "satzlaenge_median": 18.0},
+                                  "hinweise": [{"typ": "buendeln", "anfang": "ein satz der nicht mehr da", "satz": 1}]}]}
         c = coache_still(text, verlauf, 40, roh=True)
         uk = {u["id"]: u for u in c["fortschritt"]["ueberkorrektur"]}
         self.assertIn("anteil_lange_saetze", uk)
@@ -321,7 +327,8 @@ class Satzlaengen(unittest.TestCase):
         anfang = coach.schluessel_anfang(laengster["text"])
         verlauf = {"messungen": [{"score": 40, "p_mensch": 0.01, "kennzahlen": {},
                                   "roh": {"anteil_lange_saetze": 0.05, "satzlaenge_mittel": 18.5},
-                                  "hinweise": [{"typ": "buendeln", "anfang": anfang, "satz": laengster["nr"]}]}]}
+                                  "hinweise": [{"typ": "buendeln", "anfang": anfang, "satz": laengster["nr"]},
+                                               {"typ": "buendeln", "anfang": "ein satz der nicht mehr da", "satz": 1}]}]}
         c = coache_still(text, verlauf, 40, roh=True)
         geteilt = {coach.schluessel_anfang(erg["saetze"][h["satz"] - 1]["text"]) for h in c["hinweise_roh"] if h["typ"] == "teilen"}
         self.assertTrue(geteilt)
@@ -345,7 +352,7 @@ class VerlaufUndModi(unittest.TestCase):
 
         def fake(*a, **k):
             erg, bew = echt(*a, **k)
-            return erg, dict(bew, score=95, p_mensch=0.99)
+            return erg, dict(bew, score=95, score_ki=95, p_mensch=0.99)
 
         with mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake):
             c = coache_still(KI_TEXT)
@@ -362,7 +369,7 @@ class VerlaufUndModi(unittest.TestCase):
 
         def fake(*a, **k):
             erg, bew = echt(*a, **k)
-            return erg, dict(bew, score=40, p_mensch=0.99)
+            return erg, dict(bew, score=40, score_ki=40, p_mensch=0.99)
 
         with mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake):
             c = coache_still(KI_TEXT)
@@ -479,7 +486,8 @@ class Regressionen(unittest.TestCase):
                  "Gesprächen mit Bewerbern, Kunden und Partnern“.")
         text = "\n\n".join(absaetze + [zitat])
         verlauf = {"messungen": [{"score": 40, "p_mensch": 0.01, "kennzahlen": {},
-                                  "roh": {"anteil_lange_saetze": 0.05, "satzlaenge_mittel": 18.5, "anteil_mittlere_saetze": 0.62}}]}
+                                  "roh": {"anteil_lange_saetze": 0.05, "satzlaenge_mittel": 18.5, "anteil_mittlere_saetze": 0.62},
+                                  "hinweise": [{"typ": "buendeln", "anfang": "ein satz der nicht mehr da", "satz": 1}]}]}
         c = coache_still(text, verlauf, 40, roh=True)
         letzter = analyse.analysiere_text(text)["saetze"][-1]
         # der längste Satz des Texts: ohne Zitatschutz wäre er der erste Teilen-Kandidat

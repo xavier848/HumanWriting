@@ -1604,6 +1604,9 @@ def _verklebt(kern: str) -> bool:
             continue  # Initialen und Abkürzungen: „M.Sc“, „J.Smith“, „Dr.Müller“, „vgl.Abb“
         if zeichen in ".!?" and not rechts[0].isupper():
             continue  # Code, Domains, Dateinamen; ein Satzanfang wäre großgeschrieben
+        if zeichen == "." and (rechts.isupper() or (lw.group(0)[0].isupper() and len(rechts) <= 4
+                                                    and rechts.lower() not in STARTWOERTER)):
+            continue  # Marken- und Domainnamen: „Plan.Net“, „Group.IE“, „DATA.GOV“ (aber „Ziel.Die“ zählt)
         if zeichen == ":" and re.match(r"in(?:nen)?$", rechts):
             continue  # Gender-Doppelpunkt „Mitarbeiter:innen“
         return True
@@ -2573,14 +2576,14 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
                            f"{fmt(z['mensch_p50'])} | {fmt(z['ki_p50'])} | nur Tendenz (fließt ins Modell) |")
                 continue
             aufgabe = ""
-            if z["richtung"] == "erhoehen":
+            if z.get("seite") == "gegen":  # v7: menschlicher als typisch – nicht in Richtung KI zurückschieben
+                aufgabe = "kein Auftrag (Gegenseite, kein KI-Signal)"
+            elif z["richtung"] == "erhoehen":
                 aufgabe = "↑ erhöhen"
             elif z["richtung"] == "senken":
                 aufgabe = "↓ senken"
-            if z["status"] != "gruen" and z["ki_naeher"]:
+            if z["status"] != "gruen" and z["ki_naeher"] and z.get("seite") != "gegen":
                 aufgabe += " (KI-typisch)"
-            elif z.get("seite") == "gegen":
-                aufgabe += " (Gegenseite, kein KI-Signal)"
             if z.get("unsicher") and z["status"] != "gruen":
                 aufgabe += " (Grenzfall)"
             out.append(

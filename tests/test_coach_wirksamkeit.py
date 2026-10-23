@@ -467,7 +467,7 @@ class Stagnation(unittest.TestCase):
 
         def fake(*a, **k):
             erg, bew = echt(*a, **k)
-            return erg, dict(bew, score=95, p_mensch=0.99)
+            return erg, dict(bew, score=95, score_ki=95, p_mensch=0.99)
         with mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake):
             c = coach.coache(KI_TEXT, None, 2)
         self.assertIsNone(c["diagnose"])

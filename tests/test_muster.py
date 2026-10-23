@@ -1,5 +1,6 @@
 """Tests für die KI-Muster in ki_muster.json: Regex (Positiv-/Negativsätze), Abgrenzung der „sondern“-Muster,
-Strohmann-Muster und Ersatzstrategien ohne Inhaltsverlust.
+Strohmann-Muster und Ersatzstrategien ohne Inhaltsverlust; dazu die daraus erzeugten Referenzen (referenzen.py:
+ki-muster.md mit geteilter Wortliste, zielwerte.md, kennzahlen.md).
 
 Alle Beispielsätze sind für die Tests formuliert (keine Korpustexte)."""
 import json
@@ -11,6 +12,9 @@ import unittest
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "scripts"))
 import analyse  # noqa: E402
+
+sys.path.insert(0, os.path.join(REPO, "kalibrierung", "scripts"))
+import referenzen  # noqa: E402
 
 MUSTER_PFAD = os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "data", "ki_muster.json")
 
@@ -280,6 +284,114 @@ class GegenfolieUmstellung(unittest.TestCase):
         # Verhältnis KI/Mensch im Korpus 2,7 (v7-Messung): klar KI-typisch, Gewicht > 0
         self.assertGreater(self.gewicht["gegenfolie_nachgestellt"], 0)
         self.assertGreaterEqual(self.gewicht["gegenfolie_nachgestellt"], 0.75 * self.gewicht["nicht_x_sondern"])
+
+
+
+BASELINES_PFAD = os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "data", "baselines.json")
+
+
+def _wl(ngramm, ki, mensch):
+    return {"ngramm": ngramm, "ki_pro_1000": ki, "mensch_pro_1000": mensch, "z": 5.0, "docs_ki": 50, "docs_mensch": 50}
+
+
+class ReferenzenV7(unittest.TestCase):
+    """referenzen.py, Runde v7: Wortliste in „nicht häufen“ und „nur Diagnose“ geteilt (A/B-Test: der Skill mied auch
+    Funktionswörter und „null Floskeln“ wurde zum Ziel), „0 ist menschlich normal“ bei P10 = 0, einseitiger Score,
+    Kappung und Anteil „Ziel erreicht“ in kennzahlen.md."""
+
+    WL = {"ki_typisch": [_wl("zugleich", 0.96, 0.14), _wl("lässt sich", 1.38, 0.35), _wl("auf diese weise", 0.51, 0.05),
+                         _wl("diese weise", 0.51, 0.05), _wl("hinzu kommt", 0.33, 0.04), _wl("sodass", 0.58, 0.13),
+                         _wl("ergibt sich", 0.50, 0.10), _wl("in der regel", 0.47, 0.15), _wl("als", 10.10, 6.62),
+                         _wl("sich", 12.74, 8.86), _wl("die", 44.94, 40.81), _wl("ein", 8.00, 6.12),
+                         _wl("befragten", 0.89, 0.43), _wl("die befragten", 0.29, 0.08), _wl("befund", 0.20, 0.03)],
+          "mensch_typisch": [_wl("es", 3.25, 5.78)]}
+    NOMEN = {"befragten", "befund", "regel", "weise"}
+
+    @classmethod
+    def setUpClass(cls):
+        with open(BASELINES_PFAD, encoding="utf-8") as f:
+            cls.b = json.load(f)
+
+    def test_wortliste_geteilt(self):
+        haeufen, diagnose = referenzen.wortliste_teilen(self.WL["ki_typisch"], self.NOMEN)
+        h, d = {e["ngramm"] for e in haeufen}, {e["ngramm"] for e in diagnose}
+        self.assertEqual(h, {"zugleich", "lässt sich", "auf diese weise", "hinzu kommt", "sodass", "ergibt sich", "in der regel"})
+        self.assertEqual(d, {"als", "sich", "die", "ein", "befragten", "die befragten", "befund"})
+        self.assertNotIn("diese weise", h | d)      # Bruchstück von „auf diese weise“
+        # ohne Korpus (keine Nomen bekannt): nur nach Verhältnis
+        h0, d0 = (set(e["ngramm"] for e in x) for x in referenzen.wortliste_teilen(self.WL["ki_typisch"], None))
+        self.assertIn("befragten", d0)
+        self.assertIn("die befragten", h0)
+
+    def test_ki_muster_md_zwei_gruppen(self):
+        md = referenzen.kimuster(lade_json(), self.WL, self.NOMEN)
+        haeufen = md.split("### Phrasen, die man nicht häufen sollte")[1].split("###")[0]
+        diagnose = md.split("### Nur Diagnose, nicht meiden")[1].split("## ")[0]
+        for w in ("*zugleich*", "*lässt sich*", "*auf diese weise*", "*hinzu kommt*", "*sodass*", "*ergibt sich*"):
+            self.assertIn(w, haeufen)
+            self.assertNotIn(w, diagnose)
+        for w in ("*als*", "*sich*", "*die*", "*ein*", "*befragten*"):
+            self.assertIn(w, diagnose)
+            self.assertNotIn(w, haeufen)
+        self.assertIn("2,5-mal", haeufen)
+        self.assertIn("gegenfolie", json.dumps(lade_json()))   # neues Muster steht in der Mustertabelle
+        self.assertIn("Nachgestellte Gegenfolie", md)
+
+    def test_zielwerte_null_ist_normal(self):
+        md = referenzen.zielwerte(self.b)
+        self.assertIn("0 Floskeln ist menschlich normal (P10 = 0)", md)
+        abschnitt = md.split("## 0 ist menschlich normal")[1].split("\n## ")[0]
+        met = self.b["textsorten"]["hochschule"]["metriken"]
+        null = [k for k, v in met.items() if v["bewertet"] and v["mensch"]["p10"] == 0]
+        self.assertIn("ki_muster_pro_1000", null)
+        for k in null:
+            with self.subTest(kennzahl=k):
+                self.assertIn(analyse.NAMEN.get(k, k), abschnitt)
+        for k, v in met.items():
+            if v["bewertet"] and v["mensch"]["p10"] != 0:
+                self.assertNotIn(f"**{analyse.NAMEN.get(k, k)}**", abschnitt)
+        self.assertIn("Band Mensch (P10–P90)", md)
+
+    def v7_baselines(self):
+        import copy
+        b = copy.deepcopy(self.b)
+        t, ev = b["textsorten"]["hochschule"], b["evaluation"]
+        t["ziel_score_ki"] = 73.1
+        k0 = next(iter(t["modell"]["koeffizienten"]))
+        t["modell"]["kappen"] = {k0: {"seite": "oben", "wert": 7.76}, "ki_muster_pro_1000": {"seite": "unten", "wert": 0.0}}
+        ev.update({"score_ki_cv": {"auroc": 0.956, "auroc_sd": 0.01, "genauigkeit": 0.90, "bal_genauigkeit": 0.89,
+                                   "median_mensch": 85.6, "median_ki": 58.5},
+                   "score_ki_alle": {"auroc": 0.957, "median_mensch": 85.9, "median_ki": 59.2},
+                   "ziel_score_ki": 73.1, "ziel_score_ki_methode": "P10 der menschlichen Out-of-fold-Werte des einseitigen Scores",
+                   "ziel_erreicht_anteil_oof": {"mensch": 0.824, "ki": 0.007},
+                   "ziel_erreicht_methode": "p_mensch ≥ ziel_p_mensch und score_ki ≥ ziel_score_ki (out-of-fold)",
+                   "ziel_erreicht_anteil_oof_zweiseitig": {"mensch": 0.812, "ki": 0.007}})
+        return b, k0
+
+    def test_kennzahlen_v7_groessen(self):
+        b, k0 = self.v7_baselines()
+        md = referenzen.kennzahlen(b)
+        for teil in ("## Einseitiger Score", "## Kappung der Modellmerkmale", "Ziel für den einseitigen Score 73,1",
+                     "Anteil „Ziel erreicht“ (out-of-fold)**: Mensch 82,4 %, KI 0,7 %", "Mensch 81,2 %",
+                     "| Einseitiger Score | 0,956 ± 0,010", "Ziel für den Score"):
+            self.assertIn(teil, md)
+        kappung = md.split("## Kappung der Modellmerkmale")[1].split("\n## ")[0]
+        self.assertIn(analyse.NAMEN.get(k0, k0), kappung)
+        self.assertIn("nach oben (P90)", kappung)
+        self.assertIn("nach unten (P10)", kappung)
+        self.assertIn("## Menschlicher als typisch", referenzen.zielwerte(b))
+        # ohne v7-Felder (ältere Baselines): keine neuen Abschnitte, keine Fehler
+        import copy
+        b_alt = copy.deepcopy(self.b)
+        b_alt["textsorten"]["hochschule"].pop("ziel_score_ki", None)
+        b_alt["textsorten"]["hochschule"]["modell"].pop("kappen", None)
+        for k in ("score_ki_cv", "score_ki_alle", "score_ki_oof_auroc", "ziel_score_ki", "ziel_score_ki_methode",
+                  "ziel_erreicht_anteil_oof_zweiseitig"):
+            b_alt["evaluation"].pop(k, None)
+        alt = referenzen.kennzahlen(b_alt)
+        self.assertNotIn("## Menschlicher als typisch", referenzen.zielwerte(b_alt))
+        for teil in ("## Einseitiger Score", "## Kappung der Modellmerkmale", "Einseitiger Score |"):
+            self.assertNotIn(teil, alt)
 
 
 if __name__ == "__main__":

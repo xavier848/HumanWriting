@@ -257,7 +257,7 @@ class GenderErsetzbar(unittest.TestCase):
 
     def test_formen_und_maskulinform_ersetzbar(self):
         c = coach.coache(self.TEXT + "\n\n" + gleichmaessig(3, 5), None, 40)
-        g = next(x for x in c["hinweise"] if x["typ"] == "gender")
+        g = next(x for x in c["vorgaben"] if x["typ"] == "gender")  # v7: Vorgaben stehen in einem eigenen Abschnitt
         self.assertIn("bewerbende", g["ersetzbar"])
         self.assertIn("bewerber", g["ersetzbar"])
         self.assertIn("bewerbende", c["stand"]["ersetzbar"])

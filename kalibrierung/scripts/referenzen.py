@@ -2,7 +2,8 @@
 """Erzeugt die Referenzdateien der Skills aus den Kalibrierungsergebnissen.
 
   menschlich-schreiben/references/zielwerte.md  ← baselines.json
-  menschlich-schreiben/references/ki-muster.md  ← ki_muster.json + ergebnisse/wortlisten.json
+  menschlich-schreiben/references/ki-muster.md  ← ki_muster.json + ergebnisse/wortlisten.json (Wortliste geteilt in
+                                                   „nicht häufen“ und „nur Diagnose“; Nomen aus der Großschreibung im Korpus)
   text-analyse/references/kennzahlen.md         ← baselines.json (alle Kennzahlen, Korpus, Evaluation)
 
     python3 referenzen.py                          # schreibt in die Skill-References
@@ -86,10 +87,23 @@ def lade(p):
         return json.load(fh)
 
 
+def null_normal(met: dict) -> list[str]:
+    """Bewertete Kennzahlen mit Zielbereich, bei denen der menschliche P10 genau 0 ist: 0 ist dort menschlich normal."""
+    return [kk for kk, v in met.items() if v["bewertet"] and abs(v["mensch"].get("p10") or 0) < 1e-9
+            and (v["mensch"].get("p10") is not None)]
+
+
+def _null_satz(kk: str) -> str:
+    if kk == "ki_muster_pro_1000":
+        return "0 Floskeln ist menschlich normal (P10 = 0)"
+    return "0 ist menschlich normal (P10 = 0)"
+
+
 def zielwerte(b) -> str:
     t = b["textsorten"]["hochschule"]
     met = t["metriken"]
     k = b["korpus"]
+    null = set(null_normal(met))
     zeilen = [
         "# Zielwerte für deutsche Hochschultexte",
         "",
@@ -99,19 +113,44 @@ def zielwerte(b) -> str:
         f"{k.get('abschnittslaenge', '~600–1300')} Wörter) "
         f"und {k['ki']['dokumente']} KI-Texte zu denselben Themen ({k['ki']['abschnitte']} Abschnitte).",
         "",
-        "**Zielbereich** = mittlere 50 % der menschlichen Abschnitte (P25–P75, jedes Dokument zählt gleich). **Trennschärfe** = AUROC, richtungsunabhängig (0,5 = trennt nicht, 1,0 = trennt perfekt).",
+        "**Zielbereich** = mittlere 50 % der menschlichen Abschnitte (P25–P75, jedes Dokument zählt gleich). **Band** = P10–P90 "
+        "der menschlichen Abschnitte: Auch Werte zwischen Band- und Zielbereichsgrenze sind menschlich. **Trennschärfe** = AUROC, "
+        "richtungsunabhängig (0,5 = trennt nicht, 1,0 = trennt perfekt).",
         "",
         "## Bewertete Kennzahlen (nach Trennschärfe)",
         "",
-        "| Kennzahl | Zielbereich Mensch | Mensch Median | KI Median | Trennschärfe | Tendenz bei KI |",
-        "|---|---|---|---|---|---|",
+        "| Kennzahl | Zielbereich Mensch | Band Mensch (P10–P90) | Mensch Median | KI Median | Trennschärfe | Tendenz bei KI |",
+        "|---|---|---|---|---|---|---|",
     ]
     bew = sorted([(kk, v) for kk, v in met.items() if v["bewertet"]], key=lambda kv: -kv[1]["trennschaerfe"])
     for kk, v in bew:
         m, ki = v["mensch"], v["ki"]
         tendenz = "zu niedrig" if v["richtung"] == "mensch_hoeher" else "zu hoch"
-        zeilen.append(f"| {analyse.NAMEN.get(kk, kk)} | {f(kk, m['p25'])} – {f(kk, m['p75'])} | {f(kk, m['p50'])} | {f(kk, ki['p50'])} | "
-                      f"{trenn(v)} | {tendenz} |")
+        band = f"{f(kk, m.get('p10'))} – {f(kk, m.get('p90'))}" + (" (0 normal)" if kk in null else "")
+        zeilen.append(f"| {analyse.NAMEN.get(kk, kk)} | {f(kk, m['p25'])} – {f(kk, m['p75'])} | {band} | {f(kk, m['p50'])} | "
+                      f"{f(kk, ki['p50'])} | {trenn(v)} | {tendenz} |")
+    if null:
+        zeilen += ["", "## 0 ist menschlich normal", "",
+                   "Bei diesen Kennzahlen hat mindestens jeder zehnte menschliche Abschnitt den Wert 0 (P10 = 0). 0 ist dort kein "
+                   "Fehler, auch wenn der Wert unter dem Zielbereich liegt und die Analyse ihn gelb färbt: nie Vorkommen "
+                   "einbauen, nur um den Zielbereich zu treffen.", ""]
+        for kk, v in bew:
+            if kk not in null:
+                continue
+            m = v["mensch"]
+            seite = ("weniger ist die menschliche Seite" if v["richtung"] == "ki_hoeher"
+                     else "auch KI-Texte liegen oft niedrig, ein einzelner Abschnitt mit 0 ist trotzdem unauffällig")
+            zeilen.append(f"- **{analyse.NAMEN.get(kk, kk)}**: {_null_satz(kk)}; Zielbereich {f(kk, m['p25'])}–{f(kk, m['p75'])}, "
+                          f"{seite}.")
+    kappen = (t.get("modell") or {}).get("kappen") or {}
+    if kappen or t.get("ziel_score_ki") is not None:
+        zeilen += ["", "## Menschlicher als typisch", "",
+                   "Abweichungen vom Zielbereich auf der der KI abgewandten Seite (z. B. weniger Floskeln, mehr Wortaufnahme als "
+                   "P75) sind menschlich, solange sie im Band bleiben."
+                   + (f" Der einseitige Score (Ziel {_k(t['ziel_score_ki'], 1)}) zählt sie wie grün." if t.get("ziel_score_ki")
+                      is not None else "")
+                   + (" Über das Band hinaus bringt nichts mehr: Das Modell kappt jedes Merkmal auf dieser Seite am menschlichen "
+                      "P10 bzw. P90. Nicht übertreiben, sondern im Band bleiben." if kappen else "")]
     tendenz_k = sorted([(kk, v) for kk, v in met.items() if v.get("nur_modell")], key=lambda kv: -kv[1]["trennschaerfe"])
     if tendenz_k:
         zeilen += ["", "## Nur als Tendenz (Modell, kein Zielbereich)", "",
@@ -129,6 +168,7 @@ def zielwerte(b) -> str:
         richtung = "höher" if v["richtung"] == "mensch_hoeher" else "niedriger"
         zeilen.append(f"- **{analyse.NAMEN.get(kk, kk)}**: Menschen liegen typischerweise bei {f(kk, m['p25'])}–{f(kk, m['p75'])}, "
                       f"KI-Texte bei {f(kk, ki['p25'])}–{f(kk, ki['p75'])}. Beim Schreiben {richtung} ansetzen als der KI-Reflex."
+                      + (f" {_null_satz(kk)}." if kk in null else "")
                       + (f" {ERKLAERUNG[kk]}" if kk in ERKLAERUNG else ""))
     vert_m = t.get("satzlaengen_verteilung_mensch")
     if vert_m:
@@ -139,14 +179,87 @@ def zielwerte(b) -> str:
     return "\n".join(zeilen) + "\n"
 
 
-def kimuster(mu, wl) -> str:
+# --- Wortliste in ki-muster.md: „nicht häufen“ vs. „nur Diagnose“ -------------------------------------------------------
+HAEUFEN_AB = 2.5          # geglättetes Verhältnis KI/Mensch, ab dem eine Wendung unter „nicht häufen“ steht
+NOMEN_ANTEIL = 0.6        # Anteil großgeschriebener Vorkommen mitten im Satz, ab dem ein Wort als Nomen gilt
+BRUCHSTUECK = 0.9         # Teil-n-Gramm fällt weg, wenn eine längere Wendung mindestens 90 % seiner Treffer hat
+PRAEPOSITIONEN = {"in", "im", "vor", "für", "auf", "an", "am", "mit", "nach", "aus", "bei", "zu", "zum", "zur", "von", "vom",
+                  "über", "unter", "durch", "gegen", "ohne", "um"}
+
+
+def nomen_im_korpus(woerter: set, korpus: str | None = None) -> set | None:
+    """Wörter, die im Korpus mitten im Satz überwiegend großgeschrieben stehen (Nomen: „befragten“ → „die Befragten“).
+    None, wenn kein Korpus vorliegt (dann entscheidet nur das Verhältnis)."""
+    korpus = korpus or os.path.join(REPO, "kalibrierung", "korpus")
+    pfade = sorted(glob.glob(os.path.join(korpus, "*", "*", "*.txt")))
+    if not pfade:
+        return None
+    gross, klein = {}, {}
+    tok_re = re.compile(r"[A-Za-zÄÖÜäöüß]+|[.!?:]|\n\s*\n")
+    for pfad in pfade:
+        with open(pfad, encoding="utf-8") as fh:
+            text = fh.read()
+        anfang = True
+        for tok in tok_re.findall(text):
+            if tok[0] in ".!?:\n":
+                anfang = True
+                continue
+            low = tok.lower()
+            if not anfang and low in woerter:
+                ziel = gross if tok[0].isupper() else klein
+                ziel[low] = ziel.get(low, 0) + 1
+            anfang = False
+    return {w for w in woerter if gross.get(w, 0) + klein.get(w, 0) >= 5
+            and gross.get(w, 0) >= NOMEN_ANTEIL * (gross.get(w, 0) + klein.get(w, 0))}
+
+
+def _verh(e: dict) -> float:
+    return (e["ki_pro_1000"] + 0.02) / (e["mensch_pro_1000"] + 0.02)
+
+
+def wortliste_teilen(eintraege: list[dict], nomen: set | None) -> tuple[list[dict], list[dict]]:
+    """KI-typische Wörter/Wendungen → (nicht häufen, nur Diagnose).
+
+    - nicht häufen: Verhältnis ≥ HAEUFEN_AB ohne Themen-/Personenwort (zugleich, lässt sich, auf diese Weise, hinzu
+      kommt, sodass, ergibt sich); Wendungen mit Präposition vorn („in der Regel“) zählen als Wendung, auch mit Nomen
+    - nur Diagnose: Funktionswörter mit kleinerem Verhältnis (als, sich, die, ein) und alles mit Nomen (befragten,
+      Befund, „vgl. Abb.“)
+    Bruchstücke längerer Wendungen mit fast gleicher Häufigkeit („diese weise“ neben „auf diese weise“) fallen weg."""
+    def toks(e):
+        return [x for x in e["ngramm"].split() if re.match(r"[a-zäöüß]", x)]
+
+    behalten = []
+    for e in eintraege:
+        t = toks(e)
+        teil = any(len(toks(g)) > len(t) and g["ki_pro_1000"] >= BRUCHSTUECK * e["ki_pro_1000"]
+                   and any(toks(g)[i:i + len(t)] == t for i in range(len(toks(g)) - len(t) + 1)) for g in eintraege)
+        if not teil:
+            behalten.append(e)
+    haeufen, diagnose = [], []
+    for e in behalten:
+        t = toks(e)
+        inhalt = [x for x in t if x not in analyse.FUNKTIONSWOERTER]
+        wendung = len(t) > 1 and t[0] in PRAEPOSITIONEN
+        thema = bool(nomen) and not wendung and any(x in nomen for x in inhalt)
+        # gerundet wie angezeigt („2,5×“), damit Liste und Schwelle zusammenpassen
+        (diagnose if thema or round(_verh(e), 1) < HAEUFEN_AB else haeufen).append(e)
+    return haeufen, diagnose
+
+
+def _wl_eintrag(e: dict) -> str:
+    return f"*{e['ngramm']}* ({e['ki_pro_1000']:.2f} vs {e['mensch_pro_1000']:.2f}, {_verh(e):.1f}×)"
+
+
+def kimuster(mu, wl, nomen: set | None = None) -> str:
+    """nomen: Nomen der Wortliste (nomen_im_korpus); None = nur nach Verhältnis teilen."""
     zeilen = [
         "# KI-Muster: vermeiden und ersetzen",
         "",
         "Automatisch erzeugt aus `text-analyse/data/ki_muster.json` und `kalibrierung/ergebnisse/wortlisten.json`. Nicht von Hand bearbeiten.",
         "",
         "Raten = Treffer pro 1000 Token im menschlichen bzw. KI-Korpus. **Verhältnis** = wie viel häufiger KI das Muster nutzt. "
-        "Muster mit Gewicht 0 sind in menschlichen Texten genauso häufig und werden nicht bestraft.",
+        "Muster mit Gewicht 0 sind in menschlichen Texten genauso häufig und werden nicht bestraft. Null Treffer ist menschlich "
+        "normal: nie Floskeln einbauen, um eine Kennzahl zu treffen.",
         "",
         "Ein Muster nie durch ein Synonym des Musters ersetzen (aus „spielt eine zentrale Rolle“ wird nicht „nimmt eine Schlüsselposition ein“), sondern durch die konkrete Aussage.",
         "",
@@ -157,10 +270,20 @@ def kimuster(mu, wl) -> str:
         zeilen.append(f"| {m['label']} | {m.get('rate_mensch_pro_1000', '–')} | {m.get('rate_ki_pro_1000', '–')} | "
                       f"{m.get('verhaeltnis_ki_mensch', '–')} | {m.get('gewicht', '–')} | {m.get('ersatz', '')} |")
     if wl:
+        haeufen, diagnose = wortliste_teilen(wl["ki_typisch"][:150], nomen)
         zeilen += ["", "## Datenbasierte Wortliste: von KI überdurchschnittlich genutzt", "",
-                   "Aus dem themengleichen Korpusvergleich (log-odds mit Dirichlet-Prior). Pro 1000 Wörter: KI vs. Mensch. "
-                   "Themenwörter fallen durch das themengleiche Design weitgehend heraus; was bleibt, ist Stil.", ""]
-        zeilen.append(", ".join(f"*{e['ngramm']}* ({e['ki_pro_1000']:.2f} vs {e['mensch_pro_1000']:.2f})" for e in wl["ki_typisch"][:120]))
+                   "Aus dem themengleichen Korpusvergleich (log-odds mit Dirichlet-Prior). Pro 1000 Wörter: KI vs. Mensch, dazu "
+                   "das Verhältnis. Die Liste ist zweigeteilt: Nur die erste Gruppe betrifft das Schreiben.", "",
+                   "### Phrasen, die man nicht häufen sollte", "",
+                   f"Wendungen, die KI mindestens {str(HAEUFEN_AB).replace('.', ',')}-mal so oft nutzt wie Menschen (nach "
+                   "Verhältnis). Einzeln erlaubt, aber nicht mehrfach im selben Abschnitt; nicht durch ein Synonym ersetzen, "
+                   "sondern den Satz anders bauen.", ""]
+        zeilen.append(", ".join(_wl_eintrag(e) for e in sorted(haeufen, key=lambda e: -_verh(e))))
+        zeilen += ["", "### Nur Diagnose, nicht meiden", "",
+                   "Funktionswörter, die KI nur etwas häufiger nutzt (als, sich, die, ein), sowie Themen- und Personenwörter "
+                   "(z. B. „Befragte“). Sie zeigen, worin sich KI-Text statistisch unterscheidet. Sie gezielt zu meiden oder zu "
+                   "ersetzen, macht einen Text nicht menschlicher, sondern verzerrt ihn.", ""]
+        zeilen.append(", ".join(_wl_eintrag(e) for e in diagnose))
         zeilen += ["", "## Datenbasierte Wortliste: von Menschen überdurchschnittlich genutzt", "",
                    "Diese Wörter und Wendungen sind in echten Hochschultexten häufiger als in KI-Texten. Sie dürfen (natürlich und passend) verwendet werden.", ""]
         zeilen.append(", ".join(f"*{e['ngramm']}* ({e['mensch_pro_1000']:.2f} vs {e['ki_pro_1000']:.2f})" for e in wl["mensch_typisch"][:120]))
@@ -191,7 +314,10 @@ def kennzahlen(b) -> str:
         zeilen += [f"## Güte out-of-fold ({ev.get('methode', 'Kreuzvalidierung')})", "",
                    "Mittelwert ± SD über die Folds; pro Fold wurde alles (Perzentile, Gewichte, Funktionswort-Profil, Modell) nur aus den Train-Themen geschätzt.", "",
                    "| Verfahren | AUROC | Genauigkeit | bal. Genauigkeit | Median Mensch | Median KI |", "|---|---|---|---|---|---|"]
-        for name, key in (("Modell P(menschlich)", "modell_cv"), ("Menschlichkeits-Score", "score_cv")):
+        for name, key in (("Modell P(menschlich)", "modell_cv"), ("Menschlichkeits-Score", "score_cv"),
+                          ("Einseitiger Score", "score_ki_cv")):
+            if key not in ev:
+                continue
             e = ev[key]
             pm = lambda x, n=3: f"{e[x]:.{n}f} ± {e.get(x + '_sd', 0):.{n}f}".replace(".", ",") if x in e else "–"  # noqa: E731
             zeilen.append(f"| {name} | {pm('auroc')} | {pm('genauigkeit')} | {pm('bal_genauigkeit')} | {pm('median_mensch', 2)} | {pm('median_ki', 2)} |")
@@ -203,6 +329,7 @@ def kennzahlen(b) -> str:
                 e = ev[key]
                 zeilen.append(f"| {name} | {e['auroc']} | {e['genauigkeit']} | {e['median_mensch']} | {e['median_ki']} |")
     zeilen += schwellen_und_kalibrierung(t, ev)
+    zeilen += einseitig_und_kappung(t, ev)
     zeilen += goodhart_tabelle(t)
     zeilen += ["", "## Alle Kennzahlen", "",
                "| Kennzahl | Mensch P10 / P25 / P50 / P75 / P90 | KI P25 / P50 / P75 | Trennschärfe | bewertet | Gewicht | Messunsicherheit | Bedeutung |",
@@ -221,7 +348,9 @@ def kennzahlen(b) -> str:
                 zeilen.append("- " + ", ".join(analyse.NAMEN.get(m_, m_) for m_ in mitglieder))
     modell = t.get("modell", {})
     if modell.get("koeffizienten"):
-        zeilen += ["", "## Modell", "", "Logistische Regression auf standardisierten Kennzahlen (positiv = spricht für menschlich):", ""]
+        zeilen += ["", "## Modell", "", "Logistische Regression auf standardisierten Kennzahlen (positiv = spricht für menschlich)"
+                   + ("; jedes Merkmal vor der Standardisierung einseitig am menschlichen Band gekappt (siehe Kappung)"
+                      if modell.get("kappen") else "") + ":", ""]
         for kk, c in sorted(modell["koeffizienten"].items(), key=lambda kv: -abs(kv[1])):
             zeilen.append(f"- {analyse.NAMEN.get(kk, kk)}: {c:+.2f}")
     return "\n".join(zeilen) + "\n"
@@ -230,6 +359,41 @@ def kennzahlen(b) -> str:
 def _k(x, n=3) -> str:
     """Zahl mit deutschem Dezimalkomma."""
     return "–" if x is None else f"{x:.{n}f}".replace(".", ",")
+
+
+def _prozent(x) -> str:
+    return "–" if x is None else f"{100 * x:.1f} %".replace(".", ",")
+
+
+def einseitig_und_kappung(t: dict, ev: dict) -> list[str]:
+    """v7: einseitiger Score (Abweichungen auf der Gegenseite der KI zählen wie grün) und die einseitige Kappung der
+    Modellmerkmale am menschlichen Band (textsorten.hochschule.modell.kappen)."""
+    zeilen = []
+    if t.get("ziel_score_ki") is not None or "score_ki_cv" in ev or "score_ki_alle" in ev:
+        e = ev.get("score_ki_alle") or {}
+        zeilen += ["", "## Einseitiger Score", "",
+                   "Wie der Menschlichkeits-Score (gewichteter Anteil grün/gelb/rot über die bewerteten Kennzahlen), aber nur "
+                   "Abweichungen in Richtung KI zählen: Liegt eine Kennzahl auf der der KI abgewandten Seite des menschlichen "
+                   "Medians („menschlicher als typisch“), zählt sie wie grün. Der zweiseitige Score bleibt als „score“ erhalten."
+                   + (f" Auf allen Abschnitten: AUROC {_k(e.get('auroc'), 3)}, Median Mensch {_k(e.get('median_mensch'), 1)}, "
+                      f"Median KI {_k(e.get('median_ki'), 1)}." if e else "")
+                   + (f" Ziel {_k(t['ziel_score_ki'], 1)} (siehe Schwellen)." if t.get("ziel_score_ki") is not None else "")]
+    kappen = (t.get("modell") or {}).get("kappen") or {}
+    if kappen:
+        met, koef = t.get("metriken", {}), (t.get("modell") or {}).get("koeffizienten", {})
+        zeilen += ["", "## Kappung der Modellmerkmale", "",
+                   "Jedes Modellmerkmal wird vor der Standardisierung einseitig am menschlichen Band gekappt: auf der der KI "
+                   "abgewandten Seite höchstens bis zum menschlichen P90 bzw. P10, auf der KI-Seite unverändert (dort gilt das "
+                   "z-Clipping). Ein Wert „menschlicher als 90 % der Menschen“ zählt so nicht noch menschlicher; Übertreiben "
+                   "bringt keine Wahrscheinlichkeit.", "",
+                   "| Merkmal | gekappt | Grenze | Mensch Median | KI Median | Koeffizient |", "|---|---|---|---|---|---|"]
+        for kk, kp in sorted(kappen.items(), key=lambda kv: -abs(koef.get(kv[0], 0))):
+            v = met.get(kk, {})
+            seite = "nach oben (P90)" if kp.get("seite") == "oben" else "nach unten (P10)"
+            zeilen.append(f"| {analyse.NAMEN.get(kk, kk)} | {seite} | {f(kk, kp.get('wert'))} | "
+                          f"{f(kk, (v.get('mensch') or {}).get('p50'))} | {f(kk, (v.get('ki') or {}).get('p50'))} | "
+                          + (f"{koef[kk]:+.2f}".replace(".", ",") if kk in koef else "–") + " |")
+    return zeilen
 
 
 def schwellen_und_kalibrierung(t: dict, ev: dict) -> list[str]:
@@ -242,6 +406,21 @@ def schwellen_und_kalibrierung(t: dict, ev: dict) -> list[str]:
         zeilen.append(f"- **Ziel für P(menschlich) {_k(t['ziel_p_mensch'], 2)}**: "
                       + ev.get("ziel_p_mensch_methode", "aus den menschlichen Out-of-fold-Wahrscheinlichkeiten")
                       + ", auf 2 Stellen gerundet. Zusammen mit der Score-Schwelle ist das das Ziel des Coachs.")
+    if t.get("ziel_score") is not None:
+        zeilen.append(f"- **Ziel für den Score {_k(t['ziel_score'], 1)}**: "
+                      + ev.get("ziel_score_methode", "P10 der menschlichen Out-of-fold-Scores") + ".")
+    if t.get("ziel_score_ki") is not None:
+        zeilen.append(f"- **Ziel für den einseitigen Score {_k(t['ziel_score_ki'], 1)}**: "
+                      + ev.get("ziel_score_ki_methode", "P10 der menschlichen Out-of-fold-Werte des einseitigen Scores") + ".")
+    za = ev.get("ziel_erreicht_anteil_oof")
+    if za:
+        zeilen.append(f"- **Anteil „Ziel erreicht“ (out-of-fold)**: Mensch {_prozent(za.get('mensch'))}, KI {_prozent(za.get('ki'))}"
+                      + (f" – {ev['ziel_erreicht_methode']}" if ev.get("ziel_erreicht_methode") else "") + "."
+                      + (f" Mit dem zweiseitigen Score statt des einseitigen: Mensch "
+                         f"{_prozent(ev['ziel_erreicht_anteil_oof_zweiseitig'].get('mensch'))}, KI "
+                         f"{_prozent(ev['ziel_erreicht_anteil_oof_zweiseitig'].get('ki'))}."
+                         if ev.get("ziel_erreicht_anteil_oof_zweiseitig") else "")
+                      + " Auch ein Teil echter menschlicher Abschnitte verfehlt das Ziel; es ist eine Orientierung, kein Beweis.")
     if hp:
         lam = hp.get("lambda")
         zeilen.append(f"- **Modell**: {hp.get('k')} Merkmale, L2-Strafe λ = {f'{lam:g}'.replace('.', ',') if lam is not None else '–'}"
@@ -362,12 +541,15 @@ def main(argv=None) -> int:
     mu = lade(args.muster)
     wl = lade(args.wortlisten) if os.path.exists(args.wortlisten) else None
 
+    # Nomen der KI-Wortliste (Themen- und Personenwörter → „nur Diagnose“), aus der Großschreibung im Korpus
+    nomen = nomen_im_korpus({x for e in wl["ki_typisch"] for x in e["ngramm"].split()}) if wl else None
+
     def ziel(skill, name):
         return os.path.join(args.aus, name) if args.aus else os.path.join(SKILLS, skill, "references", name)
 
     ausgaben = {
         ziel("menschlich-schreiben", "zielwerte.md"): zielwerte(b),
-        ziel("menschlich-schreiben", "ki-muster.md"): kimuster(mu, wl),
+        ziel("menschlich-schreiben", "ki-muster.md"): kimuster(mu, wl, nomen),
         ziel("text-analyse", "kennzahlen.md"): kennzahlen(b),
     }
     wortschatz_pfad = os.path.join(REPO, "kalibrierung", "persoenlich", "wortschatz.json")

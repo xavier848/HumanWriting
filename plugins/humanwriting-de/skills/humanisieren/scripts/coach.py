@@ -186,6 +186,7 @@ TYP_HEBEL = {
     "semikolon": "semikolon", "doppelpunkt": "doppelpunkt", "abkuerzung": "abkuerzungen",
     "absatz_teilen": "absaetze", "absatz_zusammen": "absaetze",
     "gender": "vorgaben", "gedankenstrich": "vorgaben", "bindestrich": "vorgaben", "konsistenz": "vorgaben",
+    "bereinigung": "bereinigung",
 }
 STRUKTURELL = {"buendeln", "teilen", "kurz", "zickzack", "mitte", "klammer", "klammer_zusatz", "nebensatz", "kommas"}
 # Hinweistypen je Hebel, die einen Hebel tragen: sind sie alle ausgesetzt, zeigt der Bericht den Hebel als ausgesetzt
@@ -208,7 +209,7 @@ SELBSTHILFE_HEBEL = {
     "floskeln": "Wendungen wie „spielt eine zentrale Rolle“ durch die konkrete Aussage ersetzen",
     "konnektoren": "„zugleich“ streichen, wo der Bezug klar ist; andere Satzverknüpfer nur, wenn derselbe im Absatz gehäuft steht",
     "abkuerzungen": "nur vorhandene Langformen kürzen („beispielsweise“ → „z. B.“), nichts einstreuen",
-    "semikolon": "Semikolons durch einen Punkt ersetzen",
+    "semikolon": "Semikolons durch Punkt ersetzen (in Aufzählungen durch Komma) – höchstens 1–2 je 800 Wörter",
     "doppelpunkt": "Doppelpunkte mitten im Satz durch einen eigenen Satz ersetzen",
     "wortwahl": "ergibt sich meist aus den übrigen Hebeln",
     "stimme": "wörtliche Zitate, Klammern oder „wir“ verwenden, wo es passt",
@@ -1416,12 +1417,16 @@ class LaengenModell:
         self.koef_absatz = koef.get(ABSATZ_CV) if ABSATZ_CV in (modell.get("mittel") or {}) else None
         self.mu, self.sd = modell.get("mittel") or {}, modell.get("sd") or {}
         self.clip = modell.get("z_clip") or getattr(analyse, "Z_CLIP", 3.0)
+        self.kappen = modell.get("kappen") or {}  # v7: einseitige Kappung am menschlichen Band (wie analyse.bewerte)
         self.ziel = ts.get("satzlaengen_verteilung_mensch") or {}
         self.gewicht = {k: float(ref[k].get("gewicht") or 0.0) for k in LAENGEN_KENNZAHLEN if k in ref and ref[k].get("bewertet")}
         self.lesbar = {k: v for k, v in (lesbar or {}).items() if v is not None and k in ref}
         self.asl0 = asl0
 
     def _z(self, k: str, v: float) -> float:
+        kappe = self.kappen.get(k)
+        if kappe:
+            v = min(v, kappe["wert"]) if kappe.get("seite") == "oben" else max(v, kappe["wert"])
         return max(-self.clip, min(self.clip, (v - self.mu[k]) / (self.sd.get(k) or 1.0)))
 
     def werte(self, laengen: list[int], absatz_anz: list[int] | None = None) -> dict:
@@ -1919,6 +1924,8 @@ def _hebel_priorisieren(L: Lauf) -> None:
             continue  # gelb, aber innerhalb der Messunsicherheit an der Grenze: kein Arbeitsauftrag
         if L.kz[z["id"]]["seite"] != "ki":
             continue  # Abweichungen weg von der KI-Seite sind kein Arbeitsauftrag
+        if z["id"] == "semikolon_pro_1000" and semikolon_zahl(L) <= semikolon_erlaubt(L):
+            continue  # höchstens 1–2 je 800 Wörter: unauffällig (das Modellgewicht zählt oben weiter)
         h = HEBEL_VON.get(z["id"])
         if not h:
             continue
@@ -2667,13 +2674,18 @@ def _bremse(L: Lauf) -> None:
     diag = L.diag
     laengen = [s["woerter"] for s in L.fokus]
     lang_ids = {"satzlaenge_mittel", "satzlaenge_median", "anteil_lange_saetze", "anteil_sehr_lange_saetze", "anteil_mittlere_saetze"}
-    diag["ueberkorrektur"] = any(u["id"] in lang_ids and u["art"] == "Überkorrektur" for u in L.ueberkorrektur)
+    # Überkorrektur nur, wenn der Verlauf zeigt, dass befolgte Coach-Aufträge (Bündeln, Angabe holen, Zickzack) die Satzlängen über
+    # das menschliche Band getrieben haben – dann wie bisher Teilen-Aufträge
+    verlaengert = any(isinstance(h, dict) and h.get("typ") and set(h.get("typen") or [h["typ"]]) & {"buendeln", "klammer_zusatz", "zickzack"}
+                      and _befolgt(L, h) for mess in L.messungen for h in mess.get("hinweise") or [])
+    diag["ueberkorrektur"] = verlaengert and any(u["id"] in lang_ids and u["art"] == "Überkorrektur" for u in L.ueberkorrektur)
     diag["ueber_p90"] = bool(laengen) and (diag["anteil_lange"] > (L.p_("anteil_lange_saetze", "p90") or 1)
                                            or diag["mittel"] > (L.p_("satzlaenge_mittel", "p90") or 99))
     min_teilen = LANG_AB
     if diag["modus"] == "teilen" and not diag["ueberkorrektur"]:
-        # ohne Verlauf-Beleg: höchstens zwei Aufträge, nur für sehr lange Sätze (≥ 40 Wörter)
-        diag["kontingent"] = min(2, diag["kontingent"]) if (diag["ueber_p90"] or diag["fehlende_mitte"]) else 0
+        # ohne Verlauf-Beleg kein Teilen-Auftrag: Satzlängen jenseits des menschlichen Bands auf der der KI abgewandten Seite sind
+        # auf echten Texten Eigenart (Info „Menschlicher als typisch“, kein Auftrag); zwischen P75 und P90 ohnehin unauffällig
+        diag["kontingent"] = 0
         min_teilen = SEHR_LANG_AB
     if diag["modus"] != "teilen" or diag["kontingent"] <= 0 or "teilen" in L.ausgesetzt:
         return
@@ -2792,6 +2804,10 @@ def _zickzack(L: Lauf) -> None:
             n_zz += 1
 
 
+# Funktionswörter, die ein Adverbialsatz → Präpositionalgruppe entfernt bzw. hinzufügt (Netto-Simulation: Funktionswort-Profil, MATTR)
+KLAMMER_FW = {"um": ({"um": 1, "zu": 1}, {"zur": 1}), "ohne": ({"zu": 1}, {}), "indem": ({"indem": 1}, {"durch": 1}),
+              "weil": ({"weil": 1}, {"wegen": 1}), "da": ({"da": 1}, {"wegen": 1}), "wenn": ({"wenn": 1}, {"bei": 1}),
+              "nachdem": ({"nachdem": 1}, {"nach": 1}), "bevor": ({"bevor": 1}, {"vor": 1}), "sobald": ({"sobald": 1}, {"mit": 1})}
 KLAMMER_LEER_MAX = 3  # Satzklammer gilt bis zu so vielen Wörtern zwischen Hilfsverb und Partizip als (fast) leer
 KLAMMER_MAX = 4  # Klammer-Aufträge je Runde
 VORFELD_MIN, VORFELD_MAX = 3, 9  # Angabe im Vorfeld, die ins Mittelfeld wandern kann („Bereits vor der Digitalisierung …“)
@@ -2810,6 +2826,8 @@ def vorfeld_angabe(mk: str) -> tuple[str, int, int, str, str, bool] | None:
     if re.match(r"\s*,\s*(?:(?:in|an|auf|mit|bei|für|von|zu|aus|nach|über|unter|durch)\s+)?(?:der|die|das|dem|den|deren|dessen|denen|"
                 r"welche[rsmn]?)\s", mk[len(erster):]):
         return None  # Relativsatz hinter dem Partizip gehört zum Subjekt: nach vorn geholt, verlöre er seinen Bezug
+    if re.match(r"\s*,\s*(?:wie|ob|was|warum|wo|wann|dass|inwiefern|inwieweit|welche[rsmn]?)\b", mk[len(erster):], re.IGNORECASE):
+        return None  # Attribut- bzw. Subjektsatz („…, wie auf die Hypothesen geschlossen wurde“): mit nach vorn geholt, schwerfällig
     praep = analyse.PRAEPOSITIONEN | {"im", "am", "beim", "vom", "zum", "zur", "ins"}
     if tw[0].lower() not in praep and tw[1].lower() not in praep:
         return None  # „Bereits Hackman und Oldham haben …“: Gradpartikel vor dem Subjekt, keine Angabe
@@ -2847,9 +2865,7 @@ def klammer_logit(L: Lauf, sim: dict, plus: float) -> float:
     k = "satzklammer_mittel"
     if k not in (modell.get("koeffizienten") or {}):
         return 0.0
-    lm = L.laengen_modell
-    mu, sd_ = modell["mittel"][k], modell["sd"][k] or 1.0
-    z = lambda v: max(-lm.clip, min(lm.clip, (v - mu) / sd_))  # noqa: E731
+    z = lambda v: modell_z(L.ts, k, v)  # noqa: E731
     alt = (sim["summe"] + sim["gewinn"]) / sim["n"]
     return modell["koeffizienten"][k] * (z(alt + plus / sim["n"]) - z(alt))
 
@@ -2905,7 +2921,7 @@ def _satzklammer(L: Lauf) -> None:
             angabe, n_vf, zuwachs, hv, ende, leer_ = vf
             kopf = f"Zwischen „{hv}“ und „{ende}“ steht fast nichts. " if leer_ else ""
             kand.append((zuwachs, s, "klammer", f"{zitat(s)}: {kopf}Die Angabe „{angabe}“ vom Satzanfang zwischen „{hv}“ und „{ende}“ "
-                         "stellen und das Subjekt an den Satzanfang holen – nur umstellen, der Inhalt bleibt gleich.", ()))
+                         "stellen und das Subjekt an den Satzanfang holen – nur umstellen, der Inhalt bleibt gleich.", (), {}))
             continue
         if s["woerter"] <= 12 or REDEVERB_DASS_RE.search(mk) or re.search(r",\s+(?:dass|ob)\b", mk):
             continue  # Objektsatz: folgende Nebensätze gehören zu ihm, nicht ins Mittelfeld des Hauptsatzes
@@ -2946,21 +2962,23 @@ def _satzklammer(L: Lauf) -> None:
                 p_ = re.sub(r"^dar?", "", korrelat.lower())
                 praep = f"„{p_}“ – „{korrelat}“ entfällt, der Inhalt bleibt"
             kand.append((max(1, n_q - 2), s, "klammer", f"{zitat(s)}: Zwischen „{aux}“ und „{ende}“ steht fast nichts. Den {teil} als "
-                         f"Angabe (Präpositionalgruppe mit {praep}) zwischen „{aux}“ und „{ende}“ holen.", ()))
+                         f"Angabe (Präpositionalgruppe mit {praep}) zwischen „{aux}“ und „{ende}“ holen.", (),
+                         {"fw_weg": dict(KLAMMER_FW.get(q.group("w"), ({q.group("w"): 1}, {}))[0]),
+                          "fw_dazu": dict(KLAMMER_FW.get(q.group("w"), ({}, {}))[1]), "subjunktion": q.group("w")}))
         elif nachbar and L.diag.get("modus") != "teilen" and L.nutzbar(nachbar) and nachbar["woerter"] <= 14 \
                 and not L.beginnt_im_zitat(nachbar) and (analyse.tokens(nachbar["text"]) or [""])[0].lower() in ANGABE_ANFANG \
                 and verbunden(L.begriffe_info[s["nr"]], L.begriffe_info[nachbar["nr"]]) \
                 and L.quelle.get(s["nr"], False) == L.quelle.get(nachbar["nr"], False):
             kand.append((3, s, "klammer_zusatz", f"{zitat(s)}: Zwischen „{aux}“ und „{ende}“ steht fast nichts. Die Angabe vom Anfang von "
                          f"Satz {nachbar['nr']} („{anfang(nachbar['text'], 3)}“) dorthin holen und Satz {nachbar['nr']} damit auflösen.",
-                         (nachbar["nr"],)))
+                         (nachbar["nr"],), {}))
     n_kl = 0
-    for zuwachs, s, typ, text_, weitere in sorted(kand, key=lambda k: (-k[0], k[1]["nr"])):
+    for zuwachs, s, typ, text_, weitere, extra in sorted(kand, key=lambda k: (-k[0], k[1]["nr"])):
         if n_kl >= KLAMMER_MAX or (sim and sim["gewinn"] >= sim["noetig"] and n_kl > 0):
             break  # Kontingent: bis zum menschlichen Median (mindestens ein Auftrag, wenn das Merkmal aktiv ist)
         if L.hinweis(typ, s, text_, 0.8, weitere=weitere):
             d_logit = klammer_logit(L, sim, zuwachs) if sim else 0.0
-            L.hinweise[-1].update({"klammer_zuwachs": zuwachs, "sim_logit": round(d_logit, 3)})
+            L.hinweise[-1].update({"klammer_zuwachs": zuwachs, "sim_logit": round(d_logit, 3), **extra})
             L.sim_gewinn[typ] = L.sim_gewinn.get(typ, 0.0) + d_logit
             if sim:
                 sim["gewinn"] += zuwachs
@@ -3555,7 +3573,10 @@ def _anknuepfung(L: Lauf, k_begriffe: int, cap: int) -> int:
             else:
                 t_ = f"{zitat(b)}: „{wort} …“ am Satzanfang durch Artikel + Bezugswort im Genitiv ersetzen ({bezug})."
             if L.hinweis("anknuepfung", b, t_, 1.0):
-                L.hinweise[-1]["art"] = art
+                kopf = (kand[0].split()[-1] if kand else "")
+                L.hinweise[-1].update({"art": art, "bezug": kopf,
+                                       "fw_weg": {wort.lower(): 1} if art != "dem" else {},
+                                       "fw_dazu": ({"die": 1} if art == "pron" else {"die": 1, "der": 1}) if art != "dem" else {}})
                 n += 1
     return n
 
@@ -3922,6 +3943,21 @@ def lassen_gesperrt(mk: str, t: re.Match) -> bool:
     return bool(LEICHT_ADV_RE.search(teil) or KOORD_INF_RE.search(teil))
 
 
+def neue_klammer(kid: str, mk: str, t: re.Match) -> int | None:
+    """Spanne der Satzklammer, die ein Funktionswort-Umbau voraussichtlich neu erzeugt („lässt sich X Y verarbeiten“ → „wird X Y
+    verarbeitet“, „gilt als zuverlässig“ → „wird für zuverlässig gehalten“): die Wörter zwischen der Wendung und dem Verb am
+    Teilsatzende. None = keine neue Klammer (Nebensatz mit Verb am Ende, direktes Verb)."""
+    if kid not in ("laesst_sich", "gilt_als") or not re.match(r"(?i)lässt|lassen|ließ|ließen|gilt|gelten|galt|galten", t.group(0)):
+        return None
+    rest = re.split(r"[,;:()–—]", mk[t.end():], maxsplit=1)[0]
+    w = [x for x in analyse.tokens(rest) if analyse.ist_wort(x)]
+    if kid == "gilt_als":
+        return len(w) + 1 if w else None  # „wird für (…) gehalten“: „für“ plus die Einschätzung
+    if len(w) < 2 or not re.search(r"(?:en|ern|eln)$", w[-1]) or not w[-1].islower():
+        return None
+    return len(w) - 1
+
+
 FW_MIT_MODALVERB = {"dient_als", "gilt_als", "versteht_sich_als", "ergibt_sich", "zeigt_sich"}
 # Ersatzverben der „als“-Zuschreibungen: steht ein Ersatzverb schon im Satz, wird nur die andere Variante angeboten
 _IST_RE = re.compile(r"\b(?:ist|sind|war|waren)\b", re.IGNORECASE)
@@ -4028,17 +4064,18 @@ def _funktionswoerter(L: Lauf) -> None:
                 # schon eine Nominalkette hat, und nicht, wenn Nebensatz → Nominalgruppe bzw. Verdichten im Bericht ausgesetzt ist
                 continue
             fund = t.group(0) if kid != "redeverb_dass" else t.group(0)[:t.start("rest") - t.start()].strip()
-            kand.append((delta, s, typ, fund, technik, verben, behalten))
+            kand.append((delta, s, typ, fund, technik, verben, behalten, bilanz, neue_klammer(kid, mk, t)))
             L.fw_potenzial += delta
             break  # ein Funktionswort-Auftrag je Satz
     n_max = 5 if unter_p25 else 3
     n_fw = 0
-    for delta, s, typ, fund, technik, verben, behalten in sorted(kand, key=lambda x: (-x[0], x[1]["nr"])):
+    for delta, s, typ, fund, technik, verben, behalten, bilanz, klammer_neu in sorted(kand, key=lambda x: (-x[0], x[1]["nr"])):
         if n_fw >= n_max:
             break
         ersetzbar = [w for w in re.findall(r"[A-Za-zÄÖÜäöüß]+", fund) if w.lower() not in analyse.FUNKTIONSWOERTER and len(w) > 3]
         if L.hinweis(typ, s, f"{zitat(s)}: „{fund}“ {technik}.", 0.8, fund=fund, ersetzbar=ersetzbar):
-            L.hinweise[-1].update({"fw_delta": round(delta, 3), "verben": verben, "behalten": behalten})
+            L.hinweise[-1].update({"fw_delta": round(delta, 3), "verben": verben, "behalten": behalten,
+                                   "fw_weg": dict(bilanz[0]), "fw_dazu": dict(bilanz[1]), "klammer_neu": klammer_neu})
             n_fw += 1
 
 
@@ -4295,11 +4332,14 @@ def _muster(L: Lauf) -> None:
                 continue
             if gf_rest <= 0:
                 continue  # Obergrenze je Text erreicht: weitere Gegenfolien würden nur eine neue Schablone vervielfachen
+            gf_fw = ({"nicht": 1, "sondern": 1}, {})
             if ADDITIV_RE.search(fund):
                 if not additiv_ok or re.search(r"\bnicht\s+mehr\s+nur\b", fund, re.IGNORECASE):
                     continue  # „nicht mehr nur“ trägt einen Wandel – „neben/außer … auch“ verlöre ihn
                 technik, ersatz = gegenfolie_technik(x_worte, gf_technik)
                 gf_technik[technik] += 1
+                gf_fw = ({"nicht": 1, "nur": 1, "sondern": 1},
+                         {"neben": {"neben": 1}, "außer": {"außer": 1}, "und_auch": {"und": 1}, "und_auch_verb": {"und": 1}}.get(technik, {}))
         # nur Auslöser-Wörter als ersetzbar melden, nie Platzhalter des Musters (die sind Inhalt des Nutzers)
         worte = [w for w in floskel_kopfwoerter(mk, _a, _e, mu["_re"])
                  if w.lower() not in analyse.FUNKTIONSWOERTER and len(w) > 2] if typ == "floskel" else []
@@ -4307,6 +4347,8 @@ def _muster(L: Lauf) -> None:
             ersatz = floskel_ersatz(mu, L, s)
         if L.hinweis(typ, s, f"{zitat(s)}: „{fund}“ – {ersatz}", 0.6 + 0.3 * g, fund=fund, ersetzbar=worte):
             L.hinweise[-1].update({"muster_gewicht": g, "spanne": (_a, _e), "muster_id": mu.get("id")})
+            if typ == "gegenfolie":
+                L.hinweise[-1].update({"fw_weg": dict(gf_fw[0]), "fw_dazu": dict(gf_fw[1])})
             entfernt += g
             if typ == "gegenfolie":
                 gf_rest -= 1
@@ -4454,10 +4496,19 @@ def _konnektoren(L: Lauf) -> None:
             warum = f"bei Claude etwa {f'{v:.1f}'.replace('.', ',')}× so häufig wie in echten Arbeiten;"
         if L.hinweis("konnektor", s, f"{zitat(s)}: „{wort}“ {warum} streichen, wenn der Bezug klar ist, oder über das wiederholte "
                      "Nomen anschließen (nicht nur verschieben).", 0.9, fund=wort, ersetzbar=[wort]):
-            L.hinweise[-1].update({"konnektor_verhaeltnis": round(v, 2), "streicht": [wort.lower()]})
+            L.hinweise[-1].update({"konnektor_verhaeltnis": round(v, 2), "streicht": [wort.lower()], "fw_weg": {wort.lower(): 1}})
             gemeldet.add((s["absatz"], wort.lower()))
             je_wort[wort.lower()] += 1
             n_k += 1
+
+
+def semikolon_technik(mk: str) -> str:
+    """Ersatz für Semikolons: steht nach dem „;“ kein finites Verb, trennt es Glieder einer Aufzählung – dann ein Komma; sonst
+    trennt es zwei Hauptsätze – dann ein Punkt (oder „und“, wenn beide Aussagen eng zusammengehören)."""
+    teile = mk.split(";")[1:]
+    if teile and all(aufzaehlung_ohne_verb(t) for t in teile):
+        return "Semikolon durch Komma ersetzen – es trennt Glieder einer Aufzählung (danach folgt kein eigenes Verb)."
+    return "Semikolon durch Punkt ersetzen (zwei Hauptsätze) oder, wenn beide Aussagen eng zusammengehören, mit „und“ verbinden."
 
 
 def _zeichen(L: Lauf) -> None:
@@ -4466,7 +4517,7 @@ def _zeichen(L: Lauf) -> None:
             continue
         mk = analyse._ohne_zahlzeichen(L.masken[s["nr"]]) if hasattr(analyse, "_ohne_zahlzeichen") else L.masken[s["nr"]]
         if ";" in mk:
-            L.hinweis("semikolon", s, f"{zitat(s)}: Semikolon durch Punkt ersetzen oder mit „und“/„weil“ verbinden.", 1.0, fund=";")
+            L.hinweis("semikolon", s, f"{zitat(s)}: {semikolon_technik(mk)}", 1.0, fund=";")
     if "doppelpunkt" in L.hebel:
         for s in L.fokus:
             if L.nutzbar(s) and re.search(r":(?!\d)\s", L.masken[s["nr"]]):
@@ -4790,16 +4841,18 @@ def _absaetze(L: Lauf) -> None:
         teile = " + ".join(str(y - x) for x, y in zip(g, g[1:]))
         wo = " und ".join(f"vor Satz {liste[k_]['nr']} („{anfang(liste[k_]['text'], 5)}“)" for k_ in info)
         thema = " Dort überschneiden sich die Begriffe davor und danach wenig." if guete >= 0.85 else ""
-        L.hinweis("absatz_teilen", liste[info[0]], f"Absatz {nr} ({anz[i]} Sätze): {wo} einen neuen Absatz beginnen – danach {teile} "
-                  f"Sätze.{thema}{grund}", 1.0, absatz=nr)
+        if L.hinweis("absatz_teilen", liste[info[0]], f"Absatz {nr} ({anz[i]} Sätze): {wo} einen neuen Absatz beginnen – danach {teile} "
+                     f"Sätze.{thema}{grund}", 1.0, absatz=nr):
+            L.hinweise[-1]["absatz_cv"] = [round(alt["cv"], 4), round(neu["cv"], 4)]
     else:
         x, y = nrs[i], nrs[i + 1]
         wort = next((t for s in L.absaetze[y] for t in analyse.tokens(s["text"]) if analyse.ist_wort(t) and t[:1].isupper()
                      and analyse.stamm(t) in info and t.lower() not in analyse.FUNKTIONSWOERTER), None)
         thema = f" – beide behandeln „{wort}“" if wort else ""
         # erster Satz von Absatz y als Schlüssel: so erkennt das Gedächtnis ein späteres Teilen an derselben Stelle als Pendeln
-        L.hinweis("absatz_zusammen", L.absaetze[y][0], f"Absatz {x} und {y} ({anz[i]} + {anz[i + 1]} Sätze) zusammenlegen{thema}.{grund}",
-                  0.9, absatz=x)
+        if L.hinweis("absatz_zusammen", L.absaetze[y][0], f"Absatz {x} und {y} ({anz[i]} + {anz[i + 1]} Sätze) zusammenlegen{thema}.{grund}",
+                     0.9, absatz=x):
+            L.hinweise[-1]["absatz_cv"] = [round(alt["cv"], 4), round(neu["cv"], 4)]
 
 
 def _vorgaben(L: Lauf) -> None:
@@ -4977,6 +5030,10 @@ _KEIN_VERB_DAVOR = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "ei
                     "keiner", "keinen", "per", "sowie", "und", "oder", "möglichst", "sehr", "besonders"}
 
 
+_NACH_VERB = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "sich", "es", "nicht", "auch", "nur",
+              "noch", "schon", "sie", "ihn", "ihm", "uns", "mich", "dich"}
+
+
 def hat_finites_verb(teil: str) -> bool:
     """Steht in einem Satzteil ein finites Verb? Hilfs-/Modalverben und häufige Vollverben (analyse.FINIT) sicher; sonst ein
     kleingeschriebenes Inhaltswort mit Verbendung, das weder nach einem Artikel bzw. einer Präposition noch direkt vor einem Nomen
@@ -4988,12 +5045,30 @@ def hat_finites_verb(teil: str) -> bool:
             return True
         if not t.islower() or low in analyse.FUNKTIONSWOERTER or len(low) < 4 or not re.search(r"(?:t|te|ten|en|st|ern|eln)$", low):
             continue
-        if i > 0 and toks[i - 1].lower() in _KEIN_VERB_DAVOR:
-            continue
+        folgt_artikel = i + 1 < len(toks) and toks[i + 1].lower() in _NACH_VERB
+        if i > 0 and toks[i - 1].lower() in _KEIN_VERB_DAVOR and not folgt_artikel:
+            continue  # „der sozialen …“; aber „das belastet die …“: Pronomen, Verb, Artikel
         if i + 1 < len(toks) and toks[i + 1][:1].isupper():
             continue
         return True
     return False
+
+
+_EINSCHUB_NS_RE = re.compile(r",\s*(?:(?:in|an|auf|aus|bei|mit|nach|von|vor|zu|für|über|unter|durch|gegen|um)\s+)?(?:der|die|das|dem|den|"
+                             r"deren|dessen|denen|welche[rsmn]?|wo|wie|was|dass|weil|da|wenn|als|ob|obwohl|während)\b[^,;]*(?:,|$)",
+                             re.IGNORECASE)
+AUFZAEHL_ANFANG_RE = re.compile(r"^\s*(?:einerseits|zum\s+einen|erstens|sowohl|nämlich|und\s+zwar|etwa|beispielsweise|insbesondere|"
+                                r"vor\s+allem|darunter|z\.\s?B\.)\b", re.IGNORECASE)
+
+
+def aufzaehlung_ohne_verb(rest: str) -> bool:
+    """Folgt eine Aufzählung bzw. Erklärung ohne eigenes Verb? Eingeschobene Neben- und Relativsätze („…, in der … verfolgt wird,
+    sowie …“) zählen nicht; ein Aufzählungsanfang („einerseits“, „zum einen“, „nämlich“) genügt."""
+    if AUFZAEHL_ANFANG_RE.match(rest):
+        return True
+    kern = _EINSCHUB_NS_RE.sub(" ", rest)
+    kern = re.sub(r"\b(?:und|oder|sowie)\s+(?:wie|dass|ob|was|warum|wo|wann|inwiefern|inwieweit)\b[^,;]*", " ", kern, flags=re.IGNORECASE)
+    return bool(kern.strip()) and not hat_finites_verb(kern)
 
 
 def strich_technik(mk: str) -> str:
@@ -5007,7 +5082,7 @@ def strich_technik(mk: str) -> str:
     erstes = (analyse.tokens(rest) or [""])[0].lower()
     if rest.strip() and not hat_finites_verb(rest) and erstes in analyse.PRAEPOSITIONEN | {"im", "am", "zum", "zur", "beim", "vom"}:
         return ("Gedankenstrich durch ein Komma ersetzen oder den Zusatz in Klammern setzen (Vorgabe: keine Gedankenstriche).")
-    if rest.strip() and not hat_finites_verb(rest):
+    if rest.strip() and aufzaehlung_ohne_verb(rest):
         return ("Gedankenstrich durch einen Doppelpunkt ersetzen – danach folgt eine Aufzählung bzw. Erklärung (Vorgabe: keine "
                 "Gedankenstriche).")
     return "Gedankenstrich durch Komma oder einen neuen Satz ersetzen (Vorgabe: keine Gedankenstriche)."
@@ -5134,7 +5209,8 @@ GENANNT = " (schon in Runde {runde} genannt – überspringen, wenn unpassend)"
 
 
 # Ein Auftrag je Satz: ausgenommen sind Nutzer-Vorgaben sowie Absatz- und Textaufträge (sie ändern keinen Satz)
-EINZEL_AUSGENOMMEN = {"gender", "gedankenstrich", "bindestrich", "absatz_teilen", "absatz_zusammen", "synonyme", "konsistenz"}
+EINZEL_AUSGENOMMEN = {"gender", "gedankenstrich", "bindestrich", "absatz_teilen", "absatz_zusammen", "synonyme", "konsistenz",
+                      "bereinigung"}
 # feste Reihenfolge im kombinierten Auftrag: erst der Umbau des Satzes, dann Wendungen, zuletzt Zeichen und Abkürzungen
 AUFTRAG_FOLGE = ["strohmann", "teilen", "mitte", "buendeln", "zickzack", "klammer", "klammer_zusatz", "kurz", "nebensatz", "kommas",
                  "fw_ankuendigung", "floskel", "gegenfolie", "fw_lassen", "fw_zeigt", "fw_ergibt", "fw_als", "fw_dass", "fw_dichte",
@@ -5343,7 +5419,7 @@ SELBSTHILFE = {
     "saetze_pro_absatz_cv": "Absätze ungleich lang machen: an einem thematischen Einschnitt teilen oder zwei kurze Absätze zusammenlegen",
     "ki_muster_pro_1000": "Wendungen wie „spielt eine zentrale Rolle“ durch die konkrete Aussage ersetzen",
     "abkuerzungen_pro_1000": "nur vorhandene Langformen kürzen („beispielsweise“ → „z. B.“), nichts einstreuen",
-    "semikolon_pro_1000": "Semikolons durch einen Punkt ersetzen",
+    "semikolon_pro_1000": "Semikolons durch Punkt ersetzen (in Aufzählungen durch Komma) – höchstens 1–2 je 800 Wörter",
 }
 FW_EHRLICH = ("Der größte Teil des Abstands liegt im Funktionswort-Profil. Es entsteht beim eigenen Formulieren; Einzelumbauten verbessern "
               "seinen Beitrag erfahrungsgemäß nur um etwa 1. Wirksam ist, einzelne Absätze mit demselben Inhalt in eigenen Worten neu zu "
@@ -5394,8 +5470,7 @@ def abkuerzung_potenzial(L: Lauf) -> float | None:
     if None in (koef, mu, sd, p50, wert) or not sd or not hasattr(L, "fokus"):
         return None
     n_max = sum(f["n"] for f in abk_plan(L)[0])
-    clip = modell.get("z_clip") or 3.0
-    z = lambda v: max(-clip, min(clip, (v - mu) / sd))  # noqa: E731
+    z = lambda v: modell_z(L.ts, k, v)  # noqa: E731
     return max(0.0, koef * (z(wert + 1000 * n_max / L.tok_fokus) - z(wert)))
 
 
@@ -5462,8 +5537,7 @@ def muster_rest(L) -> tuple[list[tuple[int, str, float]], float]:
             break
         gewaehlt.append((nr, fund, g))
         summe += g
-    clip = modell.get("z_clip") or 3.0
-    z = lambda v: max(-clip, min(clip, (v - mu) / sd))  # noqa: E731
+    z = lambda v: modell_z(L.ts, k, v)  # noqa: E731
     neu = max(km["mensch_p50"], km["wert"] - 1000.0 * summe / L.tok_fokus)
     return gewaehlt, max(0.0, koef * (z(neu) - z(km["wert"])))
 
@@ -5782,10 +5856,327 @@ def _fw_hebeltext(L: Lauf, mit_konstruktion: bool = True) -> str | None:
     return text
 
 
+# ---------------------------------------------------------------------------
+# Netto-Simulation je Auftrag (v7): Wirkung auf das Modell samt Nebeneffekten
+# ---------------------------------------------------------------------------
+
+NETTO_TOLERANZ = 0.01  # Δ-Logit, ab dem ein Auftrag als netto schädlich gilt (Schätzfehler der Simulation)
+NETTO_FAKTOR = 1.5  # kleine Lücke: Aufträge, bis ihre simulierte Summe das 1,5-Fache der Lücke erreicht
+KLEINE_LUECKE_P = 0.02  # Modell-Lücke in p, unter der höchstens KLEINE_LUECKE_MAX Aufträge kommen
+KLEINE_LUECKE_MAX = 2
+RAUSCHEN_P, RAUSCHEN_SCORE = 0.02, 1  # Lücke im Bereich der Messunsicherheit: höchstens ein Auftrag
+NEBENSATZ_FW = {"dass": ({"dass": 1}, {}), "weil": ({"weil": 1}, {"wegen": 1}), "da": ({"da": 1}, {"wegen": 1}),
+                "indem": ({"indem": 1}, {"durch": 1}), "wenn": ({"wenn": 1}, {"bei": 1}), "nachdem": ({"nachdem": 1}, {"nach": 1}),
+                "obwohl": ({"obwohl": 1}, {"trotz": 1})}
+
+
+def modell_z(ts: dict, k: str, v: float) -> float:
+    """z-Wert eines Modellmerkmals wie analyse.bewerte: einseitig am menschlichen Band gekappt (modell['kappen'], v7; ohne
+    Kappung unverändert) und auf ±Z_CLIP begrenzt."""
+    modell = ts.get("modell") or {}
+    kappe = (modell.get("kappen") or {}).get(k)
+    gk = getattr(analyse, "gekappt", None)
+    if kappe and gk:
+        v = gk(v, kappe)
+    elif kappe:
+        v = min(v, kappe["wert"]) if kappe.get("seite") == "oben" else max(v, kappe["wert"])
+    mu, sd_ = modell["mittel"][k], modell["sd"][k] or 1.0
+    clip = modell.get("z_clip") or getattr(analyse, "Z_CLIP", 3.0)
+    return max(-clip, min(clip, (v - mu) / sd_))
+
+
+def modell_delta(L: Lauf, dm: dict[str, float]) -> float:
+    """Δ-Logit des Modells, wenn sich Modellmerkmale (Wert im Fokus) um dm ändern."""
+    modell = L.ts.get("modell") or {}
+    koef = modell.get("koeffizienten") or {}
+    out = 0.0
+    for k, d in dm.items():
+        v0 = L.wert(k)
+        if k not in koef or not d or v0 is None or k not in (modell.get("mittel") or {}):
+            continue
+        out += koef[k] * (modell_z(L.ts, k, v0 + d) - modell_z(L.ts, k, v0))
+    return out
+
+
+def _fokus_woerter(L: Lauf) -> tuple[list[str], dict[int, tuple[int, int]]]:
+    """Wörter des Fokus (klein, wie analyse.py für MATTR) und je Satz der Bereich darin."""
+    if getattr(L, "_fw_liste", None) is None:
+        woerter, bereich = [], {}
+        for s in L.fokus:
+            a = len(woerter)
+            woerter.extend(t.lower() for t in analyse.tokens(s["text"]) if analyse.ist_wort(t))
+            bereich[s["nr"]] = (a, len(woerter))
+        L._fw_liste = (woerter, bereich)
+    return L._fw_liste
+
+
+def mattr_delta(L: Lauf, nr: int | None, weg: dict | None, dazu: dict | None, ersetzen: dict | None = None) -> float:
+    """Änderung von MATTR-100, wenn im Satz nr die Wörter weg entfallen und dazu hinzukommen bzw. im ganzen Fokus die Wörter
+    nach ersetzen ausgetauscht werden (Synonyme vereinheitlichen)."""
+    woerter, bereich = _fokus_woerter(L)
+    if len(woerter) < 2:
+        return 0.0
+    if getattr(L, "_mattr0", None) is None:
+        L._mattr0 = analyse.mattr(woerter, 100)
+    neu = list(woerter)
+    if ersetzen:
+        neu = [ersetzen.get(w, w) for w in neu]
+    if nr is not None and nr in bereich and (weg or dazu):
+        a, e = bereich[nr]
+        teil = neu[a:e]
+        for w, c in (weg or {}).items():
+            for _ in range(c):
+                if w in teil:
+                    teil.remove(w)
+        teil += [w for w, c in (dazu or {}).items() for _ in range(c)]
+        neu = neu[:a] + teil + neu[e:]
+    return analyse.mattr(neu, 100) - L._mattr0
+
+
+def ueberlappung_delta(L: Lauf, nr: int, plus: set[str], minus: set[str] = frozenset()) -> float:
+    """Änderung der Nachbarsatz-Überlappung (Jaccard der Inhaltsstämme benachbarter Sätze wie analyse.py), wenn Satz nr die
+    Stämme plus dazubekommt und minus verliert."""
+    staemme = [set(analyse.inhaltsstaemme(s.get("tokens") or analyse.tokens(s["text"]))) for s in L.fokus]
+    i = L.fokus_index.get(nr)
+    if i is None:
+        return 0.0
+
+    def mittel_ueberlappung(st):
+        werte = [len(a & b) / len(a | b) for a, b in zip(st, st[1:]) if a and b]
+        return sum(werte) / len(werte) if werte else 0.0
+    vorher = mittel_ueberlappung(staemme)
+    staemme[i] = (staemme[i] - set(minus)) | set(plus)
+    return mittel_ueberlappung(staemme) - vorher
+
+
+def _stamm_von(L: Lauf, wort: str) -> set[str]:
+    return set(analyse.inhaltsstaemme(analyse.tokens(wort))) if wort else set()
+
+
+def _klammer_basis(L: Lauf) -> tuple[int, float] | None:
+    if getattr(L, "_klammer_basis", None) is None:
+        spannen = [x for s in L.fokus for x in analyse.satzklammern(s["text"])]
+        L._klammer_basis = (len(spannen), float(sum(spannen))) if len(spannen) >= 5 else (0, 0.0)
+    n, summe = L._klammer_basis
+    return (n, summe) if n else None
+
+
+def _laengen_teile(L: Lauf, h: dict) -> dict[str, float]:
+    """Änderung der längenabhängigen Modellmerkmale (Satzlängen, Sätze pro Absatz) durch diesen einen Auftrag allein."""
+    pos = h.get("pos")
+    alt_l, neu_l = h.get("laengen_alt"), h.get("sim")
+    if pos is None and h.get("satz") in L.fokus_index:
+        pos = L.fokus_index[h["satz"]]
+    if pos is None:
+        return {}
+    if h["typ"] in ("zickzack", "klammer_zusatz") and not neu_l and h.get("weitere_nr"):
+        b = L.fokus_index.get(h["weitere_nr"][0])
+        if b is None or b != pos + 1:
+            return {}
+        alt_l = [L.fokus[pos]["woerter"], L.fokus[b]["woerter"]]
+        neu_l = [sum(alt_l) - (1 if h["typ"] == "klammer_zusatz" else 0)]
+    if not alt_l or not neu_l or pos + len(alt_l) > len(L.fokus):
+        return {}
+    basis = [[s["woerter"]] for s in L.fokus]
+    if [x[0] for x in basis[pos:pos + len(alt_l)]] != list(alt_l):
+        return {}
+    neu = list(basis)
+    neu[pos] = list(neu_l)
+    for j in range(1, len(alt_l)):
+        neu[pos + j] = []
+    lm = L.laengen_modell
+    w0 = lm.werte(laengen_folge(basis), L.absatz_anzahl(basis))
+    w1 = lm.werte(laengen_folge(neu), L.absatz_anzahl(neu))
+    return {k: w1[k] - w0[k] for k in w1 if k in w0 and (k in lm.koef or k == ABSATZ_CV)}
+
+
+def netto_wirkung(L: Lauf, h: dict) -> tuple[float, dict[str, float]]:
+    """Simulierter Netto-Δ-Logit eines Auftrags im Modell: die Zielwirkung (Längen, Satzklammer, Absätze, KI-Muster, Semikolons,
+    Abkürzungen, Funktionswort-Profil, Begriffsaufnahme) samt Nebeneffekten – Funktionswort-Profil bei „um … zu“ bzw.
+    „kann … werden“, neue kurze Satzklammern, MATTR (Wörter, die wegfallen oder dazukommen), Längenklassen bei Kürzungen."""
+    dm: dict[str, float] = {}
+    typ, nr = h["typ"], h.get("satz")
+    tok = max(1, L.tok_fokus)
+
+    def plus(k, d):
+        dm[k] = dm.get(k, 0.0) + d
+    # Längen und Sätze pro Absatz (Bündeln, Teilen, Mitte, Herauslösen, Kürzungen mit Längenwirkung, Zickzack, Angabe holen)
+    if h.get("laengen_alt") or typ in ("zickzack", "klammer_zusatz"):
+        for k, d in _laengen_teile(L, h).items():
+            plus(k, d)
+    if typ in ("absatz_teilen", "absatz_zusammen") and h.get("absatz_cv"):
+        plus(ABSATZ_CV, h["absatz_cv"][1] - h["absatz_cv"][0])
+    # Satzklammer: Zuwachs der Klammer-Aufträge, neue (kurze) Klammern der Funktionswort-Umbauten
+    kb = _klammer_basis(L)
+    if kb:
+        n, summe = kb
+        if typ in ("klammer", "klammer_zusatz") and h.get("klammer_zuwachs"):
+            plus("satzklammer_mittel", h["klammer_zuwachs"] / n)
+        if h.get("klammer_neu") is not None and h["klammer_neu"] >= 1:
+            plus("satzklammer_mittel", (summe + h["klammer_neu"]) / (n + 1) - summe / n)
+    # KI-Muster, Semikolons, Abkürzungen (je 1000 Token)
+    if typ in ("floskel", "gegenfolie", "strohmann") and h.get("muster_gewicht"):
+        plus("ki_muster_pro_1000", -1000.0 * h["muster_gewicht"] / tok)
+    if typ == "semikolon" and nr in L.nach_nr:
+        plus("semikolon_pro_1000", -1000.0 * max(1, L.masken.get(nr, "").count(";")) / tok)
+    if typ == "abkuerzung":
+        plus("abkuerzungen_pro_1000", 1000.0 * len(h.get("funde") or [h.get("fund")]) / tok)
+    # Funktionswörter und MATTR
+    weg, dazu = dict(h.get("fw_weg") or {}), dict(h.get("fw_dazu") or {})
+    if typ == "nebensatz" and nr in L.nach_nr and not weg:
+        mk = L.masken.get(nr, "")
+        for w, (wg, dz) in NEBENSATZ_FW.items():
+            if re.search(rf",\s+{w}\b", mk):
+                weg, dazu = dict(wg), dict(dz)
+                break
+    if typ == "kein_bezug" and h.get("paar"):
+        y, x = h["paar"]
+        weg, dazu = {y.lower(): 1}, {x.lower(): 1}
+    if typ == "anknuepfung" and h.get("bezug"):
+        dazu[h["bezug"].lower()] = dazu.get(h["bezug"].lower(), 0) + 1
+    if L.fw_profil and L.fw_diag:
+        if typ in FW_TYPEN and h.get("fw_delta") is not None:
+            d_llr = h["fw_delta"]
+        elif weg or dazu:
+            menge = set(L.fw_profil.get("woerter") or [])
+            d_llr = fw_delta(L.fw_diag, L.fw_profil, Counter({w: c for w, c in weg.items() if w in menge}),
+                             Counter({w: c for w, c in dazu.items() if w in menge}))
+        else:
+            d_llr = 0.0
+        if d_llr:
+            plus("fw_profil_llr_pro_1000", d_llr)
+    if (weg or dazu) and nr is not None:
+        plus("mattr_100", mattr_delta(L, nr, weg, dazu))
+    if typ == "synonyme" and h.get("zaehlung"):
+        z = {str(k).lower(): v for k, v in h["zaehlung"].items()} if isinstance(h["zaehlung"], dict) else {}
+        if len(z) >= 2:
+            haupt = max(z, key=lambda k: z[k])
+            plus("mattr_100", mattr_delta(L, None, None, None, {k: haupt for k in z if k != haupt}))
+    # Begriffsaufnahme: der Begriff des Vorsatzes steht danach auch in Satz nr
+    if typ == "anknuepfung" and h.get("bezug") and nr is not None:
+        plus("nachbarsatz_ueberlappung", ueberlappung_delta(L, nr, _stamm_von(L, h["bezug"])))
+    if typ == "kein_bezug" and h.get("paar") and nr is not None:
+        plus("nachbarsatz_ueberlappung", ueberlappung_delta(L, nr, _stamm_von(L, h["paar"][1]), _stamm_von(L, h["paar"][0])))
+    # Wörter pro Teilsatz: ein Teilsatz weniger (Nebensatz bzw. Komma → Nominalgruppe)
+    if typ in ("nebensatz", "fw_dass") or (typ == "kommas" and h.get("variante") == "nominal"):
+        t_sum = sum(_teilsaetze(s) for s in L.fokus)
+        if t_sum > 1:
+            plus("woerter_pro_teilsatz", tok / (t_sum - 1) - tok / t_sum)
+    teile = {k: round(modell_delta(L, {k: d}), 4) for k, d in dm.items() if d}
+    return round(sum(teile.values()), 4), teile
+
+
+# ---------------------------------------------------------------------------
+# Eingabeprüfung (v7): verklebte Wörter, Anteil wörtlicher Zitate, erwartete neue Formen
+# ---------------------------------------------------------------------------
+
+# Rückfall, solange analyse.py info['verklebt'] nicht liefert – dieselbe Regel wie dort: Satzzeichen direkt vor ≥ 2 Buchstaben
+# („erfasst.Merkmale“, „Note,wie“; nach . ! ? nur vor Großbuchstaben) oder ein Token über 25 Zeichen mit innerem Komma bzw.
+# Klein-Groß-Wechsel; ausgenommen Abkürzungen und Initialen, URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt, Binnen-I
+_VERKLEBT_RE = re.compile(r"(?<=\w)([.,;:!?])([A-Za-zÄÖÜäöüß]{2,})")
+_VERKLEBT_URL_RE = re.compile(r"://|^www\.|@|[A-Za-z0-9-]\.(?:de|com|org|net|eu|at|ch|edu|gov|info|io|uk|fr|it|nl)(?:/|$)")
+_VERKLEBT_DATEI_RE = re.compile(r"\.(?:pdf|docx?|xlsx?|csv|txt|py|md|json|html?|jpe?g|png|gif|zip|pptx?|odt|xml|sav|dta|tex|bib|js|r)$",
+                                re.IGNORECASE)
+_KLEIN_GROSS_RE = re.compile(r"[a-zäöüß](?!I(?:nnen|n\b))[A-ZÄÖÜ]")
+
+
+def _verklebt(kern: str) -> bool:
+    if _VERKLEBT_URL_RE.search(kern) or _VERKLEBT_DATEI_RE.search(kern):
+        return False
+    abk = set(getattr(analyse, "ABKUERZUNGEN", set())) | set(getattr(analyse, "MEHRDEUTIG", set()))
+    for m in _VERKLEBT_RE.finditer(kern):
+        zeichen, rechts = m.group(1), m.group(2)
+        links = kern[:m.start(1)]
+        if links[-1:].isdigit():
+            continue
+        lw = re.search(r"[A-Za-zÄÖÜäöüß]+$", links)
+        if not lw or len(lw.group(0)) == 1 or lw.group(0).lower() in abk:
+            continue
+        if zeichen in ".!?" and not rechts[0].isupper():
+            continue
+        if zeichen == ":" and re.match(r"in(?:nen)?$", rechts):
+            continue
+        return True
+    if len(kern) > 25:
+        if re.search(r"[^\W\d_],[^\W\d_]", kern):
+            return True
+        if any(len(teil) > 12 and _KLEIN_GROSS_RE.search(teil) for teil in kern.split("-")):
+            return True
+    return False
+
+
+def verklebte_stellen(saetze: list[dict]) -> list[dict]:
+    """Verklebte Wörter (PDF-Extraktion): [{'stelle', 'satz'}] wie analyse.py info['verklebt'] (Rückfall)."""
+    f = getattr(analyse, "verklebte_stellen", None)
+    if f:
+        try:
+            return f(saetze)
+        except Exception:  # noqa: BLE001 – Rückfall auf die eigene Erkennung
+            pass
+    out = []
+    for s in saetze:
+        for tok in s["text"].split():
+            kern = tok.strip("\"'„“”»«‚‘’()[]{}").rstrip(".,;:!?").rstrip("\"'“”»«’‘)]}")
+            if kern and _verklebt(kern):
+                out.append({"stelle": kern if len(kern) <= 60 else kern[:59] + "…", "satz": s.get("nr")})
+    return out
+
+
+def zitat_anteil_rueckfall(L: Lauf) -> float:
+    """Anteil der Wörter im Fokus, die in wörtlichen Zitaten stehen (Zitatmasken; Quellenklammern mitgezählt)."""
+    gesamt = zitiert = 0
+    for s in L.fokus:
+        alle = [t for t in analyse.tokens(s["text"]) if analyse.ist_wort(t)]
+        frei = [t for t in analyse.tokens(L.masken.get(s["nr"], s["text"]).replace(MASKE, " ")) if analyse.ist_wort(t)]
+        gesamt += len(alle)
+        zitiert += max(0, len(alle) - len(frei))
+    return round(zitiert / gesamt, 4) if gesamt else 0.0
+
+
+ZITAT_ANTEIL_HOCH = 0.25
+
+
+def _bereinigung(L: Lauf) -> None:
+    """Verklebte Wörter (fehlende Leerzeichen aus der PDF-Extraktion) zuerst trennen: sie verzerren Satzgrenzen, Satz- und
+    Wortlängen und damit die übrigen Messwerte (v6-Prüfung, fhws: allein die zwei Stellen getrennt → Score 51 → 56)."""
+    info = L.erg.get("info") or {}
+    stellen = info["verklebt"] if "verklebt" in info else verklebte_stellen(L.saetze)
+    if not stellen:
+        return
+    teile = [f"„{x['stelle']}“" + (f" (S{x['satz']})" if x.get("satz") else "") for x in stellen[:6]]
+    rest = f" und {len(stellen) - 6} weitere" if len(stellen) > 6 else ""
+    neu = sorted({t.lower() for x in stellen for t in re.split(r"[.,;:!?]|(?<=[a-zäöüß])(?=[A-ZÄÖÜ])", x["stelle"]) if len(t) > 2})
+    if L.hinweis("bereinigung", None, f"Verklebte Wörter trennen (verzerrt die Messung): {', '.join(teile)}{rest} – nur die fehlenden "
+                 "Leerzeichen einfügen, sonst nichts ändern.", 5.0, anfang="bereinigung:" + "|".join(x["stelle"] for x in stellen[:6])):
+        L.hinweise[-1].update({"stellen": stellen, "erwartet": neu})
+
+
+def erwartete_formen(L: Lauf, h: dict) -> list[str]:
+    """Neue Formen, die ein Auftrag erwartbar in den Text bringt (kleingeschrieben): Maskulinform der Gender-Vorgabe, Bezugsnomen
+    bei Anknüpfung bzw. Begriffsaufnahme, wiederholtes Nomen beim Teilen, Kurzform der Abkürzungen, getrennte Wörter der
+    Bereinigung. inhalt_check.py --verlauf zählt sie nicht als neuen Begriff."""
+    out = set(h.get("erwartet") or [])
+    typen = set(h.get("typen") or [h["typ"]])
+    if "abkuerzung" in typen:
+        kurz = re.search(r"als „([^“]+)“", h.get("text") or "")
+        if kurz:
+            out |= {kurz.group(1).lower(), kurz.group(1).lower().replace(" ", "")}
+    if "anknuepfung" in typen and h.get("bezug"):
+        out.add(h["bezug"].lower())
+    if "kein_bezug" in typen and h.get("paar"):
+        out.add(h["paar"][1].lower())
+    if typen & {"teilen", "mitte", "kommas"} and h.get("satz") in L.nach_nr:
+        mk = L.masken.get(h["satz"], L.nach_nr[h["satz"]]["text"])
+        nomen = [t for t in analyse.tokens(mk) if t[:1].isupper() and analyse.ist_wort(t) and t.lower() not in analyse.FUNKTIONSWOERTER]
+        out |= {w.lower() for w in nomen[1:4]}  # Subjekt bzw. Bezugswort, das der zweite Satz als Nomen wiederholt
+    return sorted(out)
+
+
 def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15, roh: bool = False) -> dict:
     """Misst den Text und erzeugt priorisierte, satzgenaue Hinweise. roh=True liefert zusätzlich 'hinweise_roh'
     (alle Hinweise vor der Auswahl und vor dem Filter bei „Ziel erreicht“, für Auswertungen)."""
     L = Lauf(text, verlauf)
+    _bereinigung(L)
     _hebel_priorisieren(L)
     _waechter(L)
     _wirksamkeit(L)
@@ -5811,16 +6202,113 @@ def coache(text: str, verlauf: dict | None = None, max_hinweise: int = 15, roh: 
     return _ergebnis(L, max_hinweise, roh)
 
 
-def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
-    """Auswahl (Ziel erreicht / Teilziel / Reihum nach Hebel), Hebelanzeige, Verlaufseintrag und Diagnose."""
-    bew, ts, diag, kz = L.bew, L.ts, L.diag, L.kz
+VORGABE_TYPEN = {"gender", "gedankenstrich", "bindestrich"}  # Nutzer-Vorgaben: eigener Abschnitt, ändern den Score nicht
+
+
+def _ziele(L: Lauf) -> dict:
+    """Ziele und Lücken: Modell (p_mensch ≥ ziel_p_mensch) und einseitiger Score (score_ki ≥ ziel_score_ki – Abweichungen zur
+    menschlichen Seite zählen nicht); solange die Messseite diese Felder nicht liefert, der zweiseitige Score mit ziel_score."""
+    bew, ts = L.bew, L.ts
     ziel_p = bew.get("ziel_p_mensch") or ts.get("ziel_p_mensch") or 0.5
-    ziel_score = ts.get("ziel_score") or bew.get("score_schwelle") or ts.get("score_schwelle") or 60
+    ziel2 = ts.get("ziel_score") or bew.get("ziel_score") or bew.get("score_schwelle") or ts.get("score_schwelle") or 60
+    ziel_ki = bew.get("ziel_score_ki") or ts.get("ziel_score_ki")
+    if bew.get("score_ki") is not None and ziel_ki is not None:
+        score, ziel_score, einseitig = bew["score_ki"], ziel_ki, True
+    else:
+        score, ziel_score, einseitig = bew.get("score"), ziel2, False
+    p = bew.get("p_mensch")
+    ganz = math.ceil(ziel_score - 1e-9)
+    luecke_p = max(0.0, ziel_p - p) if p is not None else 0.0
+    return {"ziel_p": ziel_p, "ziel_score": ziel_score, "ziel_score_anzeige": ganz, "score": score, "einseitig": einseitig,
+            "p": p, "luecke_p": luecke_p, "luecke_score": max(0, ganz - (score or 0)),
+            "luecke_logit": (_logit(ziel_p) - _logit(p)) if luecke_p > 0 else 0.0}
+
+
+def _teilziel_familien(L: Lauf, fehlt: float) -> list[str]:
+    """Hebel der gewichtigsten Kennzahlen auf der KI-Seite, die eine Score-Lücke schließen (je Kennzahl gelb → grün bzw.
+    rot → gelb ≈ 50 · Gewicht / Gewichtssumme Punkte)."""
+    bew, kz, diag = L.bew, L.kz, L.diag
+    gsum = sum(max(0.0, float(z["gewicht"] or 0)) for z in bew["kennzahlen"] if z["bewertet"]) or 1.0
+    offen = sorted((z for z in kz.values() if z["bewertet"] and z["status"] != "gruen" and z["seite"] == "ki"
+                    and not (z["status"] == "gelb" and z.get("unsicher"))), key=lambda z: -(z["gewicht"] or 0))
+    familien, punkte = [], 0.0
+    semikolon_ok = semikolon_zahl(L) <= semikolon_erlaubt(L)
+    for z in offen:
+        if z["id"] == "semikolon_pro_1000" and semikolon_ok:
+            continue  # höchstens 1–2 Semikolons je 800 Wörter: unauffällig, kein Score-Hebel
+        h = HEBEL_VON.get(z["id"])
+        if h == "satzlaenge" and diag.get("modus") == "teilen":
+            if not diag.get("ueberkorrektur"):
+                continue  # lange Sätze auf der Gegenseite ohne Überkorrektur: kein Teilen-Auftrag (Info „menschlicher als typisch“)
+            h = "satzlaenge_bremse"
+        punkte += 50.0 * max(0.0, float(z["gewicht"] or 0)) / gsum
+        if h and h not in familien:
+            familien.append(h)
+        if punkte >= fehlt:
+            break
+    return familien
+
+
+def semikolon_zahl(L: Lauf) -> int:
+    """Semikolons im Fokus außerhalb wörtlicher Zitate (ohne Zahlzeichen)."""
+    f = getattr(analyse, "_ohne_zahlzeichen", lambda x: x)
+    return sum(f(L.masken.get(s["nr"], s["text"])).count(";") for s in L.fokus)
+
+
+def semikolon_erlaubt(L: Lauf) -> int:
+    """Semikolons, die in einem Text dieser Länge unauffällig sind: höchstens 1–2 je 800 Wörter (Mensch P90 ≈ 2,4 je 1000)."""
+    woerter = sum(s["woerter"] for s in L.fokus)
+    return max(1, round(2 * woerter / 800))
+
+
+def _semikolon_vorher(L: Lauf) -> int | None:
+    """Semikolons der Vorrunde: gespeichert (v7) oder aus dem Wert je 1000 Token geschätzt (ältere Verläufe)."""
+    v = L.vorher or {}
+    if (v.get("zaehler") or {}).get("semikolon") is not None:
+        return v["zaehler"]["semikolon"]
+    wert = ((v.get("kennzahlen") or {}).get("semikolon_pro_1000") or {}).get("wert")
+    return round(wert * L.tok_fokus / 1000) if wert is not None else None
+
+
+def menschlicher_als_typisch(L: Lauf, ausser: set[str]) -> list[dict]:
+    """Kennzahlen jenseits P10/P90 auf der der KI abgewandten Seite (Feld jenseits_band der Messseite; Rückfall: selbst
+    berechnet). Kein Auftrag – auf menschlichen Texten ist das Eigenart, bei Claudes eigenem Entwurf eine Überkorrektur, die der
+    Schreib-Skill zurücknimmt. Bewertete und Modell-Kennzahlen zuerst."""
+    out = []
+    for z in L.bew.get("kennzahlen", []):
+        if z["id"] in ausser or z["id"] not in L.ref:
+            continue
+        jb = z.get("jenseits_band")
+        if jb is None:
+            jb = z["status"] == "rot" and seite_von(z["wert"], L.ref[z["id"]]) == "gegen"
+        if jb:
+            out.append(z)
+    return sorted(out, key=lambda z: (not (z["bewertet"] or z.get("nur_modell")), -(z.get("gewicht") or 0), z["id"]))
+
+
+def _p_anzeige(p: float, ziel: float) -> str:
+    """p in Prozent; mit einer Nachkommastelle, wenn es weniger als einen Prozentpunkt vom Ziel entfernt ist (85,6 % statt 86 %)."""
+    if p is None:
+        return "–"
+    if abs(p - ziel) < 0.01 and round(100 * p) == round(100 * ziel) and p != ziel:
+        return f"{100 * p:.1f}".replace(".", ",") + " %"
+    return f"{round(100 * p)} %"
+
+
+def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
+    """Auswahl (Ziel erreicht / Messunsicherheit / Teilziel / Modell-Lücke mit Netto-Simulation), Hebelanzeige, Verlaufseintrag
+    und Diagnose. Vorgaben (Gender, Gedankenstrich) stehen getrennt und zählen nicht aufs Limit; die Bereinigung verklebter Wörter
+    steht immer zuerst."""
+    bew, ts, diag, kz = L.bew, L.ts, L.diag, L.kz
+    Z = _ziele(L)
+    ziel_p, ziel_score = Z["ziel_p"], Z["ziel_score"]
     ziel_rot = ts.get("ziel_rot_max")
     rot = [z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "rot"]
-    ziel_erreicht = bool(bew.get("verfuegbar") and (bew.get("score") or 0) >= ziel_score
-                         and (bew.get("p_mensch") is None or bew["p_mensch"] >= ziel_p)
+    ziel_erreicht = bool(bew.get("verfuegbar") and (Z["score"] or 0) >= ziel_score
+                         and (Z["p"] is None or Z["p"] >= ziel_p)
                          and (ziel_rot is None or len(rot) <= ziel_rot))
+    rauschen = bool(bew.get("verfuegbar") and not ziel_erreicht and Z["luecke_p"] <= RAUSCHEN_P
+                    and Z["luecke_score"] <= RAUSCHEN_SCORE)
     gesehen, eindeutig = set(), []
     for h in sorted(L.hinweise, key=lambda h: -h["gewicht"]):
         schluessel = (h["typ"], h["satz"], h["absatz"], h["text"] if h["satz"] is None else h["text"][:40])
@@ -5828,53 +6316,109 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             gesehen.add(schluessel)
             eindeutig.append(h)
     alle_roh = list(eindeutig)
+    bereinigung = [h for h in eindeutig if h["typ"] == "bereinigung"]
+    vorgaben = [h for h in eindeutig if h["typ"] in VORGABE_TYPEN]
+    eindeutig = [h for h in eindeutig if h["typ"] not in VORGABE_TYPEN and h["typ"] != "bereinigung"]
+    for h in eindeutig:
+        h["netto_logit"], h["netto_teile"] = netto_wirkung(L, h)
+    # Semikolons: höchstens 1–2 je 800 Wörter sind unauffällig; bei „Ziel erreicht“ nur, wenn die Anzahl gestiegen ist; ohne
+    # Modell-Lücke nur so viele Aufträge, wie über dieser Zahl liegen (mit Modell-Lücke entscheidet die Netto-Simulation)
+    n_semi, n_semi_alt = semikolon_zahl(L), _semikolon_vorher(L)
+    semi = [h for h in eindeutig if h["typ"] == "semikolon"]
     if ziel_erreicht:
-        # nur Nutzer-Vorgaben und hochpräzise Hinweise (Semikolon, KI-Muster mit Gewicht ≥ 1,5); dazu die Satzlängen-Bremse,
-        # wenn der Verlauf zeigt, dass der Text über das menschliche Band hinaus getrieben wurde
+        frei_semi = max(0, n_semi - n_semi_alt) if n_semi_alt is not None else 0
+    elif Z["luecke_p"] > 0:
+        frei_semi = len(semi)
+    else:
+        frei_semi = max(0, n_semi - semikolon_erlaubt(L))
+    weg_semi = {id(h) for h in semi[frei_semi:]}
+    eindeutig = [h for h in eindeutig if id(h) not in weg_semi]
+    if ziel_erreicht:
+        # nur hochpräzise Hinweise (Semikolon, KI-Muster mit Gewicht ≥ 1,5); dazu die Satzlängen-Bremse, wenn der Verlauf zeigt,
+        # dass der Text über das menschliche Band hinaus getrieben wurde
         bremse = diag["ueberkorrektur"]  # nur mit Beleg aus dem Verlauf: ohne ihn ist ein Text am Ziel auch mit langen Sätzen unauffällig
         teilen_h = [h for h in eindeutig if h["typ"] == "teilen"][:2] if bremse else []
         eindeutig = [h for h in eindeutig if h["typ"] in ZIEL_TYPEN
                      and (h["typ"] != "floskel" or h.get("muster_gewicht", 0) >= 1.5)] + teilen_h
         max_hinweise = min(max_hinweise, ZIEL_MAX)
     teilziel = None
-    if bew.get("verfuegbar") and not ziel_erreicht and bew.get("p_mensch") is not None and bew["p_mensch"] >= ziel_p \
-            and (bew.get("score") or 0) < ziel_score:
-        # Modell-Ziel erreicht, nur der Score fehlt: nur die Hebel der gewichtigsten Kennzahlen, die die Lücke schließen
-        fehlt = ziel_score - (bew.get("score") or 0)
+    if bew.get("verfuegbar") and not ziel_erreicht and not rauschen and Z["p"] is not None and Z["p"] >= ziel_p \
+            and (Z["score"] or 0) < ziel_score:
+        # Modell-Ziel erreicht, nur der Score fehlt: nur die Hebel der gewichtigsten Kennzahlen, die die Lücke schließen; kein
+        # Auftrag, der das Modell simuliert unter das Ziel drückte
+        fehlt = Z["luecke_score"]
+        familien = _teilziel_familien(L, fehlt)
         gsum = sum(max(0.0, float(z["gewicht"] or 0)) for z in bew["kennzahlen"] if z["bewertet"]) or 1.0
-        offen = sorted((z for z in kz.values() if z["bewertet"] and z["status"] != "gruen" and z["seite"] == "ki"
-                        and not (z["status"] == "gelb" and z.get("unsicher"))), key=lambda z: -(z["gewicht"] or 0))
-        familien, punkte = [], 0.0
-        for z in offen:
-            punkte += 50.0 * max(0.0, float(z["gewicht"] or 0)) / gsum
-            h = HEBEL_VON.get(z["id"])
-            if h == "satzlaenge" and diag["modus"] == "teilen":
-                h = "satzlaenge_bremse"
-            if h and h not in familien:
-                familien.append(h)
-            if punkte >= fehlt:
-                break
-        teilziel = {"fehlt": round(fehlt, 1), "hebel": familien}
-        eindeutig = [h for h in eindeutig if h["hebel"] in familien or h["hebel"] == "vorgaben"
-                     or (h["typ"] == "teilen" and diag["ueberkorrektur"])]
+        gegen = 0.0 if Z["einseitig"] else sum(
+            (50.0 if z["status"] == "gelb" else 100.0) * max(0.0, float(z["gewicht"] or 0)) / gsum
+            for z in kz.values() if z["bewertet"] and z["status"] != "gruen" and z["seite"] == "gegen")
+        teilziel = {"fehlt": fehlt, "hebel": familien, "gegenseite_punkte": round(gegen, 1)}
+        eindeutig = [h for h in eindeutig if (h["hebel"] in familien or h["hebel"] == "vorgaben" or (h["typ"] == "teilen" and diag["ueberkorrektur"]))
+                     and 1 / (1 + math.exp(-(_logit(Z["p"]) + h["netto_logit"]))) >= ziel_p]
         max_hinweise = min(max_hinweise, 8)
+    if not ziel_erreicht and Z["luecke_p"] > 0:
+        # Modell-Lücke: kein Auftrag, der das Modell simuliert netto verschlechtert
+        schaedlich = [h for h in eindeutig if h["netto_logit"] < -NETTO_TOLERANZ and h["typ"] != "teilen"]
+        if schaedlich:
+            L.unterdrueckt["netto_schaedlich"] += len(schaedlich)
+            eindeutig = [h for h in eindeutig if not any(h is x for x in schaedlich)]
     # kein Auftrag, dessen Typ im selben Bericht als ausgesetzt gemeldet wird
     eindeutig = [h for h in eindeutig if h["typ"] not in L.ausgesetzt]
     eindeutig = ein_auftrag_je_satz(eindeutig, {s["nr"]: L.masken.get(s["nr"], s["text"]) for s in L.saetze})
+    messunsicherheit = None
+    if rauschen:
+        # im Bereich der Messunsicherheit: ausdrücklich sagen, höchstens der eine Auftrag mit dem größten Effekt
+        if Z["luecke_p"] > 0:
+            pos = [h for h in eindeutig if h.get("netto_logit", 0) > NETTO_TOLERANZ]
+            bester = max(pos, key=lambda h: h["netto_logit"]) if pos else None
+        else:
+            familien = _teilziel_familien(L, max(1, Z["luecke_score"]))
+            pos = [h for h in eindeutig if h["hebel"] in familien and h.get("netto_logit", 0) >= -NETTO_TOLERANZ]
+            bester = min(pos, key=lambda h: (familien.index(h["hebel"]), -h.get("netto_logit", 0))) if pos else None
+        eindeutig = [bester] if bester else []
+        messunsicherheit = {"luecke_p": round(Z["luecke_p"], 4), "luecke_score": Z["luecke_score"]}
+    elif not ziel_erreicht and Z["luecke_p"] > 0:
+        # kleine Modell-Lücke: Aufträge nach simuliertem Netto-Δ-Logit, bis die Summe das 1,5-Fache der Lücke erreicht (bei
+        # einer Lücke unter 0,02 höchstens zwei); fehlt zusätzlich Score, kommen die Score-Hebel dazu
+        luecke = Z["luecke_logit"]
+        pos = sorted((h for h in eindeutig if h.get("netto_logit", 0) > NETTO_TOLERANZ), key=lambda h: -h["netto_logit"])
+        klein = Z["luecke_p"] < KLEINE_LUECKE_P
+        if klein or sum(h["netto_logit"] for h in pos) >= NETTO_FAKTOR * luecke:
+            gewaehlt, summe = [], 0.0
+            for h in pos:
+                if summe >= NETTO_FAKTOR * luecke or (klein and len(gewaehlt) >= KLEINE_LUECKE_MAX):
+                    break
+                gewaehlt.append(h)
+                summe += h["netto_logit"]
+            score_teil = []
+            if Z["luecke_score"] > RAUSCHEN_SCORE:
+                familien = _teilziel_familien(L, Z["luecke_score"])
+                score_teil = [h for h in eindeutig if h["hebel"] in familien and not any(h is x for x in gewaehlt)]
+                teilziel = {"fehlt": Z["luecke_score"], "hebel": familien, "mit_modell": True}
+            L.auftragsgrenze = {"luecke_logit": round(luecke, 3), "summe_logit": round(summe, 3), "gewaehlt": len(gewaehlt),
+                                "verworfen": len(eindeutig) - len(gewaehlt) - len(score_teil)}
+            eindeutig = gewaehlt + score_teil[:max(0, 8 - len(gewaehlt))]
     stapel: dict[str, list[dict]] = {}
-    for h in eindeutig:
+    for h in sorted(eindeutig, key=lambda h: -h["gewicht"]):  # schon genannte (herabgestuft) machen Platz für neue
         stapel.setdefault(h["hebel"], []).append(h)
     hebel = L.hebel
-    hebel_folge = sorted(stapel, key=lambda h: (h != "vorgaben", -hebel.get(h, {}).get("prioritaet", 0)))
+    hebel_folge = sorted(stapel, key=lambda h: -hebel.get(h, {}).get("prioritaet", 0))
     auswahl = []
     while len(auswahl) < max_hinweise and any(stapel.values()):
         for h in hebel_folge:
             if stapel[h] and len(auswahl) < max_hinweise:
                 auswahl.append(stapel[h].pop(0))
+    auswahl = bereinigung + auswahl
+    if getattr(L, "auftragsgrenze", None) is not None:
+        # die angezeigten Aufträge: reichen sie simuliert für das 1,5-Fache der Lücke? (sonst bleibt die Diagnose)
+        L.auftragsgrenze["summe_logit"] = round(sum(max(0.0, h.get("netto_logit") or 0.0) for h in auswahl), 3)
+        L.auftragsgrenze["reicht"] = L.auftragsgrenze["summe_logit"] >= NETTO_FAKTOR * Z["luecke_logit"]
 
     # Hebel-Anzeige: im TEILEN-Modus immer die Bremse statt „Lange Sätze ja … KI-Texte bleiben im mittleren Band“ – auch ohne
     # Teilen-Auftrag, sonst lädt der Hebeltext zu weiteren langen Sätzen ein
-    if diag["modus"] == "teilen" and ("satzlaenge" in hebel or any(h["typ"] == "teilen" for h in L.hinweise)):
+    if diag["modus"] == "teilen" and not diag.get("ueberkorrektur") and not any(h["typ"] == "teilen" for h in L.hinweise):
+        hebel.pop("satzlaenge", None)  # lange Sätze auf der Gegenseite ohne Überkorrektur: Info „Menschlicher als typisch“, kein Hebel
+    elif diag["modus"] == "teilen" and ("satzlaenge" in hebel or any(h["typ"] == "teilen" for h in L.hinweise)):
         alt = hebel.pop("satzlaenge", None)
         hebel.setdefault("satzlaenge_bremse", {"prioritaet": max(1.0, alt["prioritaet"] if alt else 0.0),
                                                "kennzahlen": [kz[k] for k in ("anteil_lange_saetze", "satzlaenge_mittel",
@@ -5922,39 +6466,65 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
                 "kennzahlen": [{k: z.get(k) for k in ("id", "name", "wert", "mensch_p25", "mensch_p50", "mensch_p75", "ki_p50", "status",
                                                       "richtung", "nur_modell", "beitrag", "bewertet")} for z in hebel[h]["kennzahlen"]]}
 
-    ersetzbar = sorted({w for h in auswahl for w in h.get("ersetzbar", [])})
+    ersetzbar = sorted({w for h in auswahl + vorgaben for w in h.get("ersetzbar", [])})
+    erwartet = sorted({w for h in auswahl + vorgaben for w in erwartete_formen(L, h)})
     stehen_lassen = [] if ziel_erreicht else [x for x in L.stehen_lassen if L.von <= x["satz"] <= L.bis]
     werte = {k: L.wert(k) for k in set(ZIEL_KENNZAHL.values())}
     traeger = {"buendeln": "buendeln", "teilen": "teilen", "mitte": "mitte"}.get(diag.get("modus"))
     modus_json = "ausgesetzt" if traeger and traeger in L.ausgesetzt else diag["modus"]
-    diagnose = None if ziel_erreicht or teilziel else _diagnose(L, auswahl, ziel_p)
+    # keine Diagnose, wenn die Auftragsgrenze greift: die genannten Stellen reichen simuliert für das 1,5-Fache der Lücke
+    diagnose = None if ziel_erreicht or (teilziel and not teilziel.get("mit_modell")) or rauschen \
+        or (getattr(L, "auftragsgrenze", None) or {}).get("reicht") else _diagnose(L, auswahl, ziel_p)
     diagnose_wie = None
-    if not diagnose and not ziel_erreicht and not teilziel and text_unveraendert(L) and (L.vorher or {}).get("diagnose_kurz"):
+    if not diagnose and not ziel_erreicht and not teilziel and not rauschen and text_unveraendert(L) \
+            and (L.vorher or {}).get("diagnose_kurz"):
         diagnose_wie = dict(L.vorher["diagnose_kurz"], messung=len(L.messungen))  # nur erneut gemessen: Kurzfassung
-    stand = {"score": bew.get("score"), "p_mensch": bew.get("p_mensch"),
+    hinweis_felder = ("typ", "typen", "anfang", "satz", "ziel", "ziel_wert", "laenge", "weitere", "zaehlung", "pos", "laengen_alt", "sim",
+                      "variante", "teilsaetze", "netto_logit")
+    stand = {"score": bew.get("score"), "score_ki": bew.get("score_ki"), "p_mensch": bew.get("p_mensch"),
              "kennzahlen": {z["id"]: {"wert": z["wert"], "status": z["status"]} for z in bew.get("kennzahlen", []) if z["bewertet"]},
              "roh": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in L.roh_jetzt.items()},
              "werte": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in werte.items() if v is not None},
              "bloecke": [{k: b.get(k) for k in ("nr", "satz_von", "satz_bis", "p_mensch", "score")} for b in L.bloecke],
-             "hinweise": [{k: h.get(k) for k in ("typ", "typen", "anfang", "satz", "ziel", "ziel_wert", "laenge", "weitere", "zaehlung",
-                                                 "pos", "laengen_alt", "sim", "variante", "teilsaetze")
-                           if k in ("typ", "anfang", "satz") or h.get(k) is not None} for h in auswahl],
-             "ersetzbar": ersetzbar, "satzlaengen_modus": modus_json, "laengen": [x["woerter"] for x in L.fokus],
+             "hinweise": [{k: h.get(k) for k in hinweis_felder if k in ("typ", "anfang", "satz") or h.get(k) is not None}
+                          for h in auswahl + vorgaben],
+             "ersetzbar": ersetzbar, "erwartet": erwartet, "satzlaengen_modus": modus_json, "laengen": [x["woerter"] for x in L.fokus],
+             "zaehler": {"semikolon": n_semi},
              "stehen_lassen": [x["anfang"] for x in stehen_lassen],
              "diagnose_kurz": ({k: diagnose[k] for k in ("grenze", "luecke_logit", "erreichbar_logit", "stellenlos_logit", "fw_dominant")}
                                if diagnose else (L.vorher or {}).get("diagnose_kurz") if diagnose_wie else None)}
     fortschritt = None
     vorher = L.vorher
+    ueberkorrektur = list(L.ueberkorrektur)
+    if ziel_erreicht:
+        # am Ziel warnt der Coach erst jenseits P90/P10 (gelbe Verschiebungen innerhalb des menschlichen Bands sind unauffällig)
+        ueberkorrektur = [u for u in ueberkorrektur if u["id"] in L.ref and status_von(u["wert"], L.ref[u["id"]]) == "rot"]
     if vorher:
         reihen = ["rot", "gelb", "gruen"]
         alt_kz = vorher.get("kennzahlen") or {}
         besser = [k for k, v in stand["kennzahlen"].items() if k in alt_kz and reihen.index(v["status"]) > reihen.index(alt_kz[k]["status"])]
         schlechter = [k for k, v in stand["kennzahlen"].items() if k in alt_kz and reihen.index(v["status"]) < reihen.index(alt_kz[k]["status"])]
-        fortschritt = {"score_vorher": vorher.get("score"), "p_mensch_vorher": vorher.get("p_mensch"), "besser": besser, "schlechter": schlechter,
+        if "semikolon_pro_1000" in schlechter and n_semi_alt is not None and n_semi <= n_semi_alt:
+            schlechter.remove("semikolon_pro_1000")  # Hysterese: Status kippt nur durch die Wortzahl, kein Semikolon dazugekommen
+        einseitig_vorher = Z["einseitig"] and vorher.get("score_ki") is not None
+        fortschritt = {"score_vorher": vorher.get("score_ki") if einseitig_vorher else vorher.get("score"),
+                       "p_mensch_vorher": vorher.get("p_mensch"), "besser": besser, "schlechter": schlechter,
                        "messung_nr": len(L.messungen) + 1,
                        "mechanisch_verlaengert": mechanisch_verlaengert(vorher.get("roh", {}), stand["roh"]),
-                       "ueberkorrektur": L.ueberkorrektur, "ausgesetzt": sorted(L.ausgesetzt), "wirkung": L.wirkung,
+                       "ueberkorrektur": ueberkorrektur, "ausgesetzt": sorted(L.ausgesetzt), "wirkung": L.wirkung,
                        "unveraendert": text_unveraendert(L)}
+    # menschlicher als typisch: Info, kein Auftrag (auch bei „Ziel erreicht“); ohne die schon gemeldeten Überkorrekturen und ohne
+    # die Werte der Warnung „Schon jenseits des menschlichen Bereichs“, solange sie erscheint
+    schon = {u["id"] for u in ueberkorrektur if u["art"] == "Überkorrektur"}
+    if not ziel_erreicht:
+        schon |= {j["id"] for j in L.jenseits}
+    menschlich = [{k: z.get(k) for k in ("id", "name", "wert", "mensch_p10", "mensch_p90", "bewertet", "nur_modell")}
+                  for z in menschlicher_als_typisch(L, schon)]
+    menschlich_unbewertet = sum(1 for z in menschlich if not (z["bewertet"] or z["nur_modell"]))
+    menschlich = [z for z in menschlich if z["bewertet"] or z["nur_modell"]]
+    info = L.erg.get("info") or {}
+    verklebt = info["verklebt"] if "verklebt" in info else verklebte_stellen(L.saetze)
+    zitat_anteil = info["zitat_anteil"] if info.get("zitat_anteil") is not None else zitat_anteil_rueckfall(L)
 
     # „Schon gut“ nur, was im Modell kaum Richtung KI zieht (sonst stünde z. B. „keine Abkürzungen“ als gut da)
     gruen = sorted([z for z in bew.get("kennzahlen", []) if z["bewertet"] and z["status"] == "gruen"
@@ -5966,15 +6536,20 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
     diag_aus["mittlere_p75"] = L.p_("anteil_mittlere_saetze", "p75")
     diag_aus["selbst_buendeln"] = buendel_raum(L)  # Spielraum für weitere lange Sätze ohne Auftrag (0 = keiner)
     fw = kz.get("fw_profil_llr_pro_1000")
-    ergebnis = {"info": L.erg["info"], "bewertung": {k: bew.get(k) for k in ("score", "p_mensch", "verfuegbar")},
+    ergebnis = {"info": L.erg["info"], "bewertung": {k: bew.get(k) for k in ("score", "score_ki", "p_mensch", "verfuegbar")},
                 "hebel": [hebel_eintrag(h) for h in reihenfolge if h in HEBEL_TEXT],
-                "hinweise": auswahl, "anzahl_hinweise_gesamt": len(eindeutig),
+                "hinweise": auswahl, "anzahl_hinweise_gesamt": len(eindeutig) + len(bereinigung),
+                "vorgaben": vorgaben, "gender_info": list(L.gender_info),
                 "rot": len(rot), "gut": [z["name"] for z in gruen[:4]], "stand": stand, "fortschritt": fortschritt,
-                "ziel_p_mensch": ziel_p, "ziel_score": ziel_score, "ziel_rot_max": ziel_rot,
+                "ziel_p_mensch": ziel_p, "ziel_score": ziel_score, "ziel_score_anzeige": Z["ziel_score_anzeige"],
+                "score_ziel_wert": Z["score"], "score_einseitig": Z["einseitig"], "ziel_rot_max": ziel_rot,
+                "messunsicherheit": messunsicherheit, "auftragsgrenze": getattr(L, "auftragsgrenze", None),
+                "menschlicher_als_typisch": menschlich, "menschlicher_unbewertet": menschlich_unbewertet,
+                "verklebt": verklebt, "zitat_anteil": zitat_anteil,
                 "bloecke": L.bloecke, "blockmodus": bool(bew.get("blockmodus")),
                 "fokus": {"block": L.fokus_block["nr"] if L.fokus_block else None, "satz_von": L.von, "satz_bis": L.bis},
-                "satzlaengen": diag_aus, "ersetzbar": ersetzbar, "ziel_erreicht": ziel_erreicht, "teilziel": teilziel,
-                "jenseits": L.jenseits, "fw_wert": fw["wert"] if fw else None,
+                "satzlaengen": diag_aus, "ersetzbar": ersetzbar, "erwartet": erwartet, "ziel_erreicht": ziel_erreicht,
+                "teilziel": teilziel, "jenseits": L.jenseits, "fw_wert": fw["wert"] if fw else None,
                 "funktionswoerter": {k: L.fw_diag[k] for k in ("n", "top", "llr")} if L.fw_diag else None,
                 "ausgesetzt": {t: g for t, g in L.aussetz_grund.items()}, "unterdrueckt": dict(L.unterdrueckt),
                 "diagnose": diagnose, "diagnose_wie": diagnose_wie, "stehen_lassen": stehen_lassen,
@@ -6117,16 +6692,27 @@ def bericht(c: dict) -> str:
     out = ["## Stil-Coach", ""]
     b, info = c["bewertung"], c["info"]
     kopf = f"{info['woerter']} Wörter · {info['saetze']} Sätze · {info['absaetze']} Absätze"
+    zp = c.get("ziel_p_mensch") or 0.86
     if b.get("verfuegbar"):
-        kopf += f" · **Score {b['score']}/100** · Modell: {round(100 * (b['p_mensch'] or 0))} % menschlich · {c['rot']} Kennzahlen rot"
+        score_txt = (f"**Score {c['score_ziel_wert']}/100** (KI-Seite; beidseitig {b['score']})"
+                     if c.get("score_einseitig") and c.get("score_ziel_wert") != b["score"] else f"**Score {b['score']}/100**")
+        kopf += f" · {score_txt} · Modell: {_p_anzeige(b['p_mensch'] or 0, zp)} menschlich · {c['rot']} Kennzahlen rot"
     out.append(kopf)
     block_hinweis = getattr(analyse, "BLOCK_HINWEIS", None)
     for w in info["warnungen"]:
         out.append(f"\n> {'ℹ️' if block_hinweis and w.startswith(block_hinweis) else '⚠️'} {w}")
+    if c.get("verklebt") and not any("verklebt" in w for w in info["warnungen"]):
+        out.append(f"\n> ⚠️ {len(c['verklebt'])} verklebte Stelle{'n' if len(c['verklebt']) > 1 else ''} ohne Leerzeichen – solange sie "
+                   "dastehen, sind die übrigen Messwerte unsicher (Satzgrenzen, Satz- und Wortlängen).")
+    elif c.get("verklebt"):
+        out.append("\n> ⚠️ Solange die verklebten Wörter dastehen, sind die übrigen Messwerte unsicher – zuerst trennen, dann neu messen.")
+    if (c.get("zitat_anteil") or 0) >= ZITAT_ANTEIL_HOCH:
+        out.append(f"\n> ℹ️ {round(100 * c['zitat_anteil'])} % wörtliche Zitate – Messung nur bedingt aussagekräftig.")
     f = c.get("fortschritt")
     if f:
-        d = (b["score"] or 0) - (f["score_vorher"] or 0)
-        out.append(f"\n**Fortschritt (Messung {f['messung_nr']}):** Score {f['score_vorher']} → {b['score']} ({'+' if d >= 0 else ''}{d})"
+        jetzt = c.get("score_ziel_wert") if c.get("score_einseitig") else b["score"]
+        d = (jetzt or 0) - (f["score_vorher"] or 0)
+        out.append(f"\n**Fortschritt (Messung {f['messung_nr']}):** Score {f['score_vorher']} → {jetzt} ({'+' if d >= 0 else ''}{d})"
                    + (f" · besser: {', '.join(analyse.NAMEN.get(k, k) for k in f['besser'])}" if f["besser"] else "")
                    + (f" · schlechter: {', '.join(analyse.NAMEN.get(k, k) for k in f['schlechter'])}" if f["schlechter"] else "")
                    + (" · Text seit der letzten Messung unverändert – die genannten Stellen sind noch offen." if f.get("unveraendert") else ""))
@@ -6166,22 +6752,57 @@ def bericht(c: dict) -> str:
         if fokus_nr:
             fo = c["fokus"]
             out.append(f"\n_Die Hinweise betreffen nur Abschnitt {fokus_nr} (Satz {fo['satz_von']}–{fo['satz_bis']}). Danach erneut messen._")
+    ziel_s = c.get("ziel_score_anzeige") or math.ceil((c.get("ziel_score") or 0) - 1e-9)
+    p_jetzt = b.get("p_mensch") or 0
+    modell_txt = f"Modell {_p_anzeige(p_jetzt, zp)} (Ziel ≥ {round(100 * zp)} %)"
+    score_jetzt = c.get("score_ziel_wert") if c.get("score_ziel_wert") is not None else b.get("score")
+    score_art = "Score (KI-Seite)" if c.get("score_einseitig") else "Score"
     if c["ziel_erreicht"]:
         rot_teil = f", höchstens {c['ziel_rot_max']} Kennzahlen rot" if c.get("ziel_rot_max") is not None else ""
-        out.append(f"\n✅ **Ziel erreicht:** Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich, Score ≥ {round(c['ziel_score'])}{rot_teil} – so "
+        out.append(f"\n✅ **Ziel erreicht:** {modell_txt}, {score_art} {score_jetzt} (Ziel ≥ {ziel_s}){rot_teil} – so "
                    "unauffällig wie die meisten echten Hochschularbeiten. **Kein weiterer Handlungsbedarf.**"
                    + (" Ausnahme: Die Satzlängen sind über den menschlichen Bereich hinaus gewachsen – die Teilen-Hinweise unten nehmen "
                       "das zurück." if any(h["typ"] == "teilen" for h in c["hinweise"]) else "")
-                   + (" Unten nur noch Vorgaben und sehr sichere Einzelstellen." if c["hinweise"] else ""))
-    elif c.get("teilziel"):
+                   + (" Unten nur noch sehr sichere Einzelstellen." if c["hinweise"] else ""))
+    elif c.get("messunsicherheit"):
+        m = c["messunsicherheit"]
+        teile = []
+        if m.get("luecke_p"):
+            teile.append(modell_txt)
+        if m.get("luecke_score"):
+            teile.append(f"{score_art} {score_jetzt} (Ziel ≥ {ziel_s})")
+        out.append(f"\n_Knapp unter dem Ziel – {' und '.join(teile) or modell_txt}: **im Bereich der Messunsicherheit.** Kein echter "
+                   "Handlungsbedarf; " + ("höchstens die eine Stelle unten mit dem größten Effekt._" if c["hinweise"] else
+                                         "keine Stelle verspricht eine sichere Verbesserung._"))
+    elif c.get("teilziel") and not c["teilziel"].get("mit_modell"):
         namen = ", ".join(HEBEL_TEXT[h][0] for h in c["teilziel"]["hebel"] if h in HEBEL_TEXT)
-        out.append(f"\n_Modell-Ziel erreicht ({round(100 * c['ziel_p_mensch'])} % menschlich); dem Score fehlen noch {fmt(c['teilziel']['fehlt'])} "
-                   f"Punkte bis {round(c['ziel_score'])}. Deshalb nur Hinweise zu: {namen or '–'}._")
+        fehlt = c["teilziel"]["fehlt"]
+        out.append(f"\n_{modell_txt} erreicht; dem {score_art} fehlen noch {fmt(fehlt)} Punkt{'e' if fehlt != 1 else ''} bis {ziel_s}. "
+                   f"Deshalb nur Hinweise zu: {namen or '–'}._")
     elif c["bewertung"].get("verfuegbar"):
-        out.append(f"\n_Ziel: Modell ≥ {round(100 * c['ziel_p_mensch'])} % menschlich und Score ≥ {round(c['ziel_score'])}. Einzelne rote Kennzahlen sind normal – auch echte Arbeiten haben im Mittel mehrere._")
+        grenze = c.get("auftragsgrenze")
+        zusatz = (f" Unten nur die Stellen mit der größten simulierten Wirkung – sie reichen rechnerisch (zusammen ≈ "
+                  f"{fmt(grenze['summe_logit'])} für eine Lücke von ≈ {fmt(grenze['luecke_logit'])}); mehr ist nicht nötig."
+                  if grenze and grenze.get("reicht") else "")
+        out.append(f"\n_Ziel: Modell ≥ {round(100 * zp)} % menschlich (jetzt {_p_anzeige(p_jetzt, zp)}) und {score_art} ≥ {ziel_s}. "
+                   f"Einzelne rote Kennzahlen sind normal – auch echte Arbeiten haben im Mittel mehrere.{zusatz}_")
+    mt = c.get("menschlicher_als_typisch") or []
+    if mt:
+        def _wt(z):
+            if z["id"].startswith("anteil_"):
+                return f"{z['name']} {_pz(z['wert'])} (Band {_pz(z['mensch_p10'])}–{_pz(z['mensch_p90'])})"
+            grenze = z["mensch_p90"] if z["wert"] > z["mensch_p90"] else z["mensch_p10"]
+            w_, g_ = fmt_paar(z["wert"], grenze)
+            lo, hi = (fmt(z["mensch_p10"]), g_) if z["wert"] > z["mensch_p90"] else (g_, fmt(z["mensch_p90"]))
+            return f"{z['name']} {w_} (Band {lo}–{hi})"
+        rest = f" und {len(mt) - 6} weitere" if len(mt) > 6 else ""
+        out.append("\n> ℹ️ **Menschlicher als typisch (kein Auftrag):** " + "; ".join(_wt(z) for z in mt[:6]) + rest
+                   + ". Auf einem eigenen Text ist das Eigenart – nichts ändern.")
     sl = c.get("satzlaengen") or {}
+    mt_ids = {z["id"] for z in c.get("menschlicher_als_typisch") or []}
     if sl.get("modus") == "teilen" and (sl.get("ueber_p90") or sl.get("fehlende_mitte")) \
-            and not any(h["typ"] == "teilen" for h in c["hinweise"]):
+            and not any(h["typ"] == "teilen" for h in c["hinweise"]) and not c["ziel_erreicht"] \
+            and not mt_ids & {"anteil_lange_saetze", "satzlaenge_mittel", "anteil_mittlere_saetze"}:
         out.append(f"\n**Satzlängen:** {'; '.join(sl['gruende'])}. Keine weiteren Sätze verlängern oder bündeln.")
     elif sl.get("modus") == "mitte" and any(h["typ"] == "mitte" for h in c["hinweise"]):
         out.append(f"\n**Satzlängen:** {sl['mittlere']} von {sl['n']} Sätzen sind mittellang ({MITTEL_VON}–{MITTEL_BIS} Wörter, "
@@ -6208,18 +6829,22 @@ def bericht(c: dict) -> str:
                 regel = f"– nicht mehr bündeln als unten genannt (höchstens ~{BUENDEL_MAX_ZIEL} Wörter je Satz)"
             out.append(f"\n**Satzlängen:** {sl['lange']} von {sl['n']} Sätzen haben ≥ {LANG_AB} Wörter; bis zum menschlichen Median (~15 %) {fehlen} "
                        f"{regel}{mitte}" + (f" ({abw})." if abw else "."))
-    if c["hebel"] and not c["ziel_erreicht"]:
+    if c["hebel"] and not c["ziel_erreicht"] and not c.get("messunsicherheit"):
         normal = [h for h in c["hebel"] if not h.get("stellenlos")][:4]
         orientierung = [h for h in c["hebel"][:6] if h.get("stellenlos")][:3]
         # rote bewertete Kennzahlen ohne Auftrag immer nennen (v4: DP Konnektoren über P90, weder Auftrag noch Erwähnung)
         orientierung += [h for h in c["hebel"] if h.get("stellenlos") and h not in orientierung
                          and any(k.get("status") == "rot" and k.get("bewertet") for k in h["kennzahlen"])]
+        if (c.get("auftragsgrenze") or {}).get("reicht") or c.get("teilziel"):
+            orientierung = []  # die genannten Stellen reichen: keine Einladung zu weiterer Arbeit
         if normal:
             out.append("\n### Die wichtigsten Hebel\n")
         for i, h in enumerate(normal, 1):
             teile = []
             for k in h["kennzahlen"][:3]:
-                if k.get("nur_modell"):
+                if k.get("id") == "semikolon_pro_1000":
+                    teile.append(f"{k['name']}: {fmt(k['wert'])} (Ziel: höchstens 1–2 je 800 Wörter)")
+                elif k.get("nur_modell"):
                     teile.append(f"{k['name']}: {fmt(k['wert'])} ({kennzahl_lage(k)}, fließt ins Modell)")
                 elif k.get("status") == "gruen" and (k.get("beitrag") or 0) <= MODELL_HEBEL:
                     teile.append(f"{k['name']}: {fmt(k['wert'])} (im Zielbereich, aber weit vom menschlichen Median "
@@ -6251,8 +6876,24 @@ def bericht(c: dict) -> str:
         rest = c["anzahl_hinweise_gesamt"] - len(c["hinweise"])
         if rest > 0:
             out.append(f"\n_{rest} weitere Hinweise nach der nächsten Messung._")
-    elif not c["ziel_erreicht"] and c["bewertung"].get("verfuegbar") and not c.get("diagnose") and not c.get("diagnose_aufgeschoben"):
+    elif c.get("teilziel") and not c["teilziel"].get("mit_modell") and not c["ziel_erreicht"]:
+        tz = c["teilziel"]
+        if (tz.get("gegenseite_punkte") or 0) >= tz["fehlt"]:
+            out.append(f"\n_Keine sichere Einzelstelle für die Score-Lücke. Die fehlenden Punkte liegen überwiegend auf der der KI abgewandten "
+                       f"Seite (≈ {fmt(tz['gegenseite_punkte'])} Punkte durch Werte, die „menschlicher als typisch“ sind) – kein "
+                       "Handlungsbedarf._")
+        else:
+            out.append("\n_Keine sichere Einzelstelle für die Score-Lücke gefunden – kein weiterer Auftrag; beim eigenen Formulieren die "
+                       "genannten Hebel im Blick behalten._")
+    elif not c["ziel_erreicht"] and c["bewertung"].get("verfuegbar") and not c.get("diagnose") and not c.get("diagnose_aufgeschoben") \
+            and not c.get("messunsicherheit"):
         out.append("\n_Keine sicheren Einzelstellen gefunden – die Hebel oben beim eigenen Formulieren im Blick behalten._")
+    if c.get("vorgaben") or c.get("gender_info"):
+        out.append("\n### Vorgaben (ändern den Score nicht)\n")
+        for h in sorted(c.get("vorgaben") or [], key=lambda h: (h.get("satz") or 0, h["typ"])):
+            out.append(f"- {h['text']}")
+        for g in c.get("gender_info") or []:
+            out.append(f"- _{g}_")
     if c.get("stehen_lassen"):
         # trifft ein anderer Auftrag denselben Satz, ausdrücklich sagen, dass er trotzdem gilt (sonst liest sich das als Widerspruch)
         auch = sorted({x["satz"] for x in c["stehen_lassen"]} & {h.get("satz") for h in c["hinweise"]})

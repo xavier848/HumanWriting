@@ -336,14 +336,15 @@ FUELL = ("Die Untersuchung beschreibt den Ablauf der Befragung genauer. Danach f
 class Verklebt(unittest.TestCase):
     def test_positiv(self):
         for t in ("erfasst.Merkmale", "Note,wie", "Strukturgleichungsmodell,wiesichdieHZB-Note", "Fazit:Die", "Warum?Weil",
-                  "dieInformiertheitvorStudienbeginnUnd", "Müller,Meier"):
+                  "dieInformiertheitvorStudienbeginnUnd", "Müller,Meier", "Ziel.Die", "repräsentieren.Es", "PwC.Werbeumsätze"):
             self.assertTrue(analyse._verklebt(t), t)
 
     def test_negativ(self):
         for t in ("z.B", "z.B.Unternehmen", "M.Sc", "Dr.Müller", "vgl.Abb", "www.statista.com", "https://x.de/a.B", "Amazon.com",
                   "bericht.pdf", "Daten.XLSX", "14:30Uhr", "§2.BGB", "Mitarbeiter:innen", "Student:in", "1,5", "3.Kapitel",
                   "YouTube-Trendlisten-Analyse", "BachelorstudentInnenbefragung", "pandas.read_csv", "max@mustermann.de",
-                  "Hochschulzugangsberechtigungsnote", "PowerPoint-Präsentationsvorlagen", "u.a", "e.V", "sog.Bachelor"):
+                  "Hochschulzugangsberechtigungsnote", "PowerPoint-Präsentationsvorlagen", "u.a", "e.V", "sog.Bachelor",
+                  "Plan.Net", "Group.IE", "DATA.GOV", "Gov.Data"):
             self.assertFalse(analyse._verklebt(t), t)
 
     def test_info_und_warnung(self):
