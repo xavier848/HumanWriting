@@ -180,7 +180,8 @@ def zielwerte(b) -> str:
 
 
 # --- Wortliste in ki-muster.md: „nicht häufen“ vs. „nur Diagnose“ -------------------------------------------------------
-HAEUFEN_AB = 2.5          # geglättetes Verhältnis KI/Mensch, ab dem eine Wendung unter „nicht häufen“ steht
+HAEUFEN_AB = 4.0          # geglättetes Verhältnis KI/Mensch, ab dem eine Wendung unter „nicht häufen“ steht
+HAEUFIG_AB = (3.0, 0.5)   # … oder ab diesem Verhältnis, wenn KI sie mindestens so oft pro 1000 Wörter nutzt („lässt sich“)
 NOMEN_ANTEIL = 0.6        # Anteil großgeschriebener Vorkommen mitten im Satz, ab dem ein Wort als Nomen gilt
 BRUCHSTUECK = 0.9         # Teil-n-Gramm fällt weg, wenn eine längere Wendung mindestens 90 % seiner Treffer hat
 PRAEPOSITIONEN = {"in", "im", "vor", "für", "auf", "an", "am", "mit", "nach", "aus", "bei", "zu", "zum", "zur", "von", "vom",
@@ -242,7 +243,9 @@ def wortliste_teilen(eintraege: list[dict], nomen: set | None) -> tuple[list[dic
         wendung = len(t) > 1 and t[0] in PRAEPOSITIONEN
         thema = bool(nomen) and not wendung and any(x in nomen for x in inhalt)
         # gerundet wie angezeigt („2,5×“), damit Liste und Schwelle zusammenpassen
-        (diagnose if thema or round(_verh(e), 1) < HAEUFEN_AB else haeufen).append(e)
+        v = round(_verh(e), 1)
+        oft = v >= HAEUFIG_AB[0] and e["ki_pro_1000"] >= HAEUFIG_AB[1]
+        (diagnose if thema or (v < HAEUFEN_AB and not oft) else haeufen).append(e)
     return haeufen, diagnose
 
 
@@ -275,9 +278,10 @@ def kimuster(mu, wl, nomen: set | None = None) -> str:
                    "Aus dem themengleichen Korpusvergleich (log-odds mit Dirichlet-Prior). Pro 1000 Wörter: KI vs. Mensch, dazu "
                    "das Verhältnis. Die Liste ist zweigeteilt: Nur die erste Gruppe betrifft das Schreiben.", "",
                    "### Phrasen, die man nicht häufen sollte", "",
-                   f"Wendungen, die KI mindestens {str(HAEUFEN_AB).replace('.', ',')}-mal so oft nutzt wie Menschen (nach "
-                   "Verhältnis). Einzeln erlaubt, aber nicht mehrfach im selben Abschnitt; nicht durch ein Synonym ersetzen, "
-                   "sondern den Satz anders bauen.", ""]
+                   f"Wendungen, die KI mindestens {HAEUFEN_AB:g}-mal so oft nutzt wie Menschen, oder "
+                   f"mindestens {HAEUFIG_AB[0]:g}-mal so oft und dabei häufig (nach Verhältnis). Einzeln "
+                   "erlaubt, dieselbe Wendung aber höchstens zweimal pro 900 Wörter; nicht durch ein Synonym ersetzen, sondern "
+                   "den Satz anders bauen. Fachbegriffe und Wörter aus der Aufgabenstellung sind ausgenommen.", ""]
         zeilen.append(", ".join(_wl_eintrag(e) for e in sorted(haeufen, key=lambda e: -_verh(e))))
         zeilen += ["", "### Nur Diagnose, nicht meiden", "",
                    "Funktionswörter, die KI nur etwas häufiger nutzt (als, sich, die, ein), sowie Themen- und Personenwörter "

@@ -323,13 +323,14 @@ class ReferenzenV7(unittest.TestCase):
     def test_wortliste_geteilt(self):
         haeufen, diagnose = referenzen.wortliste_teilen(self.WL["ki_typisch"], self.NOMEN)
         h, d = {e["ngramm"] for e in haeufen}, {e["ngramm"] for e in diagnose}
-        self.assertEqual(h, {"zugleich", "lässt sich", "auf diese weise", "hinzu kommt", "sodass", "ergibt sich", "in der regel"})
-        self.assertEqual(d, {"als", "sich", "die", "ein", "befragten", "die befragten", "befund"})
+        # ab 4-fach, oder ab 3-fach bei mindestens 0,5 pro 1000 („lässt sich“); „in der regel“ (3-fach, selten) nur Diagnose
+        self.assertEqual(h, {"zugleich", "lässt sich", "auf diese weise", "hinzu kommt", "sodass", "ergibt sich"})
+        self.assertEqual(d, {"als", "sich", "die", "ein", "befragten", "die befragten", "befund", "in der regel"})
         self.assertNotIn("diese weise", h | d)      # Bruchstück von „auf diese weise“
         # ohne Korpus (keine Nomen bekannt): nur nach Verhältnis
         h0, d0 = (set(e["ngramm"] for e in x) for x in referenzen.wortliste_teilen(self.WL["ki_typisch"], None))
         self.assertIn("befragten", d0)
-        self.assertIn("die befragten", h0)
+        self.assertIn("befund", h0)
 
     def test_ki_muster_md_zwei_gruppen(self):
         md = referenzen.kimuster(lade_json(), self.WL, self.NOMEN)
@@ -341,7 +342,8 @@ class ReferenzenV7(unittest.TestCase):
         for w in ("*als*", "*sich*", "*die*", "*ein*", "*befragten*"):
             self.assertIn(w, diagnose)
             self.assertNotIn(w, haeufen)
-        self.assertIn("2,5-mal", haeufen)
+        self.assertIn("4-mal", haeufen)
+        self.assertIn("höchstens zweimal pro 900 Wörter", haeufen)
         self.assertIn("gegenfolie", json.dumps(lade_json()))   # neues Muster steht in der Mustertabelle
         self.assertIn("Nachgestellte Gegenfolie", md)
 
