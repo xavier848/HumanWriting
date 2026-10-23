@@ -4832,7 +4832,50 @@ def _striche(L: Lauf) -> None:
             L.hinweis("bindestrich", s, f"{zitat(s)}: „{binde}“ ist ein Bindestrich mit Leerzeichen – ohne Leerzeichen schreiben "
                       f"(„{binde.replace(' - ', '-')}“), nicht durch Komma ersetzen.", 0.9, fund=binde)
         if gedanke:
-            L.hinweis("gedankenstrich", s, f"{zitat(s)}: Gedankenstrich durch Komma, Klammer oder neuen Satz ersetzen.", 0.8, fund="–")
+            L.hinweis("gedankenstrich", s, f"{zitat(s)}: {strich_technik(mk)}", 0.8, fund="–")
+
+
+_KEIN_VERB_DAVOR = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einer", "einem", "einen", "eines", "zur", "zum", "im", "am",
+                    "vom", "beim", "ins", "mit", "von", "zu", "für", "auf", "in", "aus", "bei", "nach", "über", "unter", "vor", "durch",
+                    "gegen", "ohne", "um", "seine", "seiner", "seinen", "seinem", "ihre", "ihrer", "ihren", "ihrem", "diese", "dieser",
+                    "diesen", "diesem", "dieses", "jede", "jeder", "jeden", "jedem", "alle", "allen", "viele", "vielen", "keine",
+                    "keiner", "keinen", "per", "sowie", "und", "oder", "möglichst", "sehr", "besonders"}
+
+
+def hat_finites_verb(teil: str) -> bool:
+    """Steht in einem Satzteil ein finites Verb? Hilfs-/Modalverben und häufige Vollverben (analyse.FINIT) sicher; sonst ein
+    kleingeschriebenes Inhaltswort mit Verbendung, das weder nach einem Artikel bzw. einer Präposition noch direkt vor einem Nomen
+    steht („der sozialen Medien“ ist kein Verb). Grundlage für „Aufzählung oder Erklärung“ (kein Verb) nach „;“ bzw. „–“."""
+    toks = [t for t in analyse.tokens(teil) if analyse.ist_wort(t)]
+    for i, t in enumerate(toks):
+        low = t.lower()
+        if low in analyse.FINIT or low in analyse.FINIT_MEHRDEUTIG:
+            return True
+        if not t.islower() or low in analyse.FUNKTIONSWOERTER or len(low) < 4 or not re.search(r"(?:t|te|ten|en|st|ern|eln)$", low):
+            continue
+        if i > 0 and toks[i - 1].lower() in _KEIN_VERB_DAVOR:
+            continue
+        if i + 1 < len(toks) and toks[i + 1][:1].isupper():
+            continue
+        return True
+    return False
+
+
+def strich_technik(mk: str) -> str:
+    """Ersatz für Gedankenstriche nach ihrer Funktion: paariger Einschub („– wie oben angeführt –“) → Klammer oder Kommas;
+    einzelner Strich vor einer Aufzählung oder Erklärung ohne eigenes Verb („ausgewählt – einerseits Amsterdam … sowie …“) →
+    Doppelpunkt; sonst Komma oder neuer Satz."""
+    striche = list(analyse.GEDANKENSTRICH_RE.finditer(mk))
+    if len(striche) >= 2:
+        return "den Einschub zwischen den Gedankenstrichen in Klammern oder zwischen Kommas setzen (Vorgabe: keine Gedankenstriche)."
+    rest = mk[striche[0].end():] if striche else ""
+    erstes = (analyse.tokens(rest) or [""])[0].lower()
+    if rest.strip() and not hat_finites_verb(rest) and erstes in analyse.PRAEPOSITIONEN | {"im", "am", "zum", "zur", "beim", "vom"}:
+        return ("Gedankenstrich durch ein Komma ersetzen oder den Zusatz in Klammern setzen (Vorgabe: keine Gedankenstriche).")
+    if rest.strip() and not hat_finites_verb(rest):
+        return ("Gedankenstrich durch einen Doppelpunkt ersetzen – danach folgt eine Aufzählung bzw. Erklärung (Vorgabe: keine "
+                "Gedankenstriche).")
+    return "Gedankenstrich durch Komma oder einen neuen Satz ersetzen (Vorgabe: keine Gedankenstriche)."
 
 
 def _neu_geteilt(L: Lauf) -> None:

@@ -103,6 +103,36 @@ STOP |= FUNKTIONSWOERTER
 # dort zählen sie weiter als Begriff, nur kleingeschrieben oder am Satzanfang nicht
 NOMEN_HOMOGRAPHE = {"mangels", "selbst", "mittels", "zwecks", "gerade", "nichts", "falls", "trotz"}
 
+# Gender-Paare: Partizip-, Doppel- und Zeichenformen gelten als derselbe Begriff wie die Maskulinform („Bewerbende“ =
+# „Bewerber“, „Studierende“ = „Studenten“, „Nutzerinnen“ = „Nutzer“). Die vom Coach verlangte Umstellung auf das
+# generische Maskulinum erscheint so weder als „Begriff verschwunden“ noch als „Neuer häufiger Begriff“ – auch ohne Verlauf.
+# Unregelmäßige Paare (Wortende, auch im Kompositum: „Bachelorstudierende“ = „Bachelorstudenten“); „Lehrer“ gehört
+# bewusst nicht dazu (an Hochschulen eine andere Gruppe als die Lehrenden).
+GENDER_GRUPPEN = [
+    (re.compile(r"studierende[nrms]?$"), "student"),
+    (re.compile(r"(?:lehrende[nrms]?|dozierende[nrms]?|dozent(?:in|innen|en)?|lehrkr[aä]ft(?:e|en)?)$"), "lehrkraft"),
+    (re.compile(r"absolvierende[nrms]?$"), "absolvent"),
+    (re.compile(r"(?:promovierende[nrms]?|promovend(?:in|innen|en)?|doktorand(?:in|innen|en)?)$"), "doktorand"),
+    (re.compile(r"konsumierende[nrms]?$"), "konsument"),
+    (re.compile(r"(?:pflegende[nrms]?|pflegekr[aä]ft(?:e|en)?)$"), "pflegekraft"),
+]
+# im Kompositum vorn („Studierendenwerk“ = „Studentenwerk“)
+GENDER_INFIX = [(re.compile(r"studierenden(?=[a-zäöüß]{3})"), "studenten"),
+                (re.compile(r"(?:lehrenden|dozierenden)(?=[a-zäöüß]{3})"), "lehrkraft"),
+                (re.compile(r"absolvierenden(?=[a-zäöüß]{3})"), "absolventen")]
+# regelmäßig: substantiviertes Partizip „X-ende(n)“ ↔ Nomen auf „X-er“ (Bewerbende/Bewerber, Mitarbeitende/Mitarbeiter,
+# Teilnehmende/Teilnehmer); alle Formen auf -end(e…) werden gleich behandelt, damit Adjektiv und Adverb („zunehmend“,
+# „zunehmende“) denselben Schlüssel behalten
+PARTIZIP_RE = re.compile(r"([a-zäöüß]{4,}?)end(?:e|en|er|em|es)?")
+PARTIZIP_INFIX_RE = re.compile(r"([a-zäöüß]{4,}?)enden(?=[a-zäöüß]{4})")
+# Movierte Formen: Plural „-innen“ (auch Binnen-I) immer, Singular „-in“ nur nach typischen Personen-Endungen, damit
+# „Verein“, „Termin“, „Protein“ ihren Schlüssel behalten
+INNEN_RE = re.compile(r"([a-zäöüß]{3,})innen")
+INNEN_NICHT = ("ginnen", "winnen", "pinnen", "sinnen", "rinnen")
+IN_RE = re.compile(r"([a-zäöüß]{2,}(?:er|ent|ant|ist|or|eur|nd|og|eg|ekt|är|ar)|[a-zäöüß]{3,}at)in")
+# Endung hinter Genderzeichen („Bewerber*innen“, „Nutzer:innen“, „Absolvent/-innen“) ist kein eigener Begriff
+GENDER_ZEICHEN_RE = re.compile(r"[*:_/·]-?$")
+
 # Vom Coach zum Ersetzen empfohlene Wörter (gleiche Daten wie coach.py): KI-Muster mit Gewicht > 0 und die Liste
 # typischer Claude-Wörter. Fehlen die Dateien, prüft das Skript wie zuvor.
 DATA = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "text-analyse", "data"))
@@ -199,6 +229,34 @@ def grundform(w: str) -> str:
 
 def stamm(w: str) -> str:
     return grundform(w)[:9]
+
+
+def gender_form(w: str) -> str:
+    """Wortform in Kleinschreibung mit Gender-Paaren auf die Maskulinform gebracht (siehe GENDER_GRUPPEN)."""
+    wl = w.lower()
+    for rx, ersatz in GENDER_GRUPPEN:
+        neu = rx.sub(ersatz, wl, count=1)
+        if neu != wl:
+            return neu
+    for rx, ersatz in GENDER_INFIX:
+        neu = rx.sub(ersatz, wl, count=1)
+        if neu != wl:
+            return neu
+    m = INNEN_RE.fullmatch(wl)
+    if m and not wl.endswith(INNEN_NICHT):
+        return m.group(1)
+    m = IN_RE.fullmatch(wl)
+    if m:
+        return m.group(1)
+    m = PARTIZIP_RE.fullmatch(wl)
+    if m:
+        return m.group(1) + "er"
+    return PARTIZIP_INFIX_RE.sub(r"\1er", wl, count=1)
+
+
+def begriff_stamm(w: str) -> str:
+    """Schlüssel für den Begriffsvergleich: Stamm nach Angleichung der Gender-Paare („Bewerbende“ = „Bewerber“)."""
+    return stamm(gender_form(w))
 
 
 def kontext(t: str, pos, laenge: int = 0, breite: int = 70) -> str:
@@ -476,6 +534,8 @@ def _ist_begriff(t: str, m: re.Match) -> bool:
     w = m.group(0)
     if len(w) < 5:
         return False
+    if GENDER_ZEICHEN_RE.search(t[max(0, m.start() - 2):m.start()]) and w.lower() in ("innen", "in"):
+        return False    # „Bewerber*innen“: die Endung hinter dem Genderzeichen ist kein eigener Begriff
     if w.lower() not in STOP:
         return True
     # „des Mangels“, „das Selbst“: großgeschrieben mitten im Satz ein Nomen, kein Funktionswort
@@ -483,10 +543,21 @@ def _ist_begriff(t: str, m: re.Match) -> bool:
 
 
 def begriffe(t: str, ohne: set | None = None) -> Counter:
-    """Stämme der Inhaltswörter; ohne = Startpositionen von Wörtern, die nicht als Begriff zählen (ersetzbare_stellen)."""
+    """Stämme der Inhaltswörter (Gender-Paare angeglichen, begriff_stamm); ohne = Startpositionen von Wörtern, die nicht
+    als Begriff zählen (ersetzbare_stellen)."""
     t = quellen(t)[1]
-    return Counter(stamm(m.group(0)) for m in WORT_RE.finditer(t)
+    return Counter(begriff_stamm(m.group(0)) for m in WORT_RE.finditer(t)
                    if _ist_begriff(t, m) and not (ohne and m.start() in ohne))
+
+
+def _anzeige(t: str) -> dict:
+    """Begriffsschlüssel → Stamm der ersten Wortform im Text (für Meldungen: „lehrend“ statt des Schlüssels „lehrkraft“)."""
+    t = quellen(t)[1]
+    out: dict = {}
+    for m in WORT_RE.finditer(t):
+        if _ist_begriff(t, m):
+            out.setdefault(begriff_stamm(m.group(0)), stamm(m.group(0)))
+    return out
 
 
 # ---------------------------------------------------------------------------
