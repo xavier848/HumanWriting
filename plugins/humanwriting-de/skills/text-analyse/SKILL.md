@@ -20,7 +20,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" TEXTDATEI
 - Falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt wurde: Skript suchen mit `find ~/.claude -path '*text-analyse/scripts/analyse.py' 2>/dev/null | head -1`.
 - Nur Python-Standardbibliothek nötig, keine Installation.
 
-Überschriften, Listenpunkte, Tabellen, Code, Blockzitate (Zeilen mit `>`), Fußnotenmarker, Quellenverweise in runden oder eckigen Klammern („(Müller, 2019, S. 12)“, „[Wolfram 2009]“), Transkriptnotation in Interviewzitaten („(lacht)“, „(unv.)“, „(I: Ja.)“) und alles ab „Literaturverzeichnis“ werden für die Messung ausgeblendet, damit nur der Fließtext zählt.
+Überschriften, Listenpunkte, Tabellen, Code, Blockzitate (Zeilen mit `>`, in Word eingerückte Absätze oder Formatvorlage „Zitat“), englische Absätze (z. B. ein englisches Abstract), Fußnotenmarker, Quellenverweise in runden oder eckigen Klammern („(Müller, 2019, S. 12)“, „[Wolfram 2009]“), Transkriptnotation in Interviewzitaten („(lacht)“, „(unv.)“, „(I: Ja.)“) und alles ab „Literaturverzeichnis“ bzw. „References“/„Appendix“ werden für die Messung ausgeblendet, damit nur der Fließtext zählt.
 
 **Eingabeprüfung** (vor dem Lesen der Werte beachten):
 - **Verklebte Wörter** (`info.verklebt`, Warnung im Bericht): Aus PDF-Kopien fehlen oft Leerzeichen („Modell,wiesichdie…“). Solche Stellen verfälschen Satz- und Wortlängen; erst trennen lassen, dann messen.

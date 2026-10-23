@@ -235,14 +235,35 @@ LITERATUR_UEBERSCHRIFT = re.compile(
     r"(?:\d+(?:\.\d+)*\.?\s*|(?-i:[IVXLC]+)(?:\.\s*|\s+))?"  # '7.', '7 ', '7.Lit…', 'VII.' – römisch nur groß
     r"(?:(?:(?:Quellen|Literatur)-?\s*und\s*)?(?:Literaturverzeichnis|Quellenverzeichnis)"
     r"|Verwendete\s+(?:Literatur|Quellen)|Literatur(?:liste|angaben)?|Quellen(?:angaben)?|Internetquellen"
-    r"|Bibliogra(?:ph|f)ie|Bibliography|Referenzen|References"
-    r"|Anhang|Anlagen?|(?:Eidesstattliche|Ehrenwörtliche)\s+(?:Erklärung|Versicherung)|Selbst(?:st)?ändigkeitserklärung)"
+    r"|Bibliogra(?:ph|f)ie|Bibliography|Referenzen|References|Reference\s+List|List\s+of\s+References"
+    r"|Anhang|Anlagen?|(?:Eidesstattliche|Ehrenwörtliche)\s+(?:Erklärung|Versicherung)|Selbst(?:st)?ändigkeitserklärung"
+    r"|Appendi(?:x|ces)|(?:Submission|Statutory)\s+Declaration|Declaration\s+of\s+Authorship)"
     r"(?:\s+\([^)]*\))?\s*[*_]{0,2}\s*:?\s*$",
     re.IGNORECASE,
 )
 INHALTSVERZEICHNIS_UEBERSCHRIFT = re.compile(
     r"^\s*(?:#+\s*)?[*_]{0,2}\s*(?:Inhaltsverzeichnis|Inhalt|Gliederung|Abbildungsverzeichnis|Tabellenverzeichnis|"
-    r"Abkürzungsverzeichnis)\s*[*_]{0,2}\s*:?\s*$", re.IGNORECASE)
+    r"Abkürzungsverzeichnis|Anhangsverzeichnis|(?:Table\s+of\s+)?Contents|(?:List|Index)\s+of\s+(?:Figures|Tables|Abbreviations|Appendices))"
+    r"\s*[*_]{0,2}\s*:?\s*$", re.IGNORECASE)
+# Englische Absätze (z. B. das englische Abstract einer deutschen Arbeit, englische Blockzitate ohne Markierung):
+# Die Kennzahlen gelten nur für deutschen Fließtext. Ein Absatz gilt als englisch, wenn englische Funktionswörter
+# häufig und deutsche fast nicht vorkommen; einzelne englische Sätze in einem deutschen Absatz bleiben deutsch.
+EN_FUNKTIONSWOERTER = frozenset("""the of and to is are was were be been that this these those with for from by on it its
+    which who whose not can could would should will has have had their they there than but or as at such also into""".split())
+DE_FUNKTIONSWOERTER = frozenset("""der die das den dem des und ist sind war waren nicht ein eine einer eines einem einen
+    sich mit von zu auf für im zum zur auch werden wird wurde wurden dass bei nach oder aus wie als""".split())
+_EN_WORT_RE = re.compile(r"[A-Za-zÄÖÜäöüß]+")
+
+
+def ist_englisch(absatz: str) -> bool:
+    woerter = [w.lower() for w in _EN_WORT_RE.findall(absatz)]
+    if len(woerter) < 12:
+        return False
+    en = sum(w in EN_FUNKTIONSWOERTER for w in woerter)
+    de = sum(w in DE_FUNKTIONSWOERTER for w in woerter)
+    return en >= 0.12 * len(woerter) and de <= 0.03 * len(woerter)
+
+
 TOC_ZEILE_RE = re.compile(r"^.{1,160}?(?:\.{3,}|…+|\s)\s*\d{1,3}$")
 UNTERKAPITEL_NR = re.compile(r"^\s*(?:#+\s*)?[*_]{0,2}\s*\d+\.\d+")
 EINSTIEG_UEBERSCHRIFT = re.compile(
@@ -399,6 +420,8 @@ _W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 _MC = "{http://schemas.openxmlformats.org/markup-compatibility/2006}"
 UEBERSCHRIFT_STIL = re.compile(r"(?i)^(heading|berschrift|überschrift|title|titel)")
 VERZEICHNIS_STIL = re.compile(r"(?i)^(toc|verzeichnis|inhaltsverz)")
+ZITAT_STIL = re.compile(r"(?i)(quote|zitat|block\s?text)")  # Formatvorlagen für Blockzitate (Quote, Zitat, Blocktext)
+BLOCKZITAT_EINZUG = 567  # Twips (1 cm): so viel weiter links eingerückt als der übliche Fließtext = Blockzitat
 # nur ohne styles.xml; ListParagraph/Listenabsatz bewusst nicht (ohne numPr keine Liste)
 LISTEN_STIL_OHNE_STYLES = re.compile(r"(?i)^(listbullet|listnumber|aufzhlungszeichen|aufzählungszeichen|listennummer)")
 _DOCX_UEBERSPRINGEN = {_MC + "Fallback", _W + "txbxContent", _W + "delText", _W + "instrText", _W + "tbl"}
@@ -464,6 +487,16 @@ def lies_docx(pfad: str) -> str:
     except (zipfile.BadZipFile, KeyError, ET.ParseError) as e:
         raise SystemExit(f"{pfad} ist keine gültige .docx-Datei (alte .doc? bitte als .docx speichern): {e}")
     absaetze: list[str] = []
+    einzuege: list[tuple[int, int, bool]] = []  # (Index in absaetze, linker Einzug, Zitat-Formatvorlage) für Prosaabsätze
+
+    def einzug_links(p) -> int:
+        ind = p.find(f"{_W}pPr/{_W}ind")
+        if ind is None or ind.get(_W + "hanging"):  # hängender Einzug (Literaturliste) ist kein Blockzitat
+            return 0
+        try:
+            return int(ind.get(_W + "left") or ind.get(_W + "start") or 0)
+        except ValueError:
+            return 0
 
     def bloecke(container):
         for el in container:
@@ -490,9 +523,18 @@ def lies_docx(pfad: str) -> str:
                 text = "# " + text
             elif eigen if eigen is not None else stil_num:
                 text = "- " + text
+            else:
+                einzuege.append((len(absaetze), einzug_links(el), bool(ZITAT_STIL.search(name) or ZITAT_STIL.search(sid))))
             absaetze.append(text)
     body = wurzel.find(_W + "body")
     bloecke(body if body is not None else wurzel)
+    # Blockzitate (APA: ab 40 Wörtern eingerückt, ohne Anführungszeichen) als '>' markieren, damit sie wie fremder
+    # Wortlaut ausgeblendet werden: Zitat-Formatvorlage oder deutlich weiter eingerückt als der übliche Fließtext
+    if einzuege:
+        ueblich = sorted(e for _, e, _ in einzuege)[len(einzuege) // 2]
+        for i, links, zitatstil in einzuege:
+            if zitatstil or links >= ueblich + BLOCKZITAT_EINZUG:
+                absaetze[i] = "> " + absaetze[i]
     return "\n\n".join(absaetze)
 
 
@@ -768,9 +810,13 @@ def zerlege_bloecke(text: str) -> dict:
     absaetze, ueberschriften, listenpunkte = [], [], []
     folge: list[tuple[str, int]] = []  # Textreihenfolge für den Blockmodus: (Art, Index in der jeweiligen Liste)
     abgeschnitten = False
-    fussnoten_text = zitatbloecke = 0
+    fussnoten_text = zitatbloecke = englisch = 0
 
     def neu(liste: list, art: str, inhalt: str) -> None:
+        nonlocal englisch
+        if art == "absatz" and ist_englisch(inhalt):  # englisches Abstract o. Ä.: nicht messen, nur zählen
+            englisch += 1
+            return
         folge.append((art, len(liste)))
         liste.append(inhalt)
 
@@ -886,6 +932,7 @@ def zerlege_bloecke(text: str) -> dict:
         "literatur_abgeschnitten": abgeschnitten,
         "fussnoten_text": fussnoten_text,
         "zitatbloecke": zitatbloecke,
+        "englische_absaetze": englisch,
         "folge": folge,
     }
 
@@ -1588,11 +1635,15 @@ _VERKLEBT_URL_RE = re.compile(r"://|^www\.|@|[A-Za-z0-9-]\.(?:de|com|org|net|eu|
 _VERKLEBT_DATEI_RE = re.compile(r"\.(?:pdf|docx?|xlsx?|csv|txt|py|md|json|html?|jpe?g|png|gif|zip|pptx?|odt|xml|sav|dta|tex|"
                                 r"bib|js|r)$", re.IGNORECASE)
 _KLEIN_GROSS_RE = re.compile(r"[a-zäöüß](?!I(?:nnen|n\b))[A-ZÄÖÜ]")  # Binnen-I (StudentInnen) ausgenommen
+# Bezeichner aus Code und Formeln (Prüfung v7): Punktketten mit ≥ 3 kurzen Gliedern („EJB.Server.Entitybeans“,
+# „System.Collections.Generic“), Operatoren, Funktionsaufrufe („getWert(“, „init()“), Unterstrich außer Gender-Gap
+_VERKLEBT_CODE_RE = re.compile(r"^[A-Za-z]\w{0,19}(?:\.[A-Za-z]\w{0,19}){2,}$|[+=<>{}\\|]|\(\)|\w\($|_(?!(?:in|innen|n|r|e|m|s)\b)")
+_GENDER_DOPPELPUNKT_RE = re.compile(r"[iI]n$|Innen$|innen")  # „:in“, „:innen“, auch im Kompositum „:inneninterviews“
 
 
 def _verklebt(kern: str) -> bool:
     """True, wenn ein Token (ohne umgebende Anführungen/Klammern) verklebte Wörter enthält (PDF-Extraktion)."""
-    if _VERKLEBT_URL_RE.search(kern) or _VERKLEBT_DATEI_RE.search(kern):
+    if _VERKLEBT_URL_RE.search(kern) or _VERKLEBT_DATEI_RE.search(kern) or _VERKLEBT_CODE_RE.search(kern):
         return False
     for m in VERKLEBT_RE.finditer(kern):
         zeichen, rechts = m.group(1), m.group(2)
@@ -1607,8 +1658,8 @@ def _verklebt(kern: str) -> bool:
         if zeichen == "." and (rechts.isupper() or (lw.group(0)[0].isupper() and len(rechts) <= 4
                                                     and rechts.lower() not in STARTWOERTER)):
             continue  # Marken- und Domainnamen: „Plan.Net“, „Group.IE“, „DATA.GOV“ (aber „Ziel.Die“ zählt)
-        if zeichen == ":" and re.match(r"in(?:nen)?$", rechts):
-            continue  # Gender-Doppelpunkt „Mitarbeiter:innen“
+        if zeichen == ":" and _GENDER_DOPPELPUNKT_RE.match(rechts):
+            continue  # Gender-Doppelpunkt „Mitarbeiter:innen“, „Expert:inneninterviews“, „Lehrer:innenbildung“
         return True
     if len(kern) > VERKLEBT_LANG:
         if re.search(r"[^\W\d_],[^\W\d_]", kern):
@@ -1623,7 +1674,7 @@ def verklebte_stellen(saetze: list[dict]) -> list[dict]:
 
     Regeln: Satzzeichen direkt vor ≥ 2 Buchstaben („erfasst.Merkmale“, „Note,wie“; nach . ! ? nur vor Großbuchstaben)
     oder ein Token über 25 Zeichen mit innerem Komma bzw. Klein-Groß-Wechsel. Ausgenommen: Abkürzungen und Initialen,
-    URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt, Binnen-I."""
+    URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt (auch im Kompositum), Binnen-I, Code-Bezeichner."""
     out = []
     for s in saetze:
         for tok in s["text"].split():
@@ -1634,19 +1685,27 @@ def verklebte_stellen(saetze: list[dict]) -> list[dict]:
 
 
 def zitat_spannen(text: str) -> list[tuple[int, int]]:
-    """Zeichenbereiche wörtlicher Zitate in einem Absatz: „…“ (auch „…”), »…« bzw. «…» (das erste Guillemet bestimmt die
-    Richtung), “…” und "…"; verschachtelte Zitate zählen zum äußeren. Nicht geschlossene Zitate zählen nicht."""
+    """Zeichenbereiche wörtlicher Zitate in einem Absatz: „…“ (auch „…” und gemischt „…"), »…« bzw. «…» (das erste
+    Guillemet bestimmt die Richtung), “…” und "…"; verschachtelte Zitate zählen zum äußeren. Nicht geschlossene Zitate
+    zählen nicht und verschlucken die folgenden nicht (verirrtes “, Zollzeichen 12")."""
     erstes = re.search(r"[»«]", text)
     g_auf, g_zu = ("«", "»") if erstes and erstes.group(0) == "«" else ("»", "«")
+
+    def typo_schluss_folgt(i: int) -> bool:
+        """Kommt nach i noch ein typografisches Schlusszeichen (“ oder ”) vor dem nächsten „? Dann ist ein " innerhalb
+        von „…“ ein verschachteltes Zitat, sonst das Ende eines gemischt geschriebenen „…"."""
+        zu = [p for p in (text.find("“", i + 1), text.find("”", i + 1)) if p >= 0]
+        auf = text.find("„", i + 1)
+        return bool(zu) and (auf < 0 or min(zu) < auf)
+
     stapel: list[tuple[str, int]] = []
-    out = []
+    geschlossen = []
     for i, ch in enumerate(text):
         if stapel:
             zu = stapel[-1][0]
-            if ch == zu or (zu == "“" and ch == "”"):
+            if ch == zu or (zu == "“" and (ch == "”" or (ch == '"' and not typo_schluss_folgt(i)))):
                 _, start = stapel.pop()
-                if not stapel:
-                    out.append((start, i + 1))
+                geschlossen.append((start, i + 1))
                 continue
         if ch == "„":
             stapel.append(("“", i))
@@ -1656,6 +1715,11 @@ def zitat_spannen(text: str) -> list[tuple[int, int]]:
             stapel.append(("”", i))
         elif ch == '"':
             stapel.append(('"', i))
+    out: list[tuple[int, int]] = []
+    for a, e in sorted(geschlossen):  # nur die äußersten geschlossenen Zitate (innere liegen in einem äußeren)
+        if out and a < out[-1][1]:
+            continue
+        out.append((a, e))
     return out
 
 
@@ -1984,6 +2048,7 @@ def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
         "fussnoten_entfernt": zaehler["fussnoten"],
         "fussnoten_text_entfernt": struktur["fussnoten_text"],
         "zitatbloecke": struktur["zitatbloecke"],
+        "englische_absaetze": struktur.get("englische_absaetze", 0),
         "satzlaengen": laengen,
         "satzlaengen_verteilung": verteilung(laengen),
         "kernbegriffe": kernbegriffe,
@@ -2544,7 +2609,9 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
     out.append("## Textanalyse\n")
     out.append(f"{info['woerter']} Wörter · {info['saetze']} Sätze · {info['absaetze']} Absätze"
                + (f" · {info['zitate_entfernt']} Quellenverweise (für die Messung ausgeblendet)" if info["zitate_entfernt"] else "")
-               + (" · Literaturverzeichnis ignoriert" if info["literatur_abgeschnitten"] else ""))
+               + (" · Literaturverzeichnis ignoriert" if info["literatur_abgeschnitten"] else "")
+               + ((" · 1 englischer Absatz ignoriert" if info.get("englische_absaetze") == 1
+                   else f" · {info['englische_absaetze']} englische Absätze ignoriert") if info.get("englische_absaetze") else ""))
     for w in info["warnungen"]:
         out.append(f"\n> {'ℹ️' if w.startswith(BLOCK_HINWEIS) else '⚠️'} {w}")
     bloecke = (bewertung.get("bloecke") or []) if bewertung.get("blockmodus") else []

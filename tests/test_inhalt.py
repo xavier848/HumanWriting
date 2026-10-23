@@ -805,6 +805,67 @@ class GenderUndErwartet(unittest.TestCase):
         self.assertEqual(mit["erwartet_neu"], ["gespräch"])
         self.assertIn("Nicht als neuer Begriff gewertet", inhalt_check.bericht(mit))
 
+    # Prüfung v7: Gender-Paare dürfen keine echten Begriffswechsel verdecken
+    def test_lehrkraefte_und_dozenten_bleiben_verschieden(self):
+        # Schule ≠ Hochschule: „Lehrkräfte“ → „Dozenten“ ist kein Gender-Paar (früher stumm, beide Schlüssel „lehrkraft“)
+        alt = ("Die Lehrkräfte an Grundschulen sind skeptisch. Ältere Lehrkräfte fühlen sich unvorbereitet. Lehrkräfte mit "
+               "Fortbildung sind zuversichtlich.")
+        res = inhalt_check.pruefe(alt, alt.replace("Lehrkräfte", "Dozenten"))
+        self.assertIn("lehrkräft", self.gemeldet(res, ("Begriff verschwunden",)))
+        self.assertIn("dozent", self.gemeldet(res, ("Neuer häufiger Begriff",)))
+        # „Dozierende“ → „Dozenten“ bleibt still, auch im Kompositum
+        alt = "Die Dozierenden loben die Ausstattung. Viele Dozierende nutzen Moodle. Die Dozierendenbefragung bestätigt das."
+        neu = "Die Dozenten loben die Ausstattung. Viele Dozenten nutzen Moodle. Die Dozentenbefragung bestätigt das."
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(alt, neu)), "")
+
+    def test_pflegende_pfleger_und_pflegende_angehoerige(self):
+        # coach.py verlangt „Pflegende“ → „Pfleger“ (GENDER_MASKULIN): ohne Verlauf früher „Begriff verschwunden: pflegend“
+        alt = "Pflegende arbeiten im Schichtdienst. Viele Pflegende klagen über Zeitdruck. Für Pflegende fehlt Supervision."
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(alt, alt.replace("Pflegende", "Pfleger"))), "")
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(alt, alt.replace("Pflegende", "Pflegekräfte"))), "")
+        # „pflegende Angehörige“ (Adjektiv, Familie) sind keine Pflegekräfte: der Wechsel bleibt eine Meldung
+        alt = ("Die Studie befragt pflegende Angehörige. Viele pflegende Angehörige sind über 60. Die Belastung pflegender "
+               "Angehöriger wächst.")
+        neu = ("Die Studie befragt Angehörige der Pflegekräfte. Viele Angehörige der Pflegekräfte sind über 60. Die Belastung "
+               "der Angehörigen der Pflegekräfte wächst.")
+        res = inhalt_check.pruefe(alt, neu)
+        self.assertIn("pflegend", self.gemeldet(res, ("Begriff verschwunden",)))
+        self.assertIn("pflegekrä", self.gemeldet(res, ("Neuer häufiger Begriff",)))
+
+    def test_erwartet_deckt_keine_komposita_ab(self):
+        # „befragung“ als bloße Wortform war zugleich der 9-Zeichen-Schlüssel von „Befragungsergebnisse“: neuer Inhalt blieb stumm
+        alt = "Die Befragung lief im Mai und erreichte viele Betriebe. Sie wurde online durchgeführt."
+        neu = ("Die Befragung lief im Mai. Die Befragung erreichte viele Betriebe. Die Befragungsergebnisse sind eindeutig. "
+               "Die Befragungsergebnisse zeigen Wachstum. Laut den Befragungsergebnissen steigt der Umsatz.")
+        res = inhalt_check.pruefe(alt, neu, erwartet={"befragung"})
+        self.assertIn("befragung", self.gemeldet(res, ("Neuer häufiger Begriff",)))
+
+    def test_erwartet_gilt_nur_fuer_die_grundform_nicht_den_stamm(self):
+        # „unternehmer“ und „Unternehmensberatung“ teilen den 9-Zeichen-Schlüssel „unternehm“: neuer Inhalt bleibt sonst stumm
+        alt = "Die Gründer prüfen den Markt genau. Sie holen sich dabei kaum Hilfe."
+        neu = ("Die Gründer prüfen den Markt genau. Die Unternehmensberatung hilft ihnen dabei. Eine Unternehmensberatung "
+               "kostet Geld. Ohne Unternehmensberatung scheitern viele.")
+        res = inhalt_check.pruefe(alt, neu, erwartet={"unternehmer"})
+        self.assertIn("Neuer häufiger Begriff", [w["typ"] for w in res["warnungen"]])
+        # die erwartete Form selbst (auch flektiert) bleibt ausgenommen
+        neu2 = ("Die Gründer prüfen den Markt genau. Die Unternehmer holen sich kaum Hilfe. Den Unternehmern fehlt Zeit. "
+                "Jeder Unternehmer entscheidet allein.")
+        res2 = inhalt_check.pruefe(alt, neu2, erwartet={"unternehmer"})
+        self.assertNotIn("Neuer häufiger Begriff", [w["typ"] for w in res2["warnungen"]])
+        self.assertTrue(res2.get("erwartet_neu"))
+
+    def test_erwartet_abkuerzung_mit_plural_s(self):
+        # coach.erwartete_formen schreibt die Nomen kleingeschrieben („kmus“), akronyme() zählt „KMU“
+        res = inhalt_check.pruefe("Die KMUs investieren wenig, weil sie Risiken fürchten.",
+                                  "Die KMUs investieren wenig. Die KMUs fürchten Risiken.", erwartet={"kmus"})
+        self.assertEqual([w for w in res["warnungen"] if w["typ"] == "Abkürzung"], [])
+        # Bereinigung verklebter Wörter (Coach-Evaluation fhws): coach._bereinigung erwartet „hzb-note“, akronyme() zählt „HZB“
+        alt = "Die Analyse nutzt ein Strukturgleichungsmodell,wiesichdieHZB-Note auf den Studienerfolg auswirkt."
+        neu = "Die Analyse nutzt ein Strukturgleichungsmodell, wie sich die HZB-Note auf den Studienerfolg auswirkt."
+        self.assertIn("HZB", [w["wert"] for w in inhalt_check.pruefe(alt, neu)["warnungen"] if w["typ"] == "Abkürzung"])
+        res = inhalt_check.pruefe(alt, neu, erwartet={"strukturgleichungsmodell", "wiesichdie", "hzb-note"})
+        self.assertEqual([w for w in res["warnungen"] if w["typ"] == "Abkürzung"], [])
+
     def test_harte_funde_bleiben_trotz_erwartet(self):
         res = inhalt_check.pruefe("Müller (2019) befragte 45 Betriebe.", "Schulz (2021) befragte 54 Betriebe.",
                                   erwartet={"schulz", "2021", "54"})

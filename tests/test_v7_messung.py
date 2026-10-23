@@ -347,6 +347,19 @@ class Verklebt(unittest.TestCase):
                   "Plan.Net", "Group.IE", "DATA.GOV", "Gov.Data"):
             self.assertFalse(analyse._verklebt(t), t)
 
+    def test_gender_doppelpunkt_im_kompositum_und_code(self):
+        # Prüfung v7: Gender-Doppelpunkt in Komposita („Expert:inneninterviews“) und Code-Bezeichner/Formeln (Informatik-
+        # Arbeiten, haw-5591, lmu-27789) lösten sonst den vorrangigen Coach-Auftrag „Verklebte Wörter trennen“ aus
+        for t in ("Expert:inneninterviews", "Lehrer:innenbildung", "Teilnehmer:innenzahl", "Mitarbeiter:Innen",
+                  "EJB.Server.Entitybeans", "System.Collections.Generic", "Pflanzen.Forschung.Ethik",
+                  "getParkplatzWartezeitMinutes(", "init()", "modDeklarationUSEPA_Elmshorn",
+                  "1*Links+0,5*MitteLinks+0*Mitte+(-0,5)*MitteRechts"):
+            self.assertFalse(analyse._verklebt(t), t)
+        # echte Klebestellen bleiben: Doppelpunkt vor anderem Wort, Gender-Gap/-Stern mit Komma, lange Glieder
+        for t in ("Fazit:Innenstadt", "Fazit:interessant", "Sozialarbeiter_innen,die", "Student*innen,die",
+                  "relevantenMarkenassoziationen.InderRegel.Voralle"):
+            self.assertTrue(analyse._verklebt(t), t)
+
     def test_info_und_warnung(self):
         text = (FUELL + "Blüthmann prüfte mittels Strukturgleichungsmodell,wiesichdieHZB-Note auswirkt. Die Befragung wurde "
                 "anhand von Haltungen erfasst.Merkmale des Studiums kamen hinzu. " + FUELL)
@@ -374,6 +387,20 @@ class Zitatanteil(unittest.TestCase):
         self.assertEqual([schweiz[a:e] for a, e in analyse.zitat_spannen(schweiz)], ["«Das ist ein Zitat mit fünf Wörtern»"])
         englisch = "Er sagt “so ist es eben” und geht."
         self.assertEqual(len(analyse.zitat_spannen(englisch)), 1)
+
+    def test_gemischt_und_nicht_geschlossen(self):
+        # Prüfung v7: gemischtes „…" (35 von 412 menschlichen Korpusdokumenten) und ein nicht geschlossenes Zeichen davor
+        # (verirrtes “, Zollzeichen) ließen zitat_anteil für den ganzen Absatz auf 0 fallen
+        z = "Das ist ein sehr langes wörtliches Zitat aus der Quelle"
+        for t in (f"Er schrieb: „{z}\" und ging.", f"Ein verirrtes“ Zeichen. Er schrieb: „{z}“ und ging.",
+                  f"Die 12\" Platte und „{z}“ weiter."):
+            self.assertEqual(analyse.zitat_woerter(t), 10, t)
+        # verschachteltes "…" in „…“ zählt weiter zum äußeren Zitat
+        t = "Er sagte: „Der Begriff \"Nachhaltigkeit\" ist hier nicht ganz klar gefasst“ und ging."
+        self.assertEqual([t[a:e] for a, e in analyse.zitat_spannen(t)],
+                         ["„Der Begriff \"Nachhaltigkeit\" ist hier nicht ganz klar gefasst“"])
+        t = "Erst „gemischt mit vier Wörtern\" dann „richtig mit vier Wörtern“ Ende."
+        self.assertEqual(len(analyse.zitat_spannen(t)), 2)
 
     def test_anteil(self):
         zitat = "„Die Lehrenden sollten den Studierenden ermöglichen, das selbst herauszufinden.“"

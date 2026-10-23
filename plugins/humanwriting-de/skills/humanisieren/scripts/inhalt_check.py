@@ -115,18 +115,25 @@ NOMEN_HOMOGRAPHE = {"mangels", "selbst", "mittels", "zwecks", "gerade", "nichts"
 # „Bewerber“, „Studierende“ = „Studenten“, „Nutzerinnen“ = „Nutzer“). Die vom Coach verlangte Umstellung auf das
 # generische Maskulinum erscheint so weder als „Begriff verschwunden“ noch als „Neuer häufiger Begriff“ – auch ohne Verlauf.
 # Unregelmäßige Paare (Wortende, auch im Kompositum: „Bachelorstudierende“ = „Bachelorstudenten“); „Lehrer“ gehört
-# bewusst nicht dazu (an Hochschulen eine andere Gruppe als die Lehrenden).
+# bewusst nicht dazu (an Hochschulen eine andere Gruppe als die Lehrenden). „Lehrkräfte“ und „Dozenten“ bleiben verschiedene
+# Begriffe (Schule ≠ Hochschule); „Lehrende“ zählt als die der beiden, die im Textpaar vorkommt (LEHRENDE_RE).
 GENDER_GRUPPEN = [
     (re.compile(r"studierende[nrms]?$"), "student"),
-    (re.compile(r"(?:lehrende[nrms]?|dozierende[nrms]?|dozent(?:in|innen|en)?|lehrkr[aä]ft(?:e|en)?)$"), "lehrkraft"),
+    (re.compile(r"(?:dozierende[nrms]?|dozent(?:in|innen|en)?)$"), "dozent"),
+    (re.compile(r"lehrkr[aä]ft(?:e|en)?$"), "lehrkraft"),
     (re.compile(r"absolvierende[nrms]?$"), "absolvent"),
     (re.compile(r"(?:promovierende[nrms]?|promovend(?:in|innen|en)?|doktorand(?:in|innen|en)?)$"), "doktorand"),
     (re.compile(r"konsumierende[nrms]?$"), "konsument"),
-    (re.compile(r"(?:pflegende[nrms]?|pflegekr[aä]ft(?:e|en)?)$"), "pflegekraft"),
+    # „Pfleger“ ist die Maskulinform, die coach.py für „Pflegende“ verlangt (GENDER_MASKULIN)
+    (re.compile(r"(?:pflegekr[aä]ft(?:e|en)?|pfleger(?:in|innen|n|s)?)$"), "pflegekraft"),
 ]
+LEHRENDE_RE = re.compile(r"lehrende[nrms]?$")
+# nur großgeschrieben (Nomen): „pflegende Angehörige“ (Familie) sind keine Pflegekräfte
+GENDER_NOMEN = [(re.compile(r"pflegende[nrms]?$"), "pflegekraft")]
 # im Kompositum vorn („Studierendenwerk“ = „Studentenwerk“)
 GENDER_INFIX = [(re.compile(r"studierenden(?=[a-zäöüß]{3})"), "studenten"),
-                (re.compile(r"(?:lehrenden|dozierenden)(?=[a-zäöüß]{3})"), "lehrkraft"),
+                (re.compile(r"dozierenden(?=[a-zäöüß]{3})"), "dozenten"),
+                (re.compile(r"lehrenden(?=[a-zäöüß]{3})"), "lehrkraft"),
                 (re.compile(r"absolvierenden(?=[a-zäöüß]{3})"), "absolventen")]
 # regelmäßig: substantiviertes Partizip „X-ende(n)“ ↔ Nomen auf „X-er“ (Bewerbende/Bewerber, Mitarbeitende/Mitarbeiter,
 # Teilnehmende/Teilnehmer). Nur großgeschrieben (Nomen) und nur, wenn die Maskulinform als Nomen in einem der beiden Texte
@@ -247,8 +254,17 @@ def gender_form(w: str, formen: set | None = None) -> str:
         neu = rx.sub(ersatz, wl, count=1)
         if neu != wl:
             return neu
+    m = LEHRENDE_RE.search(wl)
+    if m:   # „Lehrende“ = „Dozenten“, wenn nur diese im Textpaar stehen, sonst = „Lehrkräfte“
+        klein = {x.lower() for x in formen} if formen is not None else set()
+        dozent = any("dozent" in x or "dozierend" in x for x in klein) and not any("lehrkr" in x for x in klein)
+        return wl[:m.start()] + ("dozent" if dozent else "lehrkraft")
     if not w[:1].isupper():
         return wl
+    for rx, ersatz in GENDER_NOMEN:
+        neu = rx.sub(ersatz, wl, count=1)
+        if neu != wl:
+            return neu
 
     def gibt(basis, endungen):
         return formen is None or any(basis[:1].upper() + basis[1:] + e in formen for e in endungen)
@@ -710,11 +726,34 @@ def erwartet_aus_verlauf(daten) -> set:
 
 
 def _erwartet_schluessel(erwartet, formen: set | None = None) -> set:
-    """Schlüssel, unter denen erwartete Formen im Begriffsvergleich auftauchen: Wortform, Stamm und begriff_stamm."""
+    """Schlüssel, unter denen erwartete Formen im Begriffsvergleich auftauchen: Stamm und begriff_stamm (wie begriffe()).
+    Die bloße Wortform gehört nicht dazu: Als Schlüssel stünde sie sonst für jedes Kompositum mit demselben Anfang
+    („befragung“ deckte „Befragungsergebnisse“, Schlüssel „befragung“, als neuen Begriff ab)."""
     out = set()
     for e in erwartet:
         for x in WORT_RE.findall(str(e)):
-            out |= {x.lower(), stamm(x), begriff_stamm(x, formen)}
+            out |= {stamm(x), begriff_stamm(x, formen)}
+    return out
+
+
+def _unerwartete_begriffe(t: str, erwartet, formen: set) -> Counter:
+    """Wie begriffe(), aber ohne Vorkommen, deren ungekürzte Grundform eine erwartete Form ist. Der Begriffsschlüssel
+    (9-Zeichen-Stamm) allein reicht nicht: „unternehmer“ deckte sonst neue „Unternehmensberatung“ mit ab."""
+    erw_grund = {grundform(g) for e in erwartet for x in WORT_RE.findall(str(e)) for g in (x, gender_form(x, formen))}
+    t = quellen(t)[1]
+    return Counter(begriff_stamm(m.group(0), formen) for m in WORT_RE.finditer(t)
+                   if _ist_begriff(t, m) and grundform(gender_form(m.group(0), formen)) not in erw_grund
+                   and grundform(m.group(0)) not in erw_grund)
+
+
+def _erwartet_abkuerzungen(erwartet) -> set:
+    """Erwartete Formen in der Schreibung von akronyme(), kleingeschrieben: Plural-s ab (Coach: „kmus“ = „KMU“), Teile von
+    Bindestrich-Wörtern einzeln (Bereinigung verklebter Wörter: „hzb-note“ = „HZB“)."""
+    out = set()
+    for e in erwartet:
+        for x in WORT_RE.findall(str(e)):
+            for t in {x.lower()} | set(x.lower().split("-")):
+                out |= {t, t[:-1] if len(t) > 3 and t.endswith("s") else t}
     return out
 
 
@@ -873,6 +912,7 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
     res: dict = {"harte_verluste": [], "erfindungen": [], "warnungen": [], "kennzahlen": {}}
     formen = wortformen(alt, neu)      # Bezugsmenge für die Gender-Paare: Gegenform in einem der beiden Texte
     erw = _erwartet_schluessel(erwartet, formen)
+    erw_abk = _erwartet_abkuerzungen(erwartet)
 
     q_alt, rest_alt = quellen(alt)
     q_neu, rest_neu = quellen(neu)
@@ -886,7 +926,7 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
     for f in dict.fromkeys(fehlt):
         res["warnungen"].append({"typ": "Abkürzung", "wert": f, "kontext_original": kontext(alt, alt.find(f), len(f))})
     for d in dict.fromkeys(dazu):
-        if d.lower() in erw:
+        if d.lower() in erw_abk:
             continue    # vom Coach verlangt (z. B. Nomen beim Teilen wiederholt: „Die ESRS wurden …“)
         res["warnungen"].append({"typ": "Abkürzung", "wert": d, "kontext_neu": kontext(neu, neu.find(d), len(d))})
 
@@ -920,11 +960,12 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
                                     and (b_roh[begriff_stamm(m.group(0), formen)] >= 2
                                          or (len(m.group(0)) >= 13 and m.group(0)[0].isupper()))})
     # neue häufige Begriffe; vom Coach erwartete Formen (Verlauf "erwartet") zählen nicht
-    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_roh[s] == 0 and s not in erw]
+    b_unerw = _unerwartete_begriffe(neu, erwartet, formen) if erw else b_neu
+    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_roh[s] == 0 and (s not in erw or b_unerw[s] >= 3)]
     if neu_haeufig:
         res["warnungen"].append({"typ": "Neuer häufiger Begriff", "wert": ", ".join(zeig_neu.get(s, s) for s in neu_haeufig[:15]),
                                  "hinweis": "Taucht neu und mehrfach auf – prüfen, ob dadurch Inhalt hinzugekommen ist."})
-    erw_neu = sorted({zeig_neu.get(s, s) for s, n in b_neu.items() if n >= 3 and b_roh[s] == 0 and s in erw})
+    erw_neu = sorted({zeig_neu.get(s, s) for s, n in b_neu.items() if n >= 3 and b_roh[s] == 0 and s in erw and b_unerw[s] < 3})
     if erw_neu:
         res["erwartet_neu"] = erw_neu
 

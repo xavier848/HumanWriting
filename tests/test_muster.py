@@ -104,6 +104,7 @@ MUSTER_SAETZE = {
          "Die Befragung fand im Mai 2021 statt (vgl. Anhang A).",
          "Der Test findet in einem geräumigen Büro statt (vgl. Abb. 9).",
          "Die Erhebung fand online statt [12].",
+         "Hiermit versichere ich an Eides statt durch meine Unterschrift, dass ich die Arbeit selbst verfasst habe.",
          "Die Interviews finden in Einzelgesprächen statt und dauern eine Stunde.",
          "Die Treffen fanden statt, als die Krise begann.",
          "Der Anteil stieg auf 52 % statt 45 % im Vorjahr.",
@@ -242,6 +243,9 @@ class Ersatzstrategien(unittest.TestCase):
                 self.assertIn("zwei Sätze", ersatz)
                 self.assertIn("behalten", ersatz)
         self.assertIn("dieselbe Gegenfolie", self.muster["nicht_x_sondern"]["ersatz"])
+        # Prüfung v7: „Y, nicht X“ misst kein Muster (bei Menschen gleich häufig) – der Ersatztext nennt es trotzdem als
+        # Umstellung, damit der Auftrag nicht dorthin ausweicht
+        self.assertIn("„Y, nicht X“", self.muster["nicht_x_sondern"]["ersatz"])
 
 
 class GegenfolieUmstellung(unittest.TestCase):
