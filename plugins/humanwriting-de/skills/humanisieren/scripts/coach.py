@@ -5576,7 +5576,7 @@ def _diagnose(L: Lauf, auswahl: list[dict], ziel_p: float) -> dict | None:
         return None
     if text_unveraendert(L):
         return None  # nur erneut gemessen: die genannten Stellen sind noch offen, das ist keine Stagnation
-    umsetzbar = [h for h in auswahl if h["hebel"] != "vorgaben" and not h.get("schon_genannt") and not h.get("info")]
+    umsetzbar = [h for h in auswahl if h["hebel"] not in ("vorgaben", "bereinigung") and not h.get("schon_genannt") and not h.get("info")]
     stagniert, p_alt = False, None
     if len(L.messungen) >= 2 and L.messungen[-2].get("p_mensch") is not None:
         p_alt = L.messungen[-2]["p_mensch"]
@@ -5585,7 +5585,7 @@ def _diagnose(L: Lauf, auswahl: list[dict], ziel_p: float) -> dict | None:
         return None
     # Aufschub nur, solange es noch Aufträge gibt (auch schon genannte, noch offene); ohne jeden Auftrag braucht der Nutzer
     # die Diagnose sofort (v5 Controlling: weder Auftrag noch Diagnose)
-    offen = [h for h in auswahl if h["hebel"] != "vorgaben" and not h.get("info")]
+    offen = [h for h in auswahl if h["hebel"] not in ("vorgaben", "bereinigung") and not h.get("info")]
     if offen and len(L.messungen) == 1 and L.messungen[0].get("p_mensch") is not None \
             and p - L.messungen[0]["p_mensch"] >= DIAGNOSE_ANSTIEG:
         # die erste Überarbeitung hat deutlich gewirkt: eine Grenze lässt sich noch nicht abschätzen (v4: CSRD R2 „Grenze des
@@ -6292,7 +6292,7 @@ def _p_anzeige(p: float, ziel: float) -> str:
     """p in Prozent; mit einer Nachkommastelle, wenn es weniger als einen Prozentpunkt vom Ziel entfernt ist (85,6 % statt 86 %)."""
     if p is None:
         return "–"
-    if abs(p - ziel) < 0.01 and round(100 * p) == round(100 * ziel) and p != ziel:
+    if abs(p - ziel) < 0.01 and p != ziel:
         return f"{100 * p:.1f}".replace(".", ",") + " %"
     return f"{round(100 * p)} %"
 
@@ -6368,6 +6368,10 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
     eindeutig = [h for h in eindeutig if h["typ"] not in L.ausgesetzt]
     eindeutig = ein_auftrag_je_satz(eindeutig, {s["nr"]: L.masken.get(s["nr"], s["text"]) for s in L.saetze})
     messunsicherheit = None
+    # Gegenaufträge nach einer Überkorrektur aus Coach-Aufträgen (Teilen) gelten wie bisher – außerhalb von Messunsicherheit und
+    # Auftragsgrenze, die nur das Modell rechnen (Teilen nimmt dort lange Sätze zurück, die das Modell belohnt)
+    gegen_uk = [h for h in eindeutig if diag.get("ueberkorrektur") and "teilen" in (h.get("typen") or [h["typ"]])]
+    eindeutig = [h for h in eindeutig if not any(h is x for x in gegen_uk)]
     if rauschen:
         # im Bereich der Messunsicherheit: ausdrücklich sagen, höchstens der eine Auftrag mit dem größten Effekt
         if Z["luecke_p"] > 0:
@@ -6400,6 +6404,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             L.auftragsgrenze = {"luecke_logit": round(luecke, 3), "summe_logit": round(summe, 3), "gewaehlt": len(gewaehlt),
                                 "verworfen": len(eindeutig) - len(gewaehlt) - len(score_teil)}
             eindeutig = gewaehlt + score_teil[:max(0, 8 - len(gewaehlt))]
+    eindeutig = gegen_uk + eindeutig
     stapel: dict[str, list[dict]] = {}
     for h in sorted(eindeutig, key=lambda h: -h["gewicht"]):  # schon genannte (herabgestuft) machen Platz für neue
         stapel.setdefault(h["hebel"], []).append(h)

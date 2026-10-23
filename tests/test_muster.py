@@ -100,6 +100,10 @@ MUSTER_SAETZE = {
          "Die Daten erfassen den Bestand, nicht jedoch die Zugänge."],
         [  # „statt“ als Verbpartikel (stattfinden), vor Zahlen, in Komposita
          "Die Befragung fand im Mai 2020 statt.",
+         # Prüfung v7: Verbpartikel vor Beleg oder Fußnote (zählte als Gegenfolie)
+         "Die Befragung fand im Mai 2021 statt (vgl. Anhang A).",
+         "Der Test findet in einem geräumigen Büro statt (vgl. Abb. 9).",
+         "Die Erhebung fand online statt [12].",
          "Die Interviews finden in Einzelgesprächen statt und dauern eine Stunde.",
          "Die Treffen fanden statt, als die Krise begann.",
          "Der Anteil stieg auf 52 % statt 45 % im Vorjahr.",
