@@ -13,6 +13,7 @@ python3 -m unittest discover -s tests
 import os
 import sys
 import unittest
+import unittest.mock
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "plugins", "humanwriting-de", "skills", "text-analyse", "scripts"))
@@ -68,13 +69,15 @@ class EingebetteterSatz(unittest.TestCase):
         self.assertEqual(coach.buendel_paar_grund(L, a, b, laenge=False), "b_konjunktiv")
 
     def test_laengenaufbau_kurzer_satz_vorn_wird_geprueft(self):
-        # Kontrolle: ein schlichter kurzer Satz vorn wird vom fast langen Satz aufgenommen (Längenaufbau, umgekehrte Reihenfolge)
-        c = coach.coache(aufbau_kurz_vorn("Die Firma plant das bald neu."), None, 40, roh=True)
-        self.assertIn((2, 3, "aufbau"), buendel_paare(c))
-        # mit Vermutung, Konjunktiv II oder Modalverb nicht: der kurze Satz ginge als Nominalgruppe samt Aussagestatus verloren
-        for kurz in ("Die Firma dürfte das bald ändern.", "Die Firma würde das bald ändern.", "Die Firma kann das bald ändern."):
-            c = coach.coache(aufbau_kurz_vorn(kurz), None, 40, roh=True)
-            self.assertFalse([p for p in buendel_paare(c) if 2 in p[:2]], kurz)
+        # Kontrolle: ein schlichter kurzer Satz vorn wird vom fast langen Satz aufgenommen (Längenaufbau, umgekehrte Reihenfolge);
+        # die Teilsatz-Prüfung (v7, eigener Test) ist hier ausgeschaltet – der synthetische Text liegt knapp unter P75 von 2:1
+        with unittest.mock.patch.object(coach, "teilsatz_ok", return_value=True):
+            c = coach.coache(aufbau_kurz_vorn("Die Firma plant das bald neu."), None, 40, roh=True)
+            self.assertIn((2, 3, "aufbau"), buendel_paare(c))
+            # mit Vermutung, Konjunktiv II oder Modalverb nicht: der kurze Satz ginge als Nominalgruppe samt Aussagestatus verloren
+            for kurz in ("Die Firma dürfte das bald ändern.", "Die Firma würde das bald ändern.", "Die Firma kann das bald ändern."):
+                c = coach.coache(aufbau_kurz_vorn(kurz), None, 40, roh=True)
+                self.assertFalse([p for p in buendel_paare(c) if 2 in p[:2]], kurz)
 
 
 class NominalisierungGleicheSperren(unittest.TestCase):

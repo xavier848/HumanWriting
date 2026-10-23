@@ -33,6 +33,19 @@ def gleichmaessig(n_abs=8, n_saetze=5, start=0):
     return "\n\n".join(absatz(THEMEN[i % len(THEMEN)], laengen[i % 3][:n_saetze], start + 5 * i, W) for i in range(n_abs))
 
 
+def gleichmaessig_wechsel(n_abs=8, n_saetze=5, start=0):
+    """Wie gleichmaessig, aber jeder Absatz wechselt nach dem zweiten Satz das Thema: dort darf ein neuer Absatz beginnen
+    (v7: kein Absatzbeginn vor einem Satz, dessen definites Subjekt den Vorsatz aufnimmt – „Die Arbeitgebermarke …“ nach
+    „Die Arbeitgebermarke …“)."""
+    laengen = [[18, 16, 21, 15, 20, 17], [19, 22, 14, 17, 16, 21], [16, 20, 18, 22, 15, 19]]
+    out = []
+    for i in range(n_abs):
+        lg = laengen[i % 3][:n_saetze]
+        out.append(absatz(THEMEN[i % len(THEMEN)], lg[:2], start + 5 * i, W) + " "
+                   + absatz(THEMEN[(i + 6) % len(THEMEN)], lg[2:], start + 5 * i + 14, W))
+    return "\n\n".join(out)
+
+
 def mit_metriken(**werte):
     """Ersetzt analysiere_und_bewerte so, dass einzelne Rohmetriken bzw. Kennzahlwerte vorgegeben sind."""
     echt = coach.analyse.analysiere_und_bewerte
@@ -65,7 +78,7 @@ class AbsatzSimulation(unittest.TestCase):
         self.assertAlmostEqual(k["mittel"], erg["metriken"]["saetze_pro_absatz"], places=3)
 
     def test_umbau_erhoeht_die_gemessene_variation(self):
-        text = gleichmaessig(8, 5)
+        text = gleichmaessig_wechsel(8, 5)
         c = coach.coache(text, None, 40, roh=True)
         umbau = [h for h in c["hinweise_roh"] if h["typ"] in ("absatz_teilen", "absatz_zusammen")]
         self.assertEqual(len(umbau), 1)  # höchstens ein Absatz-Umbau je Runde
@@ -187,7 +200,10 @@ class Waechter(unittest.TestCase):
         with mit_metriken(rhythmus_r1_log=-0.3, nominalstil_pro_100=6.0):
             c = coach.coache(KI_TEXT, self.verlauf(rhythmus_r1_log=0.0), 40)
         self.assertNotIn("buendeln", c["fortschritt"]["ausgesetzt"])
-        self.assertIn("vorab so geprüft", coach.bericht(c))  # v5: kein „simuliert“ (interner Jargon) im Nutzertext
+        # „vorab so geprüft“ nur, wenn unten tatsächlich Satzlängen-Aufträge stehen (v6-Prüfung: die Behauptung stand auch ohne
+        # einen einzigen solchen Auftrag); v5: kein „simuliert“ (interner Jargon) im Nutzertext
+        laenge = any(h["typ"] in ("buendeln", "teilen", "mitte", "zickzack", "kommas") for h in c["hinweise"])
+        self.assertEqual("vorab so geprüft" in coach.bericht(c), laenge)
 
     def test_wenig_passiv_keine_relativsatz_umbauten(self):
         # viele Relativsätze, kein Passiv

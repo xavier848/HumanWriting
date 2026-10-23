@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import analyse  # noqa: E402
 import coach  # noqa: E402
 from test_coach import KI_TEXT, absatz  # noqa: E402
-from test_coach_wirksamkeit import gleichmaessig  # noqa: E402
+from test_coach_wirksamkeit import gleichmaessig, gleichmaessig_wechsel  # noqa: E402
 
 TS = analyse.lade_baselines()["textsorten"]["hochschule"]
 FUELL = gleichmaessig(5, 5)
@@ -92,6 +92,8 @@ class ZielEinseitig(unittest.TestCase):
 
     def test_anzeige_gerundet(self):
         self.assertEqual(coach._p_anzeige(0.856, 0.86), "85,6 %")
+        self.assertEqual(coach._p_anzeige(0.853, 0.86), "85,3 %")  # < 1 Prozentpunkt unter dem Ziel, auch wenn gerundet 85
+        self.assertEqual(coach._p_anzeige(0.8649, 0.86), "86,5 %")
         self.assertEqual(coach._p_anzeige(1.0, 0.86), "100 %")
         self.assertEqual(coach._p_anzeige(0.70, 0.86), "70 %")
         with bewertung_setzen(score=40, score_ki=40, p_mensch=0.995):
@@ -226,6 +228,13 @@ class Bereinigung(unittest.TestCase):
         self.assertIn("übrigen Messwerte unsicher", b)
         self.assertLess(b.index("Verklebte Wörter trennen"), b.index("Formuliere die Stellen"))
 
+    def test_zweite_runde_bleibt_vorn(self):
+        c1 = coach.coache(self.TEXT, None, 15)
+        c2 = coach.coache(self.TEXT, {"messungen": [c1["stand"]]}, 15)
+        self.assertEqual(c2["hinweise"][0]["typ"], "bereinigung")
+        self.assertIn("noch offen", c2["hinweise"][0]["text"])
+        self.assertNotIn("überspringen", c2["hinweise"][0]["text"])
+
     def test_rueckfall_gleiche_regel(self):
         s = [{"nr": 1, "text": "Die Daten wurden erfasst.Merkmale und z.B. die Note bzw.Lage, www.beispiel.de sowie 14:30Uhr."}]
         stellen = [x["stelle"] for x in coach.verklebte_stellen(s)]
@@ -309,7 +318,7 @@ class Auftragsgrenze(unittest.TestCase):
     def test_absatz_simulation_trifft_messung(self):
         # gleichmäßige Absätze: die simulierte Netto-Wirkung des Absatz-Auftrags liegt nahe an der gemessenen (Summe der
         # Modellbeiträge nach dem Umsetzen minus vorher)
-        text = gleichmaessig(8, 5)
+        text = gleichmaessig_wechsel(8, 5)  # Themenwechsel im Absatz: dort darf geteilt werden (v7-C2)
         c = coach.coache(text, None, 40, roh=True)
         h = next(x for x in c["hinweise_roh"] if x["typ"] in ("absatz_teilen", "absatz_zusammen"))
         self.assertGreater(h["netto_logit"], 0)

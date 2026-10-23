@@ -9,6 +9,7 @@ python3 -m unittest discover -s tests
 import os
 import sys
 import unittest
+import unittest.mock
 from types import SimpleNamespace
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,7 +71,10 @@ class SatzlaengenAmModell(unittest.TestCase):
         self.assertEqual(coach.buendel_laenge(23, 23), round(coach.VERDICHTUNG * 46))
 
     def test_laengenaufbau_ohne_buendelpaar(self):
-        c = coach.coache(aufbau_text(), None, 40, roh=True)
+        # der synthetische Text liegt knapp unter P75 des Verhältnisses 2:1; jede Bündelung höbe es darüber (v7: teilsatz_ok,
+        # eigens geprüft in test_coach_v7_praezision) – hier geht es nur um die Längenauswahl
+        with unittest.mock.patch.object(coach, "teilsatz_ok", return_value=True):
+            c = coach.coache(aufbau_text(), None, 40, roh=True)
         self.assertEqual(c["satzlaengen"]["modus"], "buendeln")
         self.assertLess(c["satzlaengen"]["anteil_lange"], REF["anteil_lange_saetze"]["mensch"]["p25"])
         auf = [h for h in c["hinweise_roh"] if h["typ"] == "buendeln"]

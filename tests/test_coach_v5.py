@@ -57,22 +57,29 @@ class DiagnoseEhrlich(unittest.TestCase):
                                ts={"modell": B["modell"]}, fw_potenzial=0.0, fw_diag=None, hinweise=list(hinweise), _buendel_raum=raum)
 
     def test_kein_raum_zaehlt_als_ohne_auftrag(self):
-        # Controlling-Endstand aus v4 (p 0,639): Dispersion, sehr lange und mittellange Sätze ohne Spielraum im Bündelfenster –
-        # v4 setzte ihr Potenzial auf 0 und kam auf „Grenze des Textes“ (1,22 gegen 1,24); v5: Grenze des Coaches
+        # Controlling-Endstand aus v4 (p 0,639): Dispersion, sehr lange und mittellange Sätze ohne Spielraum im Bündelfenster.
+        # v7 (v6-Prüfung): der gesperrte Rest steht als eigene Summe („gesperrt“), zählt nicht für die Einstufung, und die drei
+        # Längenmerkmale bilden einen Block (größtes Potenzial + 0,3 · übrige)
         b = [{"id": "fw_profil_llr_pro_1000", "name": "FW", "beitrag": -1.15}, {"id": "nachbarsatz_ueberlappung", "name": "NS", "beitrag": -0.95},
              {"id": "mattr_100", "name": "MATTR", "beitrag": -0.76}, {"id": "satzklammer_mittel", "name": "Klammer", "beitrag": -0.63},
              {"id": "satzlaenge_dispersion", "name": "Dispersion", "beitrag": -0.45},
              {"id": "anteil_sehr_lange_saetze", "name": "sehr lang", "beitrag": -0.25},
              {"id": "anteil_mittlere_saetze", "name": "mittel", "beitrag": -0.17}, {"id": "saetze_pro_absatz_cv", "name": "Absatz", "beitrag": -0.09}]
         d = coach._diagnose(self.ns(b, 0.639, raum=0), [], 0.86)
-        self.assertEqual(d["grenze"], "coach")
         z = {x["id"]: x for x in d["beitraege"]}
-        for k in ("satzlaenge_dispersion", "anteil_sehr_lange_saetze", "anteil_mittlere_saetze"):
-            self.assertEqual(z[k]["wie"], "kein_raum")
-            self.assertGreater(z[k]["rest_logit"], 0)  # Potenzial bleibt, zählt als „ohne Auftrag“
-            self.assertIsNone(z[k]["selbsthilfe"])  # keine Selbsthilfe „bündeln“ gegen die Satzlängen-Vorgabe
+        self.assertNotIn("satzlaenge_dispersion", z)
+        blk = z["laengenblock"]
+        self.assertEqual(sorted(blk["glieder"]), ["anteil_mittlere_saetze", "anteil_sehr_lange_saetze", "satzlaenge_dispersion"])
+        self.assertEqual(blk["wie"], "kein_raum")
+        self.assertAlmostEqual(blk["potenzial_logit"], round(0.45 + 0.3 * (0.125 + 0.17), 2), places=2)
+        self.assertIsNone(blk["selbsthilfe"])  # keine Selbsthilfe „bündeln“ gegen die Satzlängen-Vorgabe
+        self.assertAlmostEqual(d["gesperrt_logit"], blk["rest_logit"], places=2)
+        # Einstufung ohne den gesperrten Teil: ohne Auftrag 1,22 von 1,24 → knapp (v6 zählte die gesperrten 0,54 mit: „Grenze
+        # des Coaches“)
+        self.assertEqual(d["grenze"], "knapp")
+        self.assertAlmostEqual(d["stellenlos_logit"], 1.22, places=2)
         txt = "\n".join(coach.diagnose_text(d))
-        self.assertIn("Grenze des Coaches", txt)
+        self.assertIn("gesperrt ≈", txt)
         self.assertIn("eine Grenze des Coaches, zählt nicht mit", txt)
         self.assertNotIn("Grenze des Textes", txt)
         self.assertNotIn("zwei zusammengehörige mittellange Sätze", txt)
@@ -100,17 +107,18 @@ class DiagnoseEhrlich(unittest.TestCase):
         c0 = coach.coache(KI_TEXT, None, 2)
         text = KI_TEXT.replace("die Ressourcen fehlen oft", "die Ressourcen fehlen häufig")
         with unittest.mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake):
+            # v7 (v6-Prüfung): Aufschub nur, wenn die offenen Aufträge (simuliert) samt den Potenzialen ohne Auftrag ≥ 0,7 der
+            # Lücke decken – bei p 0,40 (Lücke ≈ 2,2) reichen zwei kleine Aufträge nicht: Diagnose sofort, „vorläufig“
             c = coach.coache(text, {"messungen": [dict(c0["stand"], p_mensch=0.25)]}, 2)  # +0,15 in dieser Runde
-            self.assertIsNone(c["diagnose"])
-            self.assertIsNotNone(c["diagnose_aufgeschoben"])
-            self.assertIsNone(c["stand"]["diagnose_kurz"])
-            txt = coach.bericht(c)
-            self.assertIn("Noch keine Diagnose", txt)
-            self.assertNotIn("Keine sicheren Einzelstellen gefunden", txt)
+            self.assertIsNotNone(c["diagnose"])
+            self.assertTrue(c["diagnose"]["vorlaeufig"])
+            self.assertIn("(vorläufig)", coach.bericht(c))
             c = coach.coache(text, {"messungen": [dict(c0["stand"], p_mensch=0.36)]}, 2)  # kaum gestiegen: Diagnose
             self.assertIsNotNone(c["diagnose"])
             c = coach.coache(text, {"messungen": [dict(c0["stand"], p_mensch=0.25), dict(c0["stand"], p_mensch=0.25)]}, 2)
             self.assertIsNotNone(c["diagnose"])  # nur direkt nach Runde 1
+
+        # der Aufschub selbst (offene Aufträge decken die Lücke) ist in test_coach_v7_praezision.DiagnoseAufschub geprüft
 
     def test_funktionswort_selbsthilfe_aus_der_stellenliste(self):
         L = lauf(ALS_TEXT)
