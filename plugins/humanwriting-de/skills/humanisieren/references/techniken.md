@@ -46,6 +46,7 @@ KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen
 1. Die **Kernbegriffe** des Textes (der Coach listet sie) wörtlich wieder aufgreifen. Für jeden Fachgegenstand **einen** Hauptbegriff, Synonyme darauf zurückführen.
 2. Satzanschlüsse über das wiederholte Nomen statt über Possessiva am Satzanfang („Ihre Wirkung …“, „Seine Grenzen …“ – bei Claude doppelt so häufig wie bei Menschen): „Ihre Wirkung ist begrenzt.“ → „Die Wirkung der Förderprogramme ist begrenzt.“ „Dies“, „Dabei“ und „Dadurch“ am Satzanfang sind dagegen in menschlichen Arbeiten sogar häufiger und dürfen bleiben.
 3. Füll-Synonyme streichen („relevant, bedeutsam und wichtig“ → „wichtig“).
+4. **Maß:** etwa jeder zweite Satz knüpft über ein Nomen des Vorsatzes an, nicht jeder. Autorennamen nicht im direkt folgenden Satz wiederholen.
 
 ## Konnektoren und Satzanfänge
 
@@ -53,6 +54,7 @@ KI-Texte variieren Begriffe künstlich (Synonym-Karussell). Menschen wiederholen
 - Konnektor **streichen**, wenn der logische Bezug klar ist (häufigster Fall).
 - Oder den Anschluss über das **wiederholte Nomen** herstellen.
 - **Nicht** ins Satzinnere verschieben – Claude stellt Konnektoren schon zu über 80 % ins Satzinnere; das ändert die Dichte nicht.
+- **Nicht auf null drücken:** Menschen setzen 4–8 pro 1000 Wörter. Ohne Konnektoren bleiben Gegensätze und Folgerungen unklar, und der Text liest sich additiv.
 
 **„Dies zeigt/verdeutlicht …“-Anfänge ↓**: Kommentarsatz streichen, wenn er nur wiederholt; sonst konkretes Subjekt einsetzen.
 
