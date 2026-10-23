@@ -783,8 +783,10 @@ class GenderUndErwartet(unittest.TestCase):
                 "doppelte Wesentlichkeitsanalyse, die viele KMU überfordert.")
 
     def test_esrs_nach_teilung_mit_erwartet(self):
+        # v7.1: auch ohne Verlauf still – ESRS steht schon im Original, die Teilung nennt es nur öfter (kein neuer Inhalt;
+        # Coach-Evaluation v7: der Verlauf erwartete „european“, nicht „esrs“, und der Fehlalarm kam zum vierten Mal)
         ohne = inhalt_check.pruefe(self.ALT_ESRS, self.NEU_ESRS)
-        self.assertIn("ESRS", [w["wert"] for w in ohne["warnungen"] if w["typ"] == "Abkürzung"])
+        self.assertEqual([w["wert"] for w in ohne["warnungen"] if w["typ"] == "Abkürzung"], [])
         mit = inhalt_check.pruefe(self.ALT_ESRS, self.NEU_ESRS, erwartet={"esrs"})
         self.assertEqual([w for w in mit["warnungen"] if w["typ"] == "Abkürzung"], [])
         # eine wirklich neue Abkürzung bleibt gemeldet

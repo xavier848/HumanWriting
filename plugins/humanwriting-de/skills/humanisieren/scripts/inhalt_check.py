@@ -4,11 +4,15 @@
 Vergleicht Original und Überarbeitung deterministisch auf:
   - Zahlen (inkl. Prozent, Prozentpunkte, Vorzeichen, Jahreszahlen, Kennwerte wie N = 849)
   - Quellenverweise ((Müller 2019, S. 12), Müller (2019), vgl. …, ebd.)
-  - wörtliche Zitate in Anführungszeichen
-  - Abkürzungen/Akronyme (KMU, EVP, …)
+  - wörtliche Zitate in Anführungszeichen, abgegrenzt wie im Coach (coach.zitat_masken: verschachtelte
+    Zitate zählen zum äußeren, das erste Guillemet im Absatz bestimmt die Richtung, eine Belegklammer
+    direkt hinter dem Zitat gehört dazu, ein gerades " kann ein „ schließen)
+  - Abkürzungen/Akronyme (KMU, EVP, …): fehlend oder ganz neu; eine schon vorhandene Abkürzung,
+    die nur öfter genannt wird (Nomen beim Teilen wiederholt), ist kein neuer Inhalt
   - Fachbegriffe (Inhaltswörter, die im Original mehrfach vorkommen)
   - Überschriften und Fußnotenmarker
-  - Umfang (Wörter, Absätze)
+  - Umfang (Wörter, Absätze); daneben die Wortzahl, wie der Coach sie zählt (ohne Überschriften,
+    Quellenverweise und Fußnoten)
 
 Reine Form gilt nicht als Verlust: Zitierform (Müller (2019) ↔ (Müller 2019), & ↔ und,
 et al. ↔ u. a., Reihenfolge im Mehrfachzitat), Schreibweise von Zahlen (1.250 ↔ 1250,
@@ -205,18 +209,15 @@ ZAHLWORT_RE = re.compile(
     + "|".join(w.capitalize() for w in ZAHLWORT) + r"))(?![\wäöüß])", re.M)
 
 # --- Zitate und Fußnoten -----------------------------------------------------
-# Zitatinhalt: keine Anführungszeichen, kein Absatzwechsel (einfacher Zeilenumbruch erlaubt).
-# Erst alle Paare ohne Mindestlänge bilden, damit "KMU" sein schließendes " verbraucht.
-_Z = r"(?:(?!\n[ \t]*\n)[^{}])+"
-WOERTLICH_PAAR_RE = re.compile(
-    "„(" + _Z.format('„“”"') + ")[“”\"]"      # „…“  „…”  „…"
-    "|»(" + _Z.format("»«") + ")«"             # »…«
-    "|«(" + _Z.format("«»") + ")»"             # «…»
-    "|“(" + _Z.format("“”„") + ")[”“]"         # “…”  “…“ (Autokorrektur)
-    "|\"(" + _Z.format('"') + ")\""            # "…"
+# Wörtliche Zitate erkennt zitat_spannen_absatz wie coach.zitat_masken (Stapel, Belegklammer, „…"). Zusätzlich, nur außerhalb
+# dieser Spannen: “…“ (Autokorrektur) und ‚…‘, die der Coach nicht als Zitat führt. Kein Absatzwechsel im Zitat.
+_Z = r"(?:(?!\n[ \t\r]*\n)[^{}])+"
+ZUSATZ_PAAR_RE = re.compile(
+    "“(" + _Z.format("“”„") + ")“"             # “…“ (Autokorrektur; “…” erkennt schon der Stapel)
     "|‚(" + _Z.format("‚‘’") + ")[‘’]"         # ‚…‘
-    "|›(" + _Z.format("›‹") + ")‹"             # ›…‹
 )
+# Inhalt einer Klammer direkt hinter dem schließenden Anführungszeichen, der sie als Beleg ausweist (wie coach._beleg_ende)
+BELEG_INHALT_RE = re.compile(r"\d|\bebd\b|\bebenda\b|\bvgl\b|\bders\.|\bdies\.|\bHrsg\b|\bzit\b|\bInterview")
 FUSSNOTE_RE = re.compile(r"\[\^[^\]\s]+\]|[¹²³⁴⁵⁶⁷⁸⁹⁰]+")
 # hochgestellte Einheiten/Kennwerte (m², R², η², χ², 10⁶) sind keine Fußnotenmarker
 HOCH_EINHEIT_RE = re.compile(r"(?<![\wäöüß])(?:[kcmdµμ]?m|R|r|s|σ|χ|η|ω|ε|x|y|z|a|b)[²³]|(?<![\d.,])10[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+")
@@ -536,13 +537,142 @@ def _zitat_norm(z: str) -> str:
     return norm(z).strip(" .,;:!?…")
 
 
-def zitat_funde(t: str) -> list[dict]:
+def _beleg_ende(text: str, i: int) -> int:
+    """Ende einer Quellenklammer direkt hinter einem schließenden Anführungszeichen an Position i (Leerraum dazwischen
+    erlaubt): „[2018.06.06_Lehrende, Absatz 8]“, „(ebd., S. 9)“. Gehört zum Zitat, nicht zum Folgesatz; sonst i.
+    Gleiches Verhalten wie coach._beleg_ende (Vergleichstest in tests/test_v71_inhalt.py)."""
+    j = i
+    while j < len(text) and text[j] in " \t\n":
+        j += 1
+    if j >= len(text) or text[j] not in "[(":
+        return i
+    auf, zu = text[j], "]" if text[j] == "[" else ")"
+    tiefe = 0
+    for k in range(j, min(len(text), j + 120)):
+        if text[k] == auf:
+            tiefe += 1
+        elif text[k] == zu:
+            tiefe -= 1
+            if tiefe == 0:
+                return k + 1 if BELEG_INHALT_RE.search(text[j + 1:k]) else i
+    return i
+
+
+def zitat_spannen_absatz(text: str, grenzen: list[tuple[int, int]] | None = None) -> list[tuple[int, int | None, int]]:
+    """Wörtliche Zitate in einem Absatz wie coach.zitat_masken: [(Start, Schlusszeichen, Ende)], Start = Position des
+    öffnenden Zeichens, Ende hinter dem Schlusszeichen bzw. einer direkt folgenden Belegklammer; Schlusszeichen None bei einem
+    nie geschlossenen Zitat (gilt bis zum Satzende laut grenzen, sonst bis zum Absatzende).
+
+    Regeln (identisch mit dem Coach, Vergleichstest in tests/test_v71_inhalt.py): „…“/„…”, “…”, "…", »…« bzw. «…» (das erste
+    Guillemet im Absatz bestimmt die Richtung), ebenso ›…‹ bzw. ‹…›; verschachtelte Zitate zählen zum äußeren (Stapel); ein
+    gerades " schließt ein „, wenn danach bis zum nächsten „ kein “/” mehr folgt; nie geschlossene Öffner zählen beim erneuten
+    Durchlauf nicht mehr mit; nur ein nie geschlossenes „, », «, › bzw. ‹ gilt bis zum Satzende, ein “ oder " nicht."""
+    grenzen = grenzen if grenzen is not None else [(0, len(text))]
+    erst_g = next((ch for ch in text if ch in "»«"), "»")
+    erst_e = next((ch for ch in text if ch in "›‹"), "›")
+    oeffner = {"„": "“”", "“": "”", '"': '"', erst_g: "«" if erst_g == "»" else "»", erst_e: "‹" if erst_e == "›" else "›"}
+    scan = list(text)
+    for i, ch in enumerate(text):
+        if ch != "„":
+            continue
+        j = next((k for k in range(i + 1, len(text)) if text[k] in "“”\"„"), None)
+        if j is None or text[j] != '"':
+            continue
+        k = next((k for k in range(j + 1, len(text)) if text[k] in "“”„"), None)
+        if k is None or text[k] == "„":
+            scan[j] = "“"
+
+    def durchlauf(ignoriert: set[int]):
+        spannen: list[tuple[int, int | None, int]] = []
+        stapel: list[tuple[str, str, int]] = []  # (Öffner, Schließer, Start)
+        i = 0
+        while i < len(text):
+            ch = scan[i]
+            if i in ignoriert:
+                i += 1
+                continue
+            ebene = next((k for k in range(len(stapel) - 1, -1, -1) if ch in stapel[k][1]), None)
+            if ebene is not None:
+                start = stapel[ebene][2]
+                del stapel[ebene:]
+                if not stapel:
+                    ende = _beleg_ende(text, i + 1)
+                    spannen.append((start, i, ende))
+                    i = max(i + 1, ende)
+                    continue
+            elif ch in oeffner:
+                stapel.append((ch, oeffner[ch], i))
+            i += 1
+        return spannen, stapel
+
+    ignoriert: set[int] = set()
+    offene: list[tuple[str, str, int]] = []
+    spannen, stapel = durchlauf(ignoriert)
+    while stapel:
+        offene += stapel
+        ignoriert |= {x[2] for x in stapel}
+        spannen, stapel = durchlauf(ignoriert)
+    for zeichen, _zu, start in offene:
+        if zeichen in "„»«›‹":
+            spannen.append((start, None, next((e for a, e in grenzen if a <= start < e), len(text))))
+    return spannen
+
+
+def _absaetze_mit_saetzen(t: str):
+    """(Absatzbeginn, Absatztext) je Absatz: Absätze an Leerzeilen, eine Überschriftzeile ist ein eigener Absatz."""
+    for m in re.finditer(r"(?:(?!\n[ \t\r]*\n)[\s\S])+", t):
+        start = m.start()
+        zeilen, z0 = [], start
+        for zeile in m.group(0).split("\n"):
+            if re.match(r"[ \t]*#{1,6}[ \t]", zeile):
+                if "".join(zeilen).strip():
+                    yield z0, "\n".join(zeilen)
+                yield start, zeile
+                zeilen, z0 = [], start + len(zeile) + 1
+            else:
+                zeilen.append(zeile)
+            start += len(zeile) + 1
+        if "".join(zeilen).strip():
+            yield z0, "\n".join(zeilen)
+
+
+def zitat_spannen(t: str) -> list[dict]:
+    """Wörtliche Zitate im ganzen Text: [{"start", "ende", "inhalt": (von, bis) oder None, "art"}], nach Position sortiert.
+    art "stapel" = wie der Coach (zitat_spannen_absatz je Absatz, Satzgrenzen nach SATZ_RE; "inhalt" None bei nie
+    geschlossenem Zitat), "zusatz" = “…“ bzw. ‚…‘ außerhalb davon. "ende" schließt eine Belegklammer direkt dahinter ein."""
     out = []
-    for m in WOERTLICH_PAAR_RE.finditer(t):
+    for a0, absatz in _absaetze_mit_saetzen(t):
+        grenzen, s0 = [], 0
+        for m in SATZ_RE.finditer(absatz):
+            grenzen.append((s0, m.start()))
+            s0 = m.end()
+        grenzen.append((s0, len(absatz)))
+        for s, schluss, e in zitat_spannen_absatz(absatz, grenzen):
+            out.append({"start": a0 + s, "ende": a0 + e, "inhalt": (a0 + s + 1, a0 + schluss) if schluss is not None else None,
+                        "art": "stapel"})
+    # nur geschlossene Spannen ausblenden: Ein nie geschlossenes « bzw. „ innerhalb eines “…“-Zitats verschluckte sonst dessen
+    # Schlusszeichen, und das ganze Zitat bliebe ungeprüft (v7.1-Prüfung, kn-47466: “Ein didaktisch … schaffen« (DRÄGER 2014).“)
+    rest = list(t)
+    for z in out:
+        if z["inhalt"] is not None:
+            rest[z["start"]:z["ende"]] = [ch if ch == "\n" else " " for ch in t[z["start"]:z["ende"]]]
+    for m in ZUSATZ_PAAR_RE.finditer("".join(rest)):
         i = next(i for i, g in enumerate(m.groups(), 1) if g is not None)
-        z = _zitat_norm(m.group(i))
+        out.append({"start": m.start(), "ende": m.end(), "inhalt": (m.start(i), m.end(i)), "art": "zusatz"})
+    return sorted(out, key=lambda z: z["start"])
+
+
+def zitat_funde(t: str) -> list[dict]:
+    """Geschlossene wörtliche Zitate (zitat_spannen) mit normalisiertem Wortlaut. Nie geschlossene zählen hier nicht: Der
+    Coach schützt sie (keine Aufträge, _ohne_zitate), verglichen wird aber nur, was eindeutig als Zitat abgegrenzt ist."""
+    out = []
+    for sp in zitat_spannen(t):
+        if sp["inhalt"] is None:
+            continue
+        z = _zitat_norm(t[sp["inhalt"][0]:sp["inhalt"][1]])
         if z:
-            out.append({"wert": z, "lang": len(z) >= 12 and len(z.split()) >= 3, "pos": m.start(), "laenge": len(m.group(0))})
+            out.append({"wert": z, "lang": len(z) >= 12 and len(z.split()) >= 3, "pos": sp["start"],
+                        "laenge": sp["inhalt"][1] + 1 - sp["start"]})
     return out
 
 
@@ -633,8 +763,12 @@ def ki_woerter(pfad: str | None = None) -> set:
 
 
 def _ohne_zitate(t: str) -> str:
-    """Text in Anführungszeichen durch Leerzeichen ersetzen (gleiche Positionen): Zitate sind keine Floskeln."""
-    return WOERTLICH_PAAR_RE.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), t)
+    """Wörtliche Zitate (zitat_spannen, auch nie geschlossene und die Belegklammer) durch Leerzeichen ersetzen (gleiche
+    Positionen): Zitate sind keine Floskeln."""
+    rest = list(t)
+    for z in zitat_spannen(t):
+        rest[z["start"]:z["ende"]] = [ch if ch == "\n" else " " for ch in t[z["start"]:z["ende"]]]
+    return "".join(rest)
 
 
 def _floskel_spannen(t: str, muster: list | None = None) -> tuple[set, set]:
@@ -764,6 +898,39 @@ def fussnoten(t: str) -> list[tuple[str, int]]:
 
 def absaetze(t: str) -> int:
     return len([b for b in re.split(r"\n\s*\n", t) if b.strip() and not b.strip().startswith("#")])
+
+
+def _analyse_modul():
+    """analyse.py aus text-analyse/scripts (wie coach.py es lädt) oder None, wenn es fehlt. Wird erst bei Bedarf geladen."""
+    if "analyse" not in _CACHE:
+        modul = None
+        pfad = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "text-analyse", "scripts"))
+        if os.path.exists(os.path.join(pfad, "analyse.py")):
+            if pfad not in sys.path:
+                sys.path.insert(0, pfad)
+            try:
+                import analyse as modul  # noqa: PLC0415
+            except Exception:  # noqa: BLE001 – die Zählung wie im Coach ist eine Zusatzangabe
+                modul = None
+        _CACHE["analyse"] = modul
+    return _CACHE["analyse"]
+
+
+def woerter_wie_coach(t: str) -> int | None:
+    """Wortzahl so, wie coach.py sie im Kopf nennt (analyse.py, info['woerter']): ohne Überschriften, Quellenverweise,
+    Belegklammern, Fußnoten und Transkript-Notation, Zahlen nicht als Wort. None, wenn analyse.py nicht verfügbar ist."""
+    a = _analyse_modul()
+    if a is None:
+        return None
+    try:
+        struktur = a.zerlege_bloecke(t)
+        schon = set(struktur.get("bereinigt", ()))
+        zaehler: Counter = Counter()
+        return sum(1 for i, roh in enumerate(struktur["absaetze"])
+                   for s in a.zerlege_saetze(roh if i in schon else a.bereinige_absatz(roh, zaehler))
+                   for tok in a.tokens(s) if a.ist_wort(tok))
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def differenz(alt: Counter, neu: Counter):
@@ -922,13 +1089,20 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
     _vergleiche_zitate(alt, neu, res)
     res["warnungen"].extend(zahlen_vertauscht(rest_alt, rest_neu))
 
-    fehlt, dazu = differenz(akronyme(alt), akronyme(neu))
+    a_alt, a_neu = akronyme(alt), akronyme(neu)
+    fehlt, dazu = differenz(a_alt, a_neu)
     for f in dict.fromkeys(fehlt):
-        res["warnungen"].append({"typ": "Abkürzung", "wert": f, "kontext_original": kontext(alt, alt.find(f), len(f))})
+        res["warnungen"].append({"typ": "Abkürzung", "wert": f, "kontext_original": kontext(alt, alt.find(f), len(f)),
+                                 "hinweis": ("fehlt in der Überarbeitung ganz" if not a_neu[f]
+                                             else f"im Original {a_alt[f]}×, jetzt {a_neu[f]}×")
+                                 + " – prüfen, ob eine Aussage weggefallen ist."})
     for d in dict.fromkeys(dazu):
         if d.lower() in erw_abk:
             continue    # vom Coach verlangt (z. B. Nomen beim Teilen wiederholt: „Die ESRS wurden …“)
-        res["warnungen"].append({"typ": "Abkürzung", "wert": d, "kontext_neu": kontext(neu, neu.find(d), len(d))})
+        if a_alt[d]:
+            continue    # steht schon im Original: nur öfter genannt (Nomen beim Teilen wiederholt), kein neuer Inhalt
+        res["warnungen"].append({"typ": "Abkürzung", "wert": d, "kontext_neu": kontext(neu, neu.find(d), len(d)),
+                                 "hinweis": "neu, im Original nicht enthalten – prüfen, ob Inhalt hinzugekommen ist."})
 
     # Fachbegriffe: mehrfach im Original, ganz verschwunden in der Überarbeitung. Wörter, die der Coach zum Ersetzen
     # empfiehlt (Floskel-Auslöser, typische Claude-Wörter, Verlauf), zählen im Original nicht als Begriff. Schlüssel ist
@@ -986,7 +1160,9 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
 
     w_alt, w_neu = len(WORT_RE.findall(alt)), len(WORT_RE.findall(neu))
     verh = w_neu / w_alt if w_alt else 0
+    # Zusatzangabe: Wortzahl wie im Kopf des Coaches (ohne Quellenverweise usw.), damit die Zahlen nicht verwirren
     res["kennzahlen"] = {"woerter_original": w_alt, "woerter_neu": w_neu, "verhaeltnis": round(verh, 3),
+                         "woerter_coach_original": woerter_wie_coach(alt), "woerter_coach_neu": woerter_wie_coach(neu),
                          "absaetze_original": absaetze(alt), "absaetze_neu": absaetze(neu)}
     if verh < 0.85 or verh > 1.2:
         res["warnungen"].append({"typ": "Umfang", "wert": f"{round(100 * verh)} % der Originallänge",
@@ -1008,7 +1184,12 @@ def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
 def bericht(res: dict) -> str:
     out = ["## Inhaltscheck", ""]
     k = res["kennzahlen"]
-    out.append(f"Wörter: {k['woerter_original']} → {k['woerter_neu']} ({round(100 * k['verhaeltnis'])} %) · Absätze: {k['absaetze_original']} → {k['absaetze_neu']}")
+    coach_zahl = ""
+    if k.get("woerter_coach_original") is not None and k.get("woerter_coach_neu") is not None:
+        coach_zahl = (f" · wie im Coach gezählt (ohne Überschriften, Quellenverweise und Fußnoten): "
+                      f"{k['woerter_coach_original']} → {k['woerter_coach_neu']}")
+    out.append(f"Wörter: {k['woerter_original']} → {k['woerter_neu']} ({round(100 * k['verhaeltnis'])} %){coach_zahl}"
+               f" · Absätze: {k['absaetze_original']} → {k['absaetze_neu']}")
     out.append("")
     out.append("✅ **Keine harten Verluste oder Erfindungen.**" if res["ok"] else "❌ **Inhalt verändert – vor dem Weitermachen korrigieren:**")
     for e in res["harte_verluste"]:

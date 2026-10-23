@@ -129,7 +129,9 @@ class DiagnoseErreichbarkeit(unittest.TestCase):
                                       {"id": "anteil_mittlere_saetze", "name": "mittellange Sätze", "beitrag": -0.4},
                                       {"id": "satzklammer_mittel", "name": "Satzklammer", "beitrag": -0.5}]},
             messungen=[], ts={"modell": {}}, fw_potenzial=0.0, fw_diag=None, hinweise=[{"typ": "absatz_teilen"}])
-        d = coach._diagnose(L, [], 0.86)
+        # v7.1: „mit Aufträgen“ zählt nur, was die angezeigten Aufträge simuliert bringen (netto_teile) – hier der Absatz-Auftrag
+        auftrag = {"typ": "absatz_teilen", "hebel": "absaetze", "netto_logit": 1.6, "netto_teile": {"saetze_pro_absatz_cv": 1.6}}
+        d = coach._diagnose(L, [auftrag], 0.86)
         z = {x["id"]: x for x in d["beitraege"]}
         self.assertAlmostEqual(z["saetze_pro_absatz_cv"]["erreichbar_logit"], 1.6)
         self.assertEqual(z["anteil_mittlere_saetze"]["erreichbar_logit"], 0.0)

@@ -1669,15 +1669,24 @@ def _verklebt(kern: str) -> bool:
     return False
 
 
+# Komma als entstelltes öffnendes ‚ (PDF-Extraktion, v7.1): „als,Bottom up'-Faktoren“, „Lesers,Top-down'-Faktoren“ –
+# Komma direkt zwischen Buchstabe und Großbuchstabe, ein schließendes ' ’ ‘ in einem der nächsten 1–4 Wörter, dahinter kein
+# Buchstabe (kein Apostroph wie in „geht's“). Nach s, ß, x, z muss danach ein Satzzeichen oder Bindestrich folgen: Vor
+# einem Wort ist es ein Genitiv-Apostroph („Kreyenfelds,Tölkes/Diewalds und Niehaus‘ wertvolle …“ bleibt verklebt).
+_KOMMA_ANFUEHRUNG_RE = re.compile(r"(?<=[^\W\d_]),(?=[A-ZÄÖÜ][^\s'’‘]*(?:\s+[^\s'’‘]+){0,3}?"
+                                  r"(?:(?<![sßxz])['’‘](?![^\W\d_])|['’‘](?!\s*[^\W\d_])))")
+
+
 def verklebte_stellen(saetze: list[dict]) -> list[dict]:
     """Verklebte Wörter in den gemessenen Sätzen: [{'stelle': Ausschnitt, 'satz': Satznummer}] (v7).
 
     Regeln: Satzzeichen direkt vor ≥ 2 Buchstaben („erfasst.Merkmale“, „Note,wie“; nach . ! ? nur vor Großbuchstaben)
     oder ein Token über 25 Zeichen mit innerem Komma bzw. Klein-Groß-Wechsel. Ausgenommen: Abkürzungen und Initialen,
-    URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt (auch im Kompositum), Binnen-I, Code-Bezeichner."""
+    URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt (auch im Kompositum), Binnen-I, Code-Bezeichner und
+    ein Komma als entstelltes öffnendes Anführungszeichen („als,Bottom up'-Faktoren“, v7.1)."""
     out = []
     for s in saetze:
-        for tok in s["text"].split():
+        for tok in _KOMMA_ANFUEHRUNG_RE.sub(" ‚", s["text"]).split():
             kern = tok.strip("\"'„“”»«‚‘’()[]{}").rstrip(".,;:!?").rstrip("\"'“”»«’‘)]}")
             if kern and _verklebt(kern):
                 out.append({"stelle": kern if len(kern) <= 60 else kern[:59] + "…", "satz": s.get("nr")})

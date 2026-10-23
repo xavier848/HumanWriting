@@ -74,15 +74,18 @@ class DiagnoseEhrlich(unittest.TestCase):
         self.assertAlmostEqual(blk["potenzial_logit"], round(0.45 + 0.3 * (0.125 + 0.17), 2), places=2)
         self.assertIsNone(blk["selbsthilfe"])  # keine Selbsthilfe „bündeln“ gegen die Satzlängen-Vorgabe
         self.assertAlmostEqual(d["gesperrt_logit"], blk["rest_logit"], places=2)
-        # Einstufung ohne den gesperrten Teil: ohne Auftrag 1,22 von 1,24 → knapp (v6 zählte die gesperrten 0,54 mit: „Grenze
-        # des Coaches“)
-        self.assertEqual(d["grenze"], "knapp")
+        # Einstufung ohne den gesperrten Teil: ohne Auftrag 1,22 von 1,24 (v6 zählte die gesperrten 0,54 mit: „Grenze des Coaches“).
+        # v7.1: „knapp“ nur, wenn die Aufträge selbst den größten Teil decken – hier stammt alles aus pauschal geschätzten Merkmalen
+        # ohne Auftrag: „Grenze der Einzelkorrekturen“, aber ohne „deutlich größer“
+        self.assertEqual(d["grenze"], "einzelkorrekturen")
         self.assertAlmostEqual(d["stellenlos_logit"], 1.22, places=2)
         txt = "\n".join(coach.diagnose_text(d))
         self.assertIn("gesperrt ≈", txt)
         self.assertIn("eine Grenze des Coaches, zählt nicht mit", txt)
         self.assertNotIn("Grenze des Textes", txt)
         self.assertNotIn("zwei zusammengehörige mittellange Sätze", txt)
+        self.assertIn("nur grob geschätzt", txt)
+        self.assertNotIn("deutlich größer", txt)
 
     def test_knapp_und_grenze_der_einzelkorrekturen(self):
         b = [{"id": "satzklammer_mittel", "name": "Klammer", "beitrag": -1.0}, {"id": "nachbarsatz_ueberlappung", "name": "NS", "beitrag": -1.0}]
@@ -93,7 +96,17 @@ class DiagnoseEhrlich(unittest.TestCase):
         txt = "\n".join(coach.diagnose_text(d))
         self.assertIn("Grenze der Einzelkorrekturen", txt)
         self.assertNotIn("Grenze des Textes", txt)
-        d = coach._diagnose(self.ns(b, 0.62), [], 0.86)  # Lücke ≈ 1,33: 1,0 liegt bei 75 %
+        d = coach._diagnose(self.ns(b, 0.62), [], 0.86)  # Lücke ≈ 1,33: 1,0 ohne Auftrag liegt bei 75 %
+        # v7.1: ohne Aufträge kein „knapp“ mehr (die 75 % sind pauschal geschätzt), sondern „Grenze der Einzelkorrekturen“ mit Vorbehalt
+        self.assertEqual(d["grenze"], "einzelkorrekturen")
+        self.assertIn("nur grob geschätzt", "\n".join(coach.diagnose_text(d)))
+        # „knapp“, wenn die angezeigten Aufträge selbst ≥ 70 % der Lücke bringen (Summe ihrer netto_teile)
+        auftrag = {"typ": "klammer", "hebel": "satzklammer", "netto_logit": 0.5, "netto_teile": {"satzklammer_mittel": 0.5}}
+        auftrag2 = {"typ": "anknuepfung", "hebel": "begriffe", "netto_logit": 0.5, "netto_teile": {"nachbarsatz_ueberlappung": 0.5}}
+        d = coach._diagnose(self.ns(b, 0.45, hinweise=[auftrag, auftrag2]), [auftrag, auftrag2], 0.86)  # Lücke ≈ 2,02
+        self.assertEqual(d["erreichbar_logit"], 1.0)
+        self.assertEqual(d["grenze"], "einzelkorrekturen")  # 1,0 < 0,7 · 2,02
+        d = coach._diagnose(self.ns(b, 0.62, hinweise=[auftrag, auftrag2]), [auftrag, auftrag2], 0.86)  # Lücke ≈ 1,33
         self.assertEqual(d["grenze"], "knapp")
         self.assertIn("Knapp – Schätzung unsicher", "\n".join(coach.diagnose_text(d)))
         self.assertIn("Grenze der Einzelkorrekturen", coach.GRENZE_NAME["text"])  # alte Verläufe
@@ -104,9 +117,16 @@ class DiagnoseEhrlich(unittest.TestCase):
         def fake(*a, **k):
             erg, bew = echt(*a, **k)
             return erg, dict(bew, p_mensch=0.40)
+        echt_netto = coach.netto_wirkung
+
+        def klein(L, h):  # v7.1: nur kleine Aufträge (≤ 0,05) – mit den echten Werten (Absatz teilen 2,38) reichten die beiden
+            n, t = echt_netto(L, h)  # angezeigten rechnerisch für die Lücke, und die Diagnose entfiele zu Recht („reicht rechnerisch“)
+            f = 0.05 / n if n > 0.05 else 1.0
+            return min(n, 0.05), {k: v * f for k, v in t.items()}
         c0 = coach.coache(KI_TEXT, None, 2)
         text = KI_TEXT.replace("die Ressourcen fehlen oft", "die Ressourcen fehlen häufig")
-        with unittest.mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake):
+        with unittest.mock.patch.object(coach.analyse, "analysiere_und_bewerte", fake), \
+                unittest.mock.patch.object(coach, "netto_wirkung", klein):
             # v7 (v6-Prüfung): Aufschub nur, wenn die offenen Aufträge (simuliert) samt den Potenzialen ohne Auftrag ≥ 0,7 der
             # Lücke decken – bei p 0,40 (Lücke ≈ 2,2) reichen zwei kleine Aufträge nicht: Diagnose sofort, „vorläufig“
             c = coach.coache(text, {"messungen": [dict(c0["stand"], p_mensch=0.25)]}, 2)  # +0,15 in dieser Runde
@@ -407,8 +427,8 @@ class Gegenfolie(unittest.TestCase):
 
 class Abkuerzungsfamilie(unittest.TestCase):
     def test_alle_langformen_in_einem_auftrag(self):
-        text = (FUELL + "\n\nDie Firma hat rund 500 Beschäftigte in der Region und plant dazu mehr Zeit und Geld ein.\n\n"
-                "Im Ausland arbeiten etwa 120 weitere Beschäftigte für die Firma an zwei neuen Standorten.")
+        text = (FUELL + "\n\nDie Firma hat circa 500 Beschäftigte in der Region und plant dazu mehr Zeit und Geld ein.\n\n"
+                "Im Ausland arbeiten zirka 120 weitere Beschäftigte für die Firma an zwei neuen Standorten.")  # v7.1: „rund“/„etwa“ sind keine Langformen von „ca.“ mehr – nur „circa“/„zirka“
         L = coach.Lauf(text, None)
         coach._hebel_priorisieren(L)
         r = L.ref["abkuerzungen_pro_1000"]
@@ -418,7 +438,7 @@ class Abkuerzungsfamilie(unittest.TestCase):
         abk = [h for h in L.hinweise if h["typ"] == "abkuerzung"]
         self.assertEqual(len(abk), 1)
         self.assertIsNone(abk[0]["satz"])  # mehrere Sätze: ein Auftrag mit allen Satznummern
-        self.assertEqual(abk[0]["funde"], ["rund", "etwa"])
+        self.assertEqual(abk[0]["funde"], ["circa", "zirka"])
         self.assertIn("alle Stellen in einem Durchgang", abk[0]["text"])
         self.assertTrue(abk[0]["anfang"].startswith("abk:"))
 

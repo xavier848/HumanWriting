@@ -24,6 +24,7 @@ Die Analyse funktioniert auch ohne Claude:
 ```bash
 python3 plugins/humanwriting-de/skills/text-analyse/scripts/analyse.py meine_arbeit.docx
 python3 plugins/humanwriting-de/skills/humanisieren/scripts/coach.py meine_arbeit.md --verlauf meine_arbeit.coach.json
+python3 plugins/humanwriting-de/skills/humanisieren/scripts/coach.py meine_arbeit.md --verlauf meine_arbeit.coach.json --vorgaben gedankenstrich   # ohne Gender-Vorgabe
 python3 plugins/humanwriting-de/skills/humanisieren/scripts/inhalt_check.py alt.md neu.md
 ```
 

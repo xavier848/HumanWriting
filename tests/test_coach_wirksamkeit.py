@@ -524,14 +524,14 @@ class ModellHebel(unittest.TestCase):
         self.assertFalse([h for h in kurz["hinweise_roh"] if h["typ"] == "abkuerzung"])
 
     def test_alle_treffer_im_satz_einheitlich(self):
-        satz = "Die Firma hat rund 500 Beschäftigte in der Region und etwa 120 weitere im Ausland an zwei Standorten."
+        satz = "Die Firma hat circa 500 Beschäftigte in der Region und zirka 120 weitere im Ausland an zwei Standorten."  # v7.1: „rund“/„etwa“ sind keine Langformen von „ca.“ mehr – nur „circa“/„zirka“
         text = satz + "\n\n" + ABK_ANHANG + "\n\n" + ABK_ANHANG2
         # ~910 Wörter: Kontingent 1, die Familie „ca.“ hat 2 Treffer – v5: ganz genannt, weil das Ergebnis unter P75 bleibt
         c = coach.coache(text, None, 40, roh=True)
         abk = [h for h in c["hinweise_roh"] if h["typ"] == "abkuerzung"]
         self.assertEqual(len(abk), 1, [h["text"] for h in abk])
-        self.assertEqual(abk[0]["funde"], ["rund", "etwa"])
-        self.assertIn("„rund“ und „etwa“ als „ca.“", abk[0]["text"])
+        self.assertEqual(abk[0]["funde"], ["circa", "zirka"])
+        self.assertIn("„circa“ und „zirka“ als „ca.“", abk[0]["text"])
         self.assertIn("einheitlich", abk[0]["text"])
         L = coach.Lauf(text, None)  # P75 künstlich gesenkt: die ganze Familie läge darüber → keiner (keine Mischform)
         coach._hebel_priorisieren(L)

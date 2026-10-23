@@ -337,9 +337,10 @@ class Satzlaengen(unittest.TestCase):
 
 class VerlaufUndModi(unittest.TestCase):
     def test_hinweis_gedaechtnis(self):
-        # höchstens 8 angezeigt: seit „ein Auftrag je Satz“ passen sonst alle Hinweise des kurzen Texts in die erste Runde
-        c1 = coache_still(KI_TEXT, None, 8)
-        c2 = coache_still(KI_TEXT, {"messungen": [c1["stand"]]}, 8, roh=True)
+        # höchstens 5 angezeigt: seit „ein Auftrag je Satz“ passen sonst alle Hinweise des kurzen Texts in die erste Runde (v7.1:
+        # mit der Mindestwirkung bleiben auf KI_TEXT nur noch 8 Aufträge – mit dem früheren Limit 8 gäbe es in Runde 2 nichts Neues)
+        c1 = coache_still(KI_TEXT, None, 5)
+        c2 = coache_still(KI_TEXT, {"messungen": [c1["stand"]]}, 5, roh=True)
         genannt = [h for h in c2["hinweise_roh"] if h.get("schon_genannt")]
         self.assertTrue(genannt)
         self.assertTrue(all("schon in Runde 1 genannt" in h["text"] for h in genannt))

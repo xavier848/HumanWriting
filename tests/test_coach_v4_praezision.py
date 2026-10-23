@@ -268,13 +268,13 @@ class GenderErsetzbar(unittest.TestCase):
 
 class Konsistenz(unittest.TestCase):
     TEXT = ("Die Firma beschäftigt ca. 500 Personen an drei Standorten in der Region. Die Zentrale plant neue Büros für das Team. "
-            "Im Ausland arbeiten etwa 120 weitere Personen für den Vertrieb.\n\n" + gleichmaessig(4, 5))
+            "Im Ausland arbeiten circa 120 weitere Personen für den Vertrieb.\n\n" + gleichmaessig(4, 5))  # v7.1: „rund“/„etwa“ sind keine Langformen von „ca.“ mehr – nur „circa“/„zirka“
 
     def test_mischform_nach_ersetzung(self):
-        c = coach.coache(self.TEXT, {"messungen": [leerer_stand(ersetzbar=["etwa"])]}, 40, roh=True)
+        c = coach.coache(self.TEXT, {"messungen": [leerer_stand(ersetzbar=["circa"])]}, 40, roh=True)
         k = [x for x in c["hinweise_roh"] if x["typ"] == "konsistenz"]
         self.assertEqual(len(k), 1)
-        self.assertIn("„ca.“ (S1) neben „etwa“ (S3)", k[0]["text"])
+        self.assertIn("„ca.“ (S1) neben „circa“ (S3)", k[0]["text"])
         self.assertIn("einheitlich", k[0]["text"])
 
     def test_ohne_ersetzungsauftrag_kein_hinweis(self):

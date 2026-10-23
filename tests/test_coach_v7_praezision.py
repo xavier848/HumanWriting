@@ -300,9 +300,10 @@ class KleinAberSicher(unittest.TestCase):
         treffer = [(s["nr"], fund, g) for s in L.fokus for _a, _e, g, mu, fund, _v in analyse.muster_treffer(L.masken[s["nr"]], L.muster)
                    if g >= coach.KLEIN_SICHER_GEWICHT and mu["id"] not in coach.GEGENFOLIE_MUSTER]
         self.assertTrue(treffer)
-        # alle normalen Aufträge fallen weg (wie in den Schlussrunden der v6-Prüfung): dann „klein, aber sicher“
+        # alle normalen Aufträge fallen weg (wie in den Schlussrunden der v6-Prüfung): dann „klein, aber sicher“. v7.1: alle Treffer –
+        # einzeln bringt eine Wendung weit über der Kappung (KI_TEXT: 22,5 je 1000) simuliert nichts, die Familie zusammen schon
         with mock.patch.object(coach, "ein_auftrag_je_satz", lambda hs, texte=None: []), \
-                mock.patch.object(coach, "muster_rest", lambda L_: (treffer[:1], 0.3)):
+                mock.patch.object(coach, "muster_rest", lambda L_: (treffer, 0.3)):
             c = coach.coache(KI_TEXT, None, 15)
         klein = [h for h in c["hinweise"] if h.get("klein_sicher")]
         self.assertTrue(klein)
@@ -314,7 +315,9 @@ class KleinAberSicher(unittest.TestCase):
         b = [{"id": "ki_muster_pro_1000", "name": "KI-Muster", "beitrag": -0.34}]
         L = diag_ns(b, 0.44, hinweise=[{"typ": "floskel", "hebel": "floskeln", "klein_sicher": True}])
         L.fokus, L._klein_muster_pot = [], 0.3
-        d = coach._diagnose(L, [{"typ": "floskel", "hebel": "floskeln", "klein_sicher": True, "netto_logit": 0.3}], 0.86)
+        # v7.1: „mit Aufträgen“ = Summe der netto_teile der angezeigten Aufträge
+        d = coach._diagnose(L, [{"typ": "floskel", "hebel": "floskeln", "klein_sicher": True, "netto_logit": 0.3,
+                                 "netto_teile": {"ki_muster_pro_1000": 0.3}}], 0.86)
         z = d["beitraege"][0]
         self.assertEqual(z["wie"], "klein_sicher")
         self.assertAlmostEqual(z["erreichbar_logit"], 0.3, places=2)

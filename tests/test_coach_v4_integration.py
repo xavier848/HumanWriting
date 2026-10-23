@@ -206,7 +206,8 @@ class GedaechtnisOhneWiederkehr(unittest.TestCase):
         text = test_coach_integration.SynonymTeilschutz.TEXT + "\n\n" + gleichmaessig(3, 5)
         syn = lambda c: [x for x in c["hinweise_roh"] if x["typ"] == "synonyme"]  # noqa: E731
         # Wortaufnahme fest im grünen Bereich, sonst setzt der Überkorrektur-Wächter die Begriffs-Hinweise ohnehin aus
-        with mit_metriken(mattr_100=0.9, anteil_saetze_mit_wortaufnahme=0.5):
+        # v7.1: der Synonym-Auftrag gilt als wirksam (sonst schon in Runde 1 nicht angezeigt), siehe synonyme_wirksam
+        with mit_metriken(mattr_100=0.9, anteil_saetze_mit_wortaufnahme=0.5), test_coach_integration.synonyme_wirksam():
             c1 = coach.coache(text, None, 40, roh=True)
             t2 = text.replace("Die Kunden lesen Testberichte.", "Die Kunden lesen oft Testberichte.")
             c2 = coach.coache(t2, {"messungen": [c1["stand"]]}, 40, roh=True)

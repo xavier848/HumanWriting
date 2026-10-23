@@ -20,6 +20,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import coach  # noqa: E402
 from test_coach import KI_TEXT  # noqa: E402
 from test_coach_wirksamkeit import gleichmaessig, mit_metriken  # noqa: E402
+from unittest import mock  # noqa: E402
+
+
+def synonyme_wirksam():
+    """v7.1 (Mindestwirkung): Unter dem Modellziel erscheinen nur Aufträge mit simuliertem Netto-Gewinn > NETTO_TOLERANZ. Der
+    Synonym-Auftrag dieser Kunsttexte bringt simuliert nichts (MATTR ist gemockt) und würde nicht mehr angezeigt – für die Prüfung von
+    Gedächtnis und Teilschutz gilt er hier als wirksam."""
+    echt = coach.netto_wirkung
+
+    def fake(L, h):
+        n, t = echt(L, h)
+        return (max(n, 0.05), t) if h["typ"] == "synonyme" else (n, t)
+    return mock.patch.object(coach, "netto_wirkung", fake)
 
 
 class SynonymTeilschutz(unittest.TestCase):
@@ -45,7 +58,7 @@ class SynonymTeilschutz(unittest.TestCase):
 
     def test_unveraenderter_text_wiederholt_den_hinweis(self):
         text = self.TEXT + "\n\n" + gleichmaessig(3, 5)
-        with mit_metriken(mattr_100=0.9):
+        with mit_metriken(mattr_100=0.9), synonyme_wirksam():
             c1 = coach.coache(text, None, 40, roh=True)
             c2 = coach.coache(text, {"messungen": [c1["stand"]]}, 40, roh=True)  # nur erneut gemessen
             umgebaut = text.replace("Die Kunden lesen Testberichte.", "Die Kunden lesen oft Testberichte.")

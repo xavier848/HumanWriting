@@ -205,7 +205,9 @@ class Zitatschutz(unittest.TestCase):
         for anf in ("Unter Studienerfolg verstanden", "So wurde das Studium"):  # eigener Text der Autorin (v6: fälschlich gesperrt)
             x = satz_mit(anf)
             self.assertIn(anf.split()[-1], m[x["nr"]])
-        c = coach.coache(text, None, 40, roh=True)
+        # v7.1: der Absatz gendert durchgehend (3 Stämme) – ohne ausdrückliche Wahl käme eine Rückfrage statt der Einzelaufträge;
+        # hier ist die Vorgabe bestätigt, geprüft wird der Zitatschutz der Einzelaufträge
+        c = coach.coache(text, None, 40, roh=True, vorgaben="gender,gedankenstrich")
         zitat_nrn = {satz_mit(a)["nr"] for a in ("Und so ist es ganz klar", "Ja und unsere Angebote")}
         for h in c["hinweise_roh"]:
             nrn = set(h.get("saetze") or []) | ({h["satz"]} if h.get("satz") else set())
@@ -358,8 +360,10 @@ class Vorgaben(unittest.TestCase):
             "finden schnell eine Stelle in der Region – vor allem in kleineren Betrieben, in Verwaltungen und in Schulen. Die "
             "Diskutierenden im Plenum stimmten den Ergebnissen weitgehend zu und forderten mehr Zeit für Projekte.\n\n" + FUELL)
 
+    # v7.1: TEXT gendert durchgehend (4 Stämme) – die Tests der Einzelaufträge setzen die Vorgaben ausdrücklich (bestätigt); die
+    # Rückfrage ohne ausdrückliche Wahl prüft test_coach_v71_bericht.VorgabenAbschaltbar
     def test_eigener_abschnitt_nicht_im_limit(self):
-        c = coach.coache(self.TEXT, None, 1)
+        c = coach.coache(self.TEXT, None, 1, vorgaben="gender,gedankenstrich")
         typen = {h["typ"] for h in c["vorgaben"]}
         self.assertTrue({"gender", "gedankenstrich"} <= typen)
         self.assertFalse([h for h in c["hinweise"] if h["typ"] in coach.VORGABE_TYPEN])
@@ -368,13 +372,15 @@ class Vorgaben(unittest.TestCase):
         self.assertIn("### Vorgaben (ändern den Score nicht)", b)
 
     def test_zielformen_hochschule(self):
-        c = coach.coache(self.TEXT, None, 15)
+        c = coach.coache(self.TEXT, None, 15, vorgaben="gender,gedankenstrich")
         texte = {h["fund"]: h["text"] for h in c["vorgaben"] if h["typ"] == "gender"}
         self.assertIn("„Studenten“", next(t for f, t in texte.items() if f.startswith("Studierend")))
         self.assertIn("„Absolventen“", next(t for f, t in texte.items() if f.startswith("Absolvierend")))
         lehr = next(t for f, t in texte.items() if f.startswith("Lehrend"))
-        self.assertIn("„Lehrkräfte“ oder „Dozenten“", lehr)
+        # v7.1 (v7-Prüfung, fhws): „Lehrkräfte“ ist kein generisches Maskulinum und klingt nach Schule – nur Dozenten/Hochschullehrer
+        self.assertIn("„Dozenten“ bzw. „Hochschullehrer“", lehr)
         self.assertNotIn("→ „Lehrer“", lehr)
+        self.assertNotIn("„Lehrkräfte“ oder", lehr)
         disk = next(t for f, t in texte.items() if f.startswith("Diskutierend"))
         self.assertIn("eine passende maskuline Bezeichnung", disk)
 
@@ -498,7 +504,7 @@ class Semikolon(unittest.TestCase):
 class Erwartet(unittest.TestCase):
     def test_verlauf_enthaelt_erwartete_formen(self):
         text = Vorgaben.TEXT
-        c = coach.coache(text, None, 15)
+        c = coach.coache(text, None, 15, vorgaben="gender,gedankenstrich")  # v7.1: Vorgabe bestätigt (Text gendert durchgehend)
         self.assertIn("studenten", c["stand"]["erwartet"])
         self.assertIn("absolventen", c["stand"]["erwartet"])
         self.assertIn("dozenten", c["stand"]["erwartet"])
@@ -510,7 +516,7 @@ class Erwartet(unittest.TestCase):
             with open(p, "w", encoding="utf-8") as f:
                 f.write(Vorgaben.TEXT)
             with mock.patch("sys.stdout"):
-                coach.main([p, "--verlauf", v])
+                coach.main([p, "--verlauf", v, "--vorgaben", "gender,gedankenstrich"])  # v7.1: Vorgabe bestätigt
             with open(v, encoding="utf-8") as f:
                 verlauf = json.load(f)
         m = verlauf["messungen"][-1]

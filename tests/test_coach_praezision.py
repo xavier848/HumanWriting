@@ -18,6 +18,7 @@ import analyse  # noqa: E402
 import coach  # noqa: E402
 from test_coach import KI_TEXT  # noqa: E402
 from test_coach_wirksamkeit import gleichmaessig, mit_metriken  # noqa: E402
+from test_coach_integration import synonyme_wirksam  # noqa: E402
 
 TS = analyse.lade_baselines()["textsorten"]["hochschule"]
 REF = TS["metriken"]
@@ -269,7 +270,8 @@ class Synonyme(unittest.TestCase):
             "Die Kunden achten zudem auf Bewertungen. Die Kunden wechseln oft den Anbieter.")
 
     def cluster_hinweise(self, text, verlauf=None):
-        with mit_metriken(mattr_100=0.9):
+        # v7.1: der Synonym-Auftrag gilt hier als wirksam (sonst nicht angezeigt und nicht im Verlauf), siehe synonyme_wirksam
+        with mit_metriken(mattr_100=0.9), synonyme_wirksam():
             c = coach.coache(text + "\n\n" + gleichmaessig(3, 5), verlauf, 40, roh=True)
         return c, [x for x in c["hinweise_roh"] if x["typ"] == "synonyme"]
 

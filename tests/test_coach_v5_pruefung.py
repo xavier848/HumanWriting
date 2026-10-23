@@ -68,8 +68,8 @@ class DiagnoseNeuformulieren(unittest.TestCase):
 
 
 class AbkuerzungEinAuftragJeSatz(unittest.TestCase):
-    TEXT = (FUELL + "\n\nDie Firma hat rund 500 Beschäftigte in der Region und plant dazu mehr Zeit und Geld ein.\n\n"
-            "Im Ausland arbeiten etwa 120 weitere Beschäftigte für die Firma an zwei neuen Standorten.")
+    TEXT = (FUELL + "\n\nDie Firma hat circa 500 Beschäftigte in der Region und plant dazu mehr Zeit und Geld ein.\n\n"
+            "Im Ausland arbeiten zirka 120 weitere Beschäftigte für die Firma an zwei neuen Standorten.")  # v7.1: „rund“/„etwa“ sind keine Langformen von „ca.“ mehr – nur „circa“/„zirka“
 
     def abk(self, belegen):
         L = coach.Lauf(self.TEXT, None)
