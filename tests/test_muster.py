@@ -84,6 +84,28 @@ MUSTER_SAETZE = {
         ["Mehr Daten führen nicht unbedingt zu besseren Entscheidungen.",
          "Die Folgen waren zwangsläufig.",
          "Die Regel ist zwingend einzuhalten."]),
+    # v7: nachgestellte Gegenfolie (Umstellung von „nicht X, sondern Y“)
+    "gegenfolie_nachgestellt": (
+        ["Agile Führungskräfte verstehen sich als Unterstützer und nicht als Kontrollinstanz.",
+         "Das Problem liegt in der Planung und nicht im fehlenden Budget.",
+         "Entscheidend ist die Organisation und nicht das Werkzeug.",
+         "Die Befragten nannten das Betriebsklima statt der Bezahlung.",
+         "Viele Betriebe bilden eigene Fachkräfte aus, statt sie auf dem Markt zu suchen.",
+         "Anstatt die Preise zu senken, erhöhte das Unternehmen die Werbeausgaben.",
+         "Die Reform senkt die Kosten, nicht aber die Wartezeiten.",
+         "Die Daten erfassen den Bestand, nicht jedoch die Zugänge."],
+        [  # „statt“ als Verbpartikel (stattfinden), vor Zahlen, in Komposita
+         "Die Befragung fand im Mai 2020 statt.",
+         "Die Interviews finden in Einzelgesprächen statt und dauern eine Stunde.",
+         "Die Treffen fanden statt, als die Krise begann.",
+         "Der Anteil stieg auf 52 % statt 45 % im Vorjahr.",
+         "Stattdessen wählten die Betriebe eine andere Lösung.",
+         "Die Werkstatt liegt am Stadtrand.",
+         # „und nicht“ ohne parallelen Bau, „, nicht“ ohne „aber/jedoch“ (bei Menschen genauso häufig)
+         "Die Daten sind unvollständig und nicht repräsentativ.",
+         "Die Stichprobe ist klein, nicht repräsentativ und veraltet.",
+         "Die Kosten steigen und nicht nur die Preise.",
+         "Die Kosten steigen, nicht die Erlöse."]),
 }
 
 # Ersatz, der Inhalt ohne Bedingung streicht („Streichen.“, „… oder streichen.“, „oft ersatzlos streichen“)
@@ -93,8 +115,10 @@ UNBEDINGT_STREICHEN = re.compile(
 # Muster, deren Fund Inhalt trägt (Gradangabe, Rangfolge, Quellenaussage, Einschränkung, Dauer, Bezug)
 INHALT_TRAGEND = ["massgeblich", "kern_zentral", "schluessel", "nicht_x_sondern", "nicht_nur_sondern", "dies_verdeutlicht",
                   "zusammenhang_hintergrund", "darueber_hinaus", "modewort_adjektiv", "nachhaltig_wort", "insgesamt_zeigt",
-                  "nicht_zwangslaeufig", "keineswegs", "greift_zu_kurz", "strohmann_aufbau", "einwand_formel", "hierbei_dabei"]
-NEUE_MUSTER = ["greift_zu_kurz", "strohmann_aufbau", "einwand_formel", "keineswegs", "nicht_zwangslaeufig"]
+                  "nicht_zwangslaeufig", "keineswegs", "greift_zu_kurz", "strohmann_aufbau", "einwand_formel", "hierbei_dabei",
+                  "gegenfolie_nachgestellt"]
+NEUE_MUSTER = ["greift_zu_kurz", "strohmann_aufbau", "einwand_formel", "keineswegs", "nicht_zwangslaeufig",
+               "gegenfolie_nachgestellt"]
 
 
 def lade_json():
@@ -200,6 +224,62 @@ class Ersatzstrategien(unittest.TestCase):
         for mid in ("greift_zu_kurz", "strohmann_aufbau"):
             with self.subTest(muster=mid):
                 self.assertIn("eigene These direkt nennen", self.muster[mid]["ersatz"])
+
+    def test_gegenfolie_ersatz_empfiehlt_keine_umstellung(self):
+        # früher: „X behalten und nur die Formel auflösen („Y statt X“ …)“ – „statt“ ist selbst KI-typisch (v7)
+        for mid in ("nicht_x_sondern", "gegenfolie_nachgestellt"):
+            ersatz = self.muster[mid]["ersatz"]
+            with self.subTest(muster=mid):
+                self.assertNotIn("Formel auflösen", ersatz)
+                self.assertIn("zwei Sätze", ersatz)
+                self.assertIn("behalten", ersatz)
+        self.assertIn("dieselbe Gegenfolie", self.muster["nicht_x_sondern"]["ersatz"])
+
+
+class GegenfolieUmstellung(unittest.TestCase):
+    """Coach-Evaluation v7 (echte menschliche Abschnitte): „nicht X, sondern Y“ wurde zu „Y und nicht X“ umgestellt und
+    entging so dem Muster. Die nachgestellten Formen zählen jetzt als eigenes Muster mit fast gleichem Gewicht – Umstellen
+    bringt (höchstens) einen Bruchteil der Punkte."""
+
+    PAARE = [
+        ("Experten sehen den Grund für den Anstieg nicht in der Gesetzesänderung von 1976, sondern in der Ausweitung der "
+         "kommerziellen Werbung hinsichtlich des Cannabiskonsums in Coffeeshops.",
+         ["Experten sehen den Grund für den Anstieg in der Ausweitung der kommerziellen Werbung hinsichtlich des "
+          "Cannabiskonsums in Coffeeshops und nicht in der Gesetzesänderung von 1976.",
+          "Experten sehen den Grund für den Anstieg in der Ausweitung der kommerziellen Werbung statt in der "
+          "Gesetzesänderung von 1976.",
+          "Experten sehen den Grund für den Anstieg in der Ausweitung der kommerziellen Werbung, nicht aber in der "
+          "Gesetzesänderung von 1976."]),
+        ("Agile Führungskräfte verstehen sich nicht als Kontrollinstanz, sondern als Unterstützer.",
+         ["Agile Führungskräfte verstehen sich als Unterstützer und nicht als Kontrollinstanz.",
+          "Agile Führungskräfte verstehen sich als Unterstützer statt als Kontrollinstanz."]),
+    ]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.muster = analyse.lade_muster(MUSTER_PFAD)
+        cls.gewicht = {m["id"]: m["gewicht"] for m in cls.muster}
+
+    def summe(self, satz):
+        return sum(t[2] for t in analyse.muster_treffer(satz, self.muster) if t[2] > 0), \
+            [t[3]["id"] for t in analyse.muster_treffer(satz, self.muster)]
+
+    def test_umgestellte_form_wird_erkannt(self):
+        for original, umgestellt in self.PAARE:
+            g_alt, ids_alt = self.summe(original)
+            self.assertIn("nicht_x_sondern", ids_alt)
+            for neu in umgestellt:
+                with self.subTest(neu=neu):
+                    g_neu, ids_neu = self.summe(neu)
+                    self.assertIn("gegenfolie_nachgestellt", ids_neu)
+                    self.assertNotIn("nicht_x_sondern", ids_neu)
+                    # Kalibrierungsabhängiger Wächter: Umstellen darf höchstens ein Viertel des Gewichts einsparen
+                    self.assertGreaterEqual(g_neu, 0.75 * g_alt)
+
+    def test_gewicht_aus_kalibrierung(self):
+        # Verhältnis KI/Mensch im Korpus 2,7 (v7-Messung): klar KI-typisch, Gewicht > 0
+        self.assertGreater(self.gewicht["gegenfolie_nachgestellt"], 0)
+        self.assertGreaterEqual(self.gewicht["gegenfolie_nachgestellt"], 0.75 * self.gewicht["nicht_x_sondern"])
 
 
 if __name__ == "__main__":

@@ -264,6 +264,18 @@ ZITAT_RE = re.compile(
 )
 # numerische Belege (IEEE/Vancouver) mit mehreren Nummern oder Seitenangabe; Intervalle wie [0, 1] ausgenommen
 NUM_BELEG_RE = re.compile(r"\s?\[(?!0\b)\d+(?:[,–-]\s?\d+)*(?:,\s?S\.\s?\d+[^\]]{0,10})?\]")
+# Belege in eckigen Klammern mit Jahreszahl (v7): „[Wolfram 2009]“, „[Mergner et al. (2015), S. 9)]“,
+# Interviewbelege „[2018.06.06_Lehrende, Absatz 8]“; vor ZITAT_RE, damit eine innere „(2015)“ den Beleg nicht zerreißt
+KLAMMER_BELEG_RE = re.compile(r"\s?\[[^\[\]]{0,160}?\b(?:1[6-9]\d{2}|20\d{2})[a-z]?\b[^\[\]]{0,80}?\]")
+# Transkriptnotation in Interviewzitaten (v7), vor der Satztrennung entfernt: ((lacht)), ((unv.)), ((…)), (unv.),
+# (lacht), (I: Ja.), (B: …), [unverständlich]; „(…)“ nur, wenn der Absatz weitere Transkriptnotation enthält
+TRANSKRIPT_DOPPEL_RE = re.compile(r"\s?\(\([^()]{0,60}\)\)")
+TRANSKRIPT_RE = re.compile(
+    r"\s?(?:\((?:[Uu]nv(?:erst)?\.?|[Uu]nverständlich|[Ll]acht|[Ll]achen|[Ll]achend|[Ss]eufzt|[Rr]äuspert sich|[Hh]ustet|"
+    r"[Pp]ause(?: \d+(?:,\d)? ?(?:s|Sek\.?|Sekunden))?|"
+    r"(?:I|B|IP|IV|I\d{1,2}|B\d{1,2}|Interviewer(?:in)?|Befragte[rn]?)\s?:\s?[^()]{0,120})\)"
+    r"|\[(?:[Uu]nv(?:erst)?\.?|[Uu]nverständlich|[Ll]acht|[Pp]ause)\])")
+TRANSKRIPT_AUSLASSUNG_RE = re.compile(r"\s?\((?:\.{2,3}|…)\)")
 FUSSNOTE_RE = re.compile(r"\[\^[^\]\s]+\]|\[\d+\]|[¹²³⁴⁵⁶⁷⁸⁹⁰]+")
 # Nicht hochgestellte Fußnotenziffern (pdftotext, Copy-Paste): "grundlegend.12 Weiter", "veröffentlicht3. Sie"
 FUSSNOTE_ZIFFER_RE = re.compile(
@@ -294,6 +306,12 @@ DREIERLISTE_RE = re.compile(
     rf"(?<![\w-])(?P<g1>{_DL_W}(?:\s{_DL_W})?),\s(?P<g2>{_DL_GLIED})(?:,\s{_DL_GLIED})*,?\s(?:und|sowie|oder)\s{_DL_W}",
     re.IGNORECASE,
 )
+# Autorenliste direkt vor einer Jahresangabe (v7): Namen mit Partikeln (von, van, de …), Reihe mit „und“/„&“/„sowie“,
+# optional „et al.“, danach „(1986)“, „(1986, S. 5)“, „[2004]“, „(Hrsg.) (2010)“-artig oder „(o. J.)“
+_AUTOR = r"(?:(?:von|vom|van|de|der|den|du|da|di|le|la|del|ten|zu|op)\s)*[A-ZÄÖÜ][\w'’-]*[^\W\d_]"
+AUTORENLISTE_RE = re.compile(
+    rf"(?<![\w-])(?P<liste>{_AUTOR}(?:,\s{_AUTOR})+,?\s(?:und|&|sowie|and)\s{_AUTOR}(?:\set\sal\.?)?)"
+    r"\s?[(\[]\s?(?:(?:Hrsg\.|Hg\.|Eds?\.)[,;)]?\s?\(?)?(?:(?:1[6-9]\d{2}|20\d{2})[a-z]?\b|o\.\s?J\.)")
 _NP_REIHE = re.compile(r"(?:der|die|das|den|dem|des)\s+(?:[a-zäöüß]\w*\s+)?[A-ZÄÖÜ][\w-]*\s+(?:und|oder|sowie|bzw\.)\s+"
                        r"(?:der|die|das|den|dem|des|ein\w*|deren|dessen|ihr\w*|sein\w*|unser\w*)\s")
 ARTIKEL_POSS = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "eines", "deren", "dessen",
@@ -875,6 +893,22 @@ def _fussnote_ziffer(m: re.Match, zaehler: Counter) -> str:
     return wort + zeichen
 
 
+def entferne_transkript(absatz: str, zaehler: Counter) -> str:
+    """Transkriptnotation aus Interviewzitaten entfernen (v7), gezählt in zaehler['transkript'].
+
+    ((…))-Kommentare, (unv.), (lacht), Sprecherrückmeldungen wie (I: Ja.) und [unverständlich] zerlegen sonst Zitate in
+    Fragmente bzw. zählen als Wörter; eine Auslassung (…) gilt nur bei weiterer Notation im Absatz als Transkriptpause."""
+    n = len(TRANSKRIPT_DOPPEL_RE.findall(absatz))
+    absatz = TRANSKRIPT_DOPPEL_RE.sub("", absatz)
+    n += len(TRANSKRIPT_RE.findall(absatz))
+    absatz = TRANSKRIPT_RE.sub("", absatz)
+    if n:
+        n += len(TRANSKRIPT_AUSLASSUNG_RE.findall(absatz))
+        absatz = TRANSKRIPT_AUSLASSUNG_RE.sub("", absatz)
+        zaehler["transkript"] += n
+    return absatz
+
+
 def bereinige_absatz(absatz: str, zaehler: Counter) -> str:
     absatz = re.sub(r"<br\s*/?>", " ", absatz, flags=re.I)
     absatz = HTML_TAG_RE.sub("", absatz)
@@ -888,9 +922,12 @@ def bereinige_absatz(absatz: str, zaehler: Counter) -> str:
     absatz = EMAIL_RE.sub("EMAIL", absatz)
     absatz = re.sub(r"\*\*|__", "", absatz)
     absatz = re.sub(r"(?<![*\w])\*([^*\n]+)\*(?![*\w])", r"\1", absatz)
+    absatz = entferne_transkript(absatz, zaehler)
     zaehler["fussnoten"] += len(FUSSNOTE_RE.findall(absatz))
     absatz = FUSSNOTE_RE.sub("", absatz)
     absatz = FUSSNOTE_ZIFFER_RE.sub(lambda m: _fussnote_ziffer(m, zaehler), absatz)
+    zaehler["zitate"] += len(KLAMMER_BELEG_RE.findall(absatz))
+    absatz = KLAMMER_BELEG_RE.sub("", absatz)
     zaehler["zitate"] += len(ZITAT_RE.findall(absatz))
     absatz = ZITAT_RE.sub("", absatz)
     zaehler["zitate"] += len(NUM_BELEG_RE.findall(absatz))
@@ -1446,8 +1483,20 @@ def satzklammern(satz: str) -> list[int]:
     return spannen
 
 
-def dreierlisten(satz: str) -> list[str]:
-    """Echte Aufzählungen mit ≥ 3 Gliedern; Komma vor Nebensatz/Relativsatz/Infinitiv zählt nicht."""
+def autorenlisten(text: str) -> list[str]:
+    """Autorenlisten vor einer Jahresangabe (v7): „Kahneman, Knetsch und Thaler (1986)“, „Xia, Monroe und Cox et al.
+    [2004]“. Gibt die Namensreihe ohne Jahr zurück; der Beleg selbst fällt in bereinige_absatz weg, deshalb wird auf dem
+    Rohabsatz gesucht und das Ergebnis an dreierlisten weitergereicht."""
+    return [m.group("liste") for m in AUTORENLISTE_RE.finditer(text)]
+
+
+def dreierlisten(satz: str, autoren: list[str] | set[str] | None = None) -> list[str]:
+    """Echte Aufzählungen mit ≥ 3 Gliedern; Komma vor Nebensatz/Relativsatz/Infinitiv zählt nicht.
+
+    Keine Dreierliste (v7): Autorenlisten vor einer Jahresangabe („Kahneman, Knetsch und Thaler (1986)“). Weil der
+    Beleg im bereinigten Satz fehlt, übergibt _analysiere die im Rohabsatz gefundenen Listen als autoren; ein Satz mit
+    noch vorhandenem Beleg wird zusätzlich selbst geprüft."""
+    ausnahmen = set(autoren or ()) | set(autorenlisten(satz))
     out, pos = [], 0
     while True:
         m = DREIERLISTE_RE.search(satz, pos)
@@ -1457,6 +1506,9 @@ def dreierlisten(satz: str) -> list[str]:
         satzanfang = m.start("g1") == 0 and len(m.group("g1").split()) == 1
         # Köpfe von Glied 1 und 2 gleich geschrieben (Nomen-Nomen bzw. Adj./Verb-Adj./Verb); '-verwaltung' passt immer
         ok = satzanfang or k1[:1].isupper() == k2[:1].isupper() or k2[:1] == "-" or k1.endswith("-")
+        if ok and ausnahmen:
+            rest = satz[m.start("g2"):m.end()]  # ab dem 2. Glied: liegt die Reihe ganz in einer Autorenliste?
+            ok = not any(rest in au for au in ausnahmen)
         if ok and m.group("g2").split()[0].lower() in RELATIVPRONOMEN and m.group(0).split()[-1].lower() not in ARTIKEL_POSS:
             segment = re.split(r"[,;]", satz[m.start("g2"):])[0]  # Relativsatz: verbfinal, keine Artikelreihe
             ok = not (_verbfinal(segment) and not _NP_REIHE.match(segment))
@@ -1520,6 +1572,97 @@ def nominalketten(saetze_text: list[str]) -> list[int]:
 
 
 # ---------------------------------------------------------------------------
+# Eingabeprüfung (v7): verklebte Wörter, Anteil wörtlicher Zitate
+# ---------------------------------------------------------------------------
+
+VERKLEBT_RE = re.compile(r"(?<=\w)([.,;:!?])([A-Za-zÄÖÜäöüß]{2,})")
+VERKLEBT_LANG = 25  # Token über 25 Zeichen mit innerem Komma oder Klein-Groß-Wechsel
+_VERKLEBT_URL_RE = re.compile(r"://|^www\.|@|[A-Za-z0-9-]\.(?:de|com|org|net|eu|at|ch|edu|gov|info|io|uk|fr|it|nl)(?:/|$)")
+_VERKLEBT_DATEI_RE = re.compile(r"\.(?:pdf|docx?|xlsx?|csv|txt|py|md|json|html?|jpe?g|png|gif|zip|pptx?|odt|xml|sav|dta|tex|"
+                                r"bib|js|r)$", re.IGNORECASE)
+_KLEIN_GROSS_RE = re.compile(r"[a-zäöüß](?!I(?:nnen|n\b))[A-ZÄÖÜ]")  # Binnen-I (StudentInnen) ausgenommen
+
+
+def _verklebt(kern: str) -> bool:
+    """True, wenn ein Token (ohne umgebende Anführungen/Klammern) verklebte Wörter enthält (PDF-Extraktion)."""
+    if _VERKLEBT_URL_RE.search(kern) or _VERKLEBT_DATEI_RE.search(kern):
+        return False
+    for m in VERKLEBT_RE.finditer(kern):
+        zeichen, rechts = m.group(1), m.group(2)
+        links = kern[:m.start(1)]
+        if links[-1:].isdigit():
+            continue  # Zahlen: „14:30Uhr“, „§2.BGB“
+        lw = re.search(r"[A-Za-zÄÖÜäöüß]+$", links)
+        if not lw or len(lw.group(0)) == 1 or lw.group(0).lower() in ABKUERZUNGEN | MEHRDEUTIG:
+            continue  # Initialen und Abkürzungen: „M.Sc“, „J.Smith“, „Dr.Müller“, „vgl.Abb“
+        if zeichen in ".!?" and not rechts[0].isupper():
+            continue  # Code, Domains, Dateinamen; ein Satzanfang wäre großgeschrieben
+        if zeichen == ":" and re.match(r"in(?:nen)?$", rechts):
+            continue  # Gender-Doppelpunkt „Mitarbeiter:innen“
+        return True
+    if len(kern) > VERKLEBT_LANG:
+        if re.search(r"[^\W\d_],[^\W\d_]", kern):
+            return True
+        if any(len(teil) > 12 and _KLEIN_GROSS_RE.search(teil) for teil in kern.split("-")):
+            return True  # „wiesichdieHZB“; Markennamen in Komposita („YouTube-Trendlisten-Analyse“) bleiben
+    return False
+
+
+def verklebte_stellen(saetze: list[dict]) -> list[dict]:
+    """Verklebte Wörter in den gemessenen Sätzen: [{'stelle': Ausschnitt, 'satz': Satznummer}] (v7).
+
+    Regeln: Satzzeichen direkt vor ≥ 2 Buchstaben („erfasst.Merkmale“, „Note,wie“; nach . ! ? nur vor Großbuchstaben)
+    oder ein Token über 25 Zeichen mit innerem Komma bzw. Klein-Groß-Wechsel. Ausgenommen: Abkürzungen und Initialen,
+    URLs, E-Mail-Adressen, Dateinamen, Zahlen, Gender-Doppelpunkt, Binnen-I."""
+    out = []
+    for s in saetze:
+        for tok in s["text"].split():
+            kern = tok.strip("\"'„“”»«‚‘’()[]{}").rstrip(".,;:!?").rstrip("\"'“”»«’‘)]}")
+            if kern and _verklebt(kern):
+                out.append({"stelle": kern if len(kern) <= 60 else kern[:59] + "…", "satz": s.get("nr")})
+    return out
+
+
+def zitat_spannen(text: str) -> list[tuple[int, int]]:
+    """Zeichenbereiche wörtlicher Zitate in einem Absatz: „…“ (auch „…”), »…« bzw. «…» (das erste Guillemet bestimmt die
+    Richtung), “…” und "…"; verschachtelte Zitate zählen zum äußeren. Nicht geschlossene Zitate zählen nicht."""
+    erstes = re.search(r"[»«]", text)
+    g_auf, g_zu = ("«", "»") if erstes and erstes.group(0) == "«" else ("»", "«")
+    stapel: list[tuple[str, int]] = []
+    out = []
+    for i, ch in enumerate(text):
+        if stapel:
+            zu = stapel[-1][0]
+            if ch == zu or (zu == "“" and ch == "”"):
+                _, start = stapel.pop()
+                if not stapel:
+                    out.append((start, i + 1))
+                continue
+        if ch == "„":
+            stapel.append(("“", i))
+        elif ch == g_auf:
+            stapel.append((g_zu, i))
+        elif ch == "“":
+            stapel.append(("”", i))
+        elif ch == '"':
+            stapel.append(('"', i))
+    return out
+
+
+ZITAT_MIN_WOERTER = 4  # kürzere Anführungen gelten als hervorgehobene Begriffe, nicht als wörtliches Zitat
+
+
+def zitat_woerter(text: str) -> int:
+    """Wörter (ist_wort) in wörtlichen Zitaten mit mindestens ZITAT_MIN_WOERTER Wörtern."""
+    n = 0
+    for a, e in zitat_spannen(text):
+        k = sum(1 for t in TOKEN_RE.findall(text[a:e]) if ist_wort(t))
+        if k >= ZITAT_MIN_WOERTER:
+            n += k
+    return n
+
+
+# ---------------------------------------------------------------------------
 # Hauptanalyse
 # ---------------------------------------------------------------------------
 
@@ -1555,12 +1698,14 @@ def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
     absatz_saetze: list[list[str]] = []
     roh_saetze: list[list[str]] = []  # je Eintrag von struktur["absaetze"], auch ohne Satz
     schon_bereinigt = set(struktur.get("bereinigt", ()))
+    absatz_autoren: list[list[str]] = []  # Autorenlisten vor Jahresangaben im Rohabsatz (v7, für dreierlisten)
     for ai, a in enumerate(struktur["absaetze"]):
         sauber = a if ai in schon_bereinigt else bereinige_absatz(a, zaehler)
         s = zerlege_saetze(sauber)
         roh_saetze.append(s)
         if s:
             absatz_saetze.append(s)
+            absatz_autoren.append(autorenlisten(a))
 
     saetze = []  # dicts
     for ai, liste in enumerate(absatz_saetze):
@@ -1771,7 +1916,7 @@ def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
             if mu["id"] not in s.setdefault("muster", []):
                 s["muster"].append(mu["id"])
     m["ki_muster_pro_1000"] = pro1000(treffer_gesamt)
-    dreier = [dreierlisten(s["text"]) for s in saetze]
+    dreier = [dreierlisten(s["text"], absatz_autoren[s["absatz"] - 1]) for s in saetze]
     m["dreierlisten_pro_1000"] = pro1000(sum(len(d) for d in dreier))
     m["sowohl_als_auch_pro_1000"] = pro1000(len(re.findall(r"\bsowohl\b[^.!?]{1,150}?\bals auch\b", roh, re.I)))
     m["nicht_nur_sondern_pro_1000"] = pro1000(len(re.findall(r"\bnicht nur\b[^.!?]{1,150}?\bsondern\b", roh, re.I)))
@@ -1814,6 +1959,8 @@ def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
         s["woerter"] = l
 
     roh_verweis = len(ABK_VERWEIS_RE.findall(roh))
+    verklebt = verklebte_stellen(saetze)
+    n_zitat = sum(zitat_woerter(" ".join(liste)) for liste in absatz_saetze)
     info = {
         "woerter": n_w,
         "token": n_tok,
@@ -1841,8 +1988,17 @@ def _analysiere(text: str, muster: list[dict] | None, fw_profil: dict | None,
         "anteil_konnektor_mittelstellung": round(konn_mitte / konn_gesamt, 4) if konn_gesamt else None,
         "rhythmus_r1_log_absatz": round(r1_absatz, 4) if r1_absatz is not None else None,
         "nominalketten_laenge_mittel": round(mittel(ketten), 4) if ketten else None,
+        "verklebt": verklebt,
+        "zitat_anteil": round(anteil(n_zitat, n_w), 4),
+        "transkript_notation": zaehler["transkript"],
         "warnungen": [],
     }
+    if verklebt:
+        bsp = verklebt[0]
+        info["warnungen"].append(
+            f"{len(verklebt)} verklebte Stelle{'n' if len(verklebt) > 1 else ''} ohne Leerzeichen (z. B. „{bsp['stelle']}“ in "
+            f"Satz {bsp['satz']}) – typisch für PDF-Extraktion. Das verfälscht Satzgrenzen, Satz- und Wortlängen; vor der "
+            "Bewertung die fehlenden Leerzeichen einfügen.")
     if n_w < 300:
         info["warnungen"].append(f"Nur {n_w} Wörter – unter ~300 Wörtern sind die Kennzahlen unzuverlässig.")
     if n_s < 15:
@@ -1994,18 +2150,63 @@ def z_standard(x: float, mu: float, sigma: float | None) -> float:
     return max(-Z_CLIP, min(Z_CLIP, (x - mu) / (sigma or 1.0)))
 
 
+def ki_richtung(r: dict) -> int | None:
+    """Richtung, in der der KI-Median vom menschlichen Median abweicht (v7): +1 = KI höher, −1 = KI niedriger.
+    Bei gleichen Medianen (z. B. beide 0 bei ich/wir) entscheidet die AUROC-Richtung der Kalibrierung ('richtung');
+    ohne beides None."""
+    m50 = (r.get("mensch") or {}).get("p50")
+    k50 = (r.get("ki") or {}).get("p50")
+    if m50 is not None and k50 is not None and k50 != m50:
+        return 1 if k50 > m50 else -1
+    return {"ki_hoeher": 1, "mensch_hoeher": -1}.get(r.get("richtung"))
+
+
+def seite_von(wert: float, r: dict) -> str | None:
+    """'ki', wenn der Wert vom menschlichen Median aus in Richtung des KI-Medians abweicht, 'gegen' auf der anderen
+    Seite (v7); None ohne bekannte KI-Richtung oder genau am Median."""
+    richtung = ki_richtung(r)
+    p50 = (r.get("mensch") or {}).get("p50")
+    if richtung is None or p50 is None or wert == p50:
+        return None
+    return "ki" if (wert - p50) * richtung > 0 else "gegen"
+
+
+def kappe_von(r: dict) -> dict | None:
+    """Einseitige Kappung eines Modellmerkmals am menschlichen Band (v7): auf der der KI abgewandten Seite höchstens bis
+    P90 (KI niedriger → {'seite': 'oben', 'wert': P90}) bzw. P10 (KI höher → {'seite': 'unten', 'wert': P10}); die
+    KI-Seite bleibt offen (dort begrenzt nur Z_CLIP). Werte jenseits des Bands sind dann für das Modell so menschlich wie
+    der Bandrand: Übertreibung wird nicht weiter belohnt. kalibriere.py schreibt das Ergebnis nach modell['kappen']."""
+    richtung = ki_richtung(r)
+    mensch = r.get("mensch") or {}
+    if richtung is None or mensch.get("p10") is None or mensch.get("p90") is None:
+        return None
+    return {"seite": "oben", "wert": mensch["p90"]} if richtung < 0 else {"seite": "unten", "wert": mensch["p10"]}
+
+
+def gekappt(x: float | None, kappe: dict | None) -> float | None:
+    """Wert nach der einseitigen Kappung (v7); ohne Kappe unverändert, None bleibt None."""
+    if x is None or not kappe:
+        return x
+    return min(x, kappe["wert"]) if kappe["seite"] == "oben" else max(x, kappe["wert"])
+
+
 def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule") -> dict:
     """Ordnet jede Kennzahl gegen die menschliche Referenzverteilung ein (grün/gelb/rot).
 
     'unsicher' (S3) = |Wert − nächste Grenze P25/P75| < UNSICHER_FAKTOR · se_typ · √(ABSCHNITT_L / max(ABSCHNITT_L, n)),
     n = ergebnis['info']['woerter'] (fehlt die Angabe: ABSCHNITT_L); Status und Score bleiben unverändert.
-    Logit-Modell mit z-Clipping (S1); 'beitrag' je Modellmerkmal = koef · (z(Wert) − z(Mensch-Median)), negativ =
-    zieht Richtung KI, dazu 'modell_beitraege' aufsteigend sortiert (S2).
+    Logit-Modell mit z-Clipping (S1) auf den einseitig gekappten Werten (v7, modell['kappen'], siehe kappe_von);
+    'beitrag' je Modellmerkmal = koef · (z(gekappter Wert) − z(Mensch-Median)), negativ = zieht Richtung KI, dazu
+    'modell_beitraege' aufsteigend sortiert (S2).
+    Je Kennzahl (v7): 'seite' = 'ki' | 'gegen' | None (Abweichung vom menschlichen Median in Richtung des KI-Medians bzw.
+    davon weg; None bei grün oder unbekannter KI-Richtung), 'jenseits_band' = Wert jenseits P10/P90 auf der Gegenseite.
+    'score_ki' = einseitiger Score: Abweichungen auf der Gegenseite zählen wie grün (Gewichte wie beim Score); 'score'
+    bleibt der zweiseitige Score.
     Fehlt fw_profil_llr_pro_1000 und enthält die Textsorte ein fw_profil, wird es aus ergebnis['fw_zaehlung']
     nachberechnet und in ergebnis['metriken'] eingetragen."""
     m = ergebnis["metriken"]
     if not baselines or textsorte not in baselines.get("textsorten", {}):
-        return {"verfuegbar": False, "kennzahlen": [], "score": None}
+        return {"verfuegbar": False, "kennzahlen": [], "score": None, "score_ki": None}
     ts = baselines["textsorten"][textsorte]
     fw = ts.get("fw_profil")
     if fw and "fw_profil_llr_pro_1000" not in m and ergebnis.get("fw_zaehlung"):
@@ -2021,19 +2222,20 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
     modell = ts.get("modell")
     p_mensch, beitraege = None, {}
     if modell:
+        kappen = modell.get("kappen") or {}  # v7; ältere baselines.json ohne Kappung
         logit = modell["intercept"]
         for key, coef in modell["koeffizienten"].items():
             if m.get(key) is None:
                 continue  # fehlend = Mittelwert (z = 0), wie in kalibriere.py
             mu, sigma = modell["mittel"][key], modell["sd"][key]
-            z_wert = z_standard(m[key], mu, sigma)
+            z_wert = z_standard(gekappt(m[key], kappen.get(key)), mu, sigma)
             logit += coef * z_wert
-            p50 = ((ref.get(key) or {}).get("mensch") or {}).get("p50")
+            p50 = gekappt(((ref.get(key) or {}).get("mensch") or {}).get("p50"), kappen.get(key))
             # gerundet; + 0.0 macht aus −0.0 (negativer Koeffizient · 0, z. B. Semikolons am Median 0) eine 0.0
             beitraege[key] = round(coef * (z_wert - (z_standard(p50, mu, sigma) if p50 is not None else 0.0)), 4) + 0.0
         p_mensch = round(1 / (1 + math.exp(-max(-30, min(30, logit)))), 3)
     zeilen = []
-    gew_summe = gew_punkte = 0.0
+    gew_summe = gew_punkte = gew_punkte_ki = 0.0
     for key, r in ref.items():
         if m.get(key) is None:
             continue
@@ -2051,6 +2253,7 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
         richtung = None
         if status != "gruen":
             richtung = "erhoehen" if wert < mensch["p25"] else "senken"
+        seite = seite_von(wert, r) if status != "gruen" else None
         se = r.get("se_typ")
         unsicher = bool(se) and min(abs(wert - mensch["p25"]), abs(wert - mensch["p75"])) < unsicher_skala * se
         bewertet = r.get("bewertet", False)
@@ -2071,6 +2274,8 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
             "unsicher": unsicher,
             "ki_naeher": ki_naeher,
             "richtung": richtung,
+            "seite": seite,
+            "jenseits_band": seite == "gegen" and status == "rot",
             "beitrag": round(beitraege[key], 4) if key in beitraege else None,
             "hinweis": r.get("hinweis", ""),
         }
@@ -2079,15 +2284,19 @@ def bewerte(ergebnis: dict, baselines: dict | None, textsorte: str = "hochschule
         zeilen.append(zeile)
         if zeile["bewertet"]:
             g = max(0.0, float(zeile["gewicht"] or 0.0))
+            punkte = {"gruen": 1.0, "gelb": 0.5, "rot": 0.0}[status]
             gew_summe += g
-            gew_punkte += g * {"gruen": 1.0, "gelb": 0.5, "rot": 0.0}[status]
+            gew_punkte += g * punkte
+            gew_punkte_ki += g * (1.0 if seite == "gegen" else punkte)
     score = round(100 * gew_punkte / gew_summe) if gew_summe else None
+    score_ki = round(100 * gew_punkte_ki / gew_summe) if gew_summe else None
     zeilen.sort(key=lambda z: (not z["bewertet"], {"rot": 0, "gelb": 1, "gruen": 2}[z["status"]], -(z["gewicht"] or 0)))
     modell_beitraege = sorted(({"id": k, "name": NAMEN.get(k, k), "beitrag": round(b, 4)} for k, b in beitraege.items()),
                               key=lambda e: (e["beitrag"], e["id"]))
-    return {"verfuegbar": True, "kennzahlen": zeilen, "score": score, "p_mensch": p_mensch,
+    return {"verfuegbar": True, "kennzahlen": zeilen, "score": score, "score_ki": score_ki, "p_mensch": p_mensch,
             "modell_beitraege": modell_beitraege,
             "score_schwelle": ts.get("score_schwelle"), "ziel_p_mensch": ts.get("ziel_p_mensch"),
+            "ziel_score": ts.get("ziel_score"), "ziel_score_ki": ts.get("ziel_score_ki"),
             "korpus": baselines.get("korpus", {})}
 
 
@@ -2284,7 +2493,7 @@ def analysiere_und_bewerte(text: str, muster: list[dict] | None = None, baseline
     for nr, (e, b, (von, bis)) in enumerate(zip(block_erg, block_bew, _satzbereiche(plan, block_erg, ergebnis["saetze"])), 1):
         rot = sum(1 for z in b["kennzahlen"] if z["bewertet"] and not z["nur_modell"] and z["status"] == "rot")
         bloecke.append({"nr": nr, "woerter": e["info"]["woerter"], "satz_von": von, "satz_bis": bis,
-                        "score": b["score"], "p_mensch": b.get("p_mensch"), "rot": rot})
+                        "score": b["score"], "score_ki": b.get("score_ki"), "p_mensch": b.get("p_mensch"), "rot": rot})
     bewertung.update(blockmodus=True, n_woerter=n, bloecke=bloecke)
 
     k = len(bloecke)
@@ -2335,6 +2544,8 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
         median = " (Median der Blöcke)" if len(bloecke) > 1 else ""
         if bewertung["score"] is not None:
             teile.append(f"**Menschlichkeits-Score: {bewertung['score']}/100**")
+        if bewertung.get("score_ki") is not None and bewertung["score_ki"] != bewertung["score"]:
+            teile.append(f"nur KI-Seite: {bewertung['score_ki']}/100")
         if bewertung.get("p_mensch") is not None:
             teile.append(f"Modell-Einschätzung: {round(100 * bewertung['p_mensch'])} % menschlich{median}")
         out.append(" · ".join(teile))
@@ -2361,6 +2572,8 @@ def bericht_markdown(ergebnis: dict, bewertung: dict, max_stellen: int = 15, all
                 aufgabe = "↓ senken"
             if z["status"] != "gruen" and z["ki_naeher"]:
                 aufgabe += " (KI-typisch)"
+            elif z.get("seite") == "gegen":
+                aufgabe += " (Gegenseite, kein KI-Signal)"
             if z.get("unsicher") and z["status"] != "gruen":
                 aufgabe += " (Grenzfall)"
             out.append(

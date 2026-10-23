@@ -37,20 +37,23 @@ def sigmoid(x: float) -> float:
 
 
 def logit_kalibriere(mod: dict, werte: dict) -> float:
-    """Logit wie kalibriere.p_mensch (z_wert mit Clipping, fehlend = 0), aus dem Modell in baselines.json."""
-    return mod["intercept"] + sum(c * kalibriere.z_wert(werte.get(k), mod["mittel"][k], mod["sd"][k])
+    """Logit wie kalibriere.p_mensch (z_wert mit Kappung und Clipping, fehlend = 0), aus dem Modell in baselines.json.
+    v7: einseitige Kappung am menschlichen Band (modell['kappen']) wie in Fit und bewerte()."""
+    kappen = mod.get("kappen") or {}
+    return mod["intercept"] + sum(c * kalibriere.z_wert(werte.get(k), mod["mittel"][k], mod["sd"][k], kappen.get(k))
                                   for k, c in mod["koeffizienten"].items())
 
 
 def logit_am_median(ts: dict, werte: dict) -> float:
     """Intercept-Term am menschlichen Median: Intercept + Σ koef · z(mensch_p50) über die Merkmale mit Wert."""
     mod = ts["modell"]
+    kappen = mod.get("kappen") or {}
     out = mod["intercept"]
     for k, c in mod["koeffizienten"].items():
         if werte.get(k) is None:
             continue
         p50 = ((ts["metriken"].get(k) or {}).get("mensch") or {}).get("p50")
-        out += c * (kalibriere.z_wert(p50, mod["mittel"][k], mod["sd"][k]) if p50 is not None else 0.0)
+        out += c * (kalibriere.z_wert(p50, mod["mittel"][k], mod["sd"][k], kappen.get(k)) if p50 is not None else 0.0)
     return out
 
 
@@ -149,7 +152,8 @@ class V3EndeZuEnde(unittest.TestCase):
     # ------------------------------------------------------------------ Grundlagen
     def test_lauf_und_dateien(self):
         self.assertEqual(self.rc, 0)
-        self.assertEqual(self.b["version"], "3")
+        self.assertEqual(self.b["version"], "4")  # v4: einseitige Kappung (v7)
+        self.assertTrue(self.mod["kappen"])
         self.assertEqual(self.mod["z_clip"], analyse.Z_CLIP)
         self.assertEqual(self.b["evaluation"]["hyperparameter"]["z_clip"], analyse.Z_CLIP)
         self.assertTrue(self.mod["koeffizienten"])
@@ -172,7 +176,7 @@ class V3EndeZuEnde(unittest.TestCase):
         """kalibriere.p_mensch (Modell aus baselines.json) = analyse.bewerte auf denselben Abschnitten."""
         merkmale = list(self.mod["koeffizienten"])
         modell = {"merkmale": merkmale, "w": [self.mod["koeffizienten"][k] for k in merkmale], "b": self.mod["intercept"]}
-        paket = {"mittel": self.mod["mittel"], "sd": self.mod["sd"]}
+        paket = {"mittel": self.mod["mittel"], "sd": self.mod["sd"], "kappen": self.mod["kappen"]}  # v7
         for a in self.abschnitte:
             p_kal = kalibriere.p_mensch(modell, paket, a["zeile"])
             bew = analyse.bewerte(copy.deepcopy(a["erg"]), self.b)
@@ -180,10 +184,11 @@ class V3EndeZuEnde(unittest.TestCase):
             self.assertEqual(bew["score"], round(kalibriere.score(self.ts["metriken"], a["zeile"])))
 
     def test_s1_ausreisser_begrenzt(self):
-        """Jedes Modellmerkmal einzeln auf ±10 SD gesetzt: beide Seiten begrenzen auf ±3, also gleiche p wie bei ±3 SD."""
+        """Jedes Modellmerkmal einzeln auf ±10 SD gesetzt: beide Seiten begrenzen auf ±3 (die Gegenseite schon vorher am
+        menschlichen Band, v7), also gleiche p wie bei ±3 SD."""
         merkmale = list(self.mod["koeffizienten"])
         modell = {"merkmale": merkmale, "w": [self.mod["koeffizienten"][k] for k in merkmale], "b": self.mod["intercept"]}
-        paket = {"mittel": self.mod["mittel"], "sd": self.mod["sd"]}
+        paket = {"mittel": self.mod["mittel"], "sd": self.mod["sd"], "kappen": self.mod["kappen"]}
         a = next(x for x in self.abschnitte if x["gruppe"] == "mensch")
         for k in merkmale:
             for faktor in (10.0, -10.0):

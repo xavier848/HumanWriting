@@ -259,7 +259,11 @@ GENDER_MASKULIN = {"studierend": ("Studenten", "Student"), "dozierend": ("Dozent
                    "demonstrierend": ("Demonstranten", "Demonstrant"), "kaufend": ("Käufer", "Käufer"), "pflegend": ("Pfleger", "Pfleger"),
                    "antwortend": ("Befragten", "Befragte"), "beantwortend": ("Befragten", "Befragte"), "lernend": ("Lerner", "Lerner"),
                    "vortragend": ("Referenten", "Referent"), "tragend": ("Träger", "Träger"), "fangend": ("Fänger", "Fänger"),
-                   "tanzend": ("Tänzer", "Tänzer"), "singend": ("Sänger", "Sänger")}
+                   "tanzend": ("Tänzer", "Tänzer"), "singend": ("Sänger", "Sänger"), "hochschullehrend": ("Hochschullehrer", "Hochschullehrer")}
+# Zielformen im Hochschulkontext, die kein einzelnes Wort sind: „Lehrende“ sind Lehrkräfte bzw. Dozenten – „Lehrer“ meint die
+# Schule und verschiebt die Zuordnung (v6-Prüfung, fhws: „Aufgabe der Lehrer beziehungsweise der Hochschule“)
+GENDER_ZIELTEXT = {"lehrend": "„Lehrkräfte“ oder „Dozenten“ (im Hochschulkontext nicht „Lehrer“)"}
+GENDER_UNBEKANNT = "eine passende maskuline Bezeichnung"
 # Übliche Personenbezeichnungen auf „-er“, die sich aus einem Partizip ableiten lassen („Teilnehmende“ → „Teilnehmer“). Nur diese
 # werden als Ersatz genannt; sonst entstünden erfundene Wörter („Wartende“ → „Warter“, „Alleinstehende“ → „Alleinsteher“). Ein
 # Kompositum zählt, wenn das Vorderglied kein Verbpräfix ist („Museumsmitarbeiter“, „Kursleiter“, nicht „Durchführer“).
@@ -288,6 +292,10 @@ def _maskulin(wort: str) -> tuple[str | None, str] | None:
     teile = wort.split("-")
     vorne, letzt = teile[:-1], teile[-1]
     low = letzt.lower()
+    if low in GENDER_ZIELTEXT:
+        return None, low  # feste Zielformen im Hochschulkontext (GENDER_ZIELTEXT), keine Einzelform
+    if low.endswith("lehrend") and low != "hochschullehrend":
+        return None, low  # „Fachlehrende“ o. Ä.: keine sichere Ableitung, nie „…lehrer“ raten
     for k, (anzeige, _st) in sorted(GENDER_MASKULIN.items(), key=lambda x: -len(x[0])):
         if low.endswith(k):
             m = low[:-len(k)] + anzeige.lower()
@@ -694,7 +702,8 @@ ZIEL_MAX = 5
 
 
 def anfang(text: str, n: int = 7) -> str:
-    w = text.split()
+    """Satzanfang für die Anzeige; eine führende Quellenklammer (Beleg des vorigen Zitats) wird übersprungen."""
+    w = text[fuehrende_quelle(text):].split()
     return " ".join(w[:n]) + (" …" if len(w) > n else "")
 
 
@@ -812,11 +821,51 @@ def mechanisch_verlaengert(vorher: dict, jetzt: dict) -> bool:
 # Zitate und Quellen
 # ---------------------------------------------------------------------------
 
-def zitat_masken(saetze: list[dict]) -> dict[int, str]:
-    """Satztext mit maskierten wörtlichen Zitaten („…“, "…", »…«) und Klammern mit Quellenangabe (gleiche Länge).
+def _beleg_ende(text: str, i: int) -> int:
+    """Ende einer Quellenklammer direkt hinter einem schließenden Anführungszeichen (Position i; Leerzeichen und Satzgrenze
+    dazwischen erlaubt): „[2018.06.06_Lehrende, Absatz 8]“, „(ebd., S. 9)“, „[Mergner et al. (2015), S. 9)]“. Gehört zum
+    Zitat (Beleg des wörtlichen Wortlauts), nicht zum Folgesatz. Sonst i."""
+    j = i
+    while j < len(text) and text[j] in " \t\n":
+        j += 1
+    if j >= len(text) or text[j] not in "[(":
+        return i
+    auf, zu = text[j], "]" if text[j] == "[" else ")"
+    tiefe = 0
+    for k in range(j, min(len(text), j + 120)):
+        if text[k] == auf:
+            tiefe += 1
+        elif text[k] == zu:
+            tiefe -= 1
+            if tiefe == 0:
+                inhalt = text[j + 1:k]
+                if re.search(r"\d|\bebd\b|\bebenda\b|\bvgl\b|\bders\.|\bdies\.|\bHrsg\b|\bzit\b|\bInterview", inhalt):
+                    return k + 1
+                return i
+    return i
 
-    Zitate dürfen über Satzgrenzen innerhalb eines Absatzes reichen. Ein nie geschlossenes „ bzw. » gilt bis zum
-    Satzende; ein nie geschlossenes “ oder " ist vermutlich ein einzelnes Zeichen und wird nicht maskiert."""
+
+QUELLE_VORN_RE = re.compile(r"^\s*(?:\[[^\[\]]{1,100}\]|\((?=[^()]*\d)[^()]{1,80}\))\s*")
+
+
+def fuehrende_quelle(text: str) -> int:
+    """Länge einer Quellenklammer am Satzanfang („[2018.06.06_Lehrende, Absatz 8] Studierende …“): der Beleg des vorigen
+    Zitats, den die Satztrennung dem Folgesatz zuschlägt. Anzeige und Satzanfangs-Prüfungen überspringen ihn."""
+    m = QUELLE_VORN_RE.match(text)
+    if not m or not re.search(r"[A-Za-zÄÖÜäöüß]", text[m.end():]):
+        return 0
+    inhalt = m.group(0)
+    return m.end() if re.search(r"\d|\bebd\b|\bvgl\b|\bders\.|\bHrsg\b", inhalt) else 0
+
+
+def zitat_masken(saetze: list[dict]) -> dict[int, str]:
+    """Satztext mit maskierten wörtlichen Zitaten („…“, "…", »…«, ›…‹) und Klammern mit Quellenangabe (gleiche Länge).
+
+    Zitate dürfen über Satzgrenzen innerhalb eines Absatzes reichen und verschachtelt sein (»Wie … sagen kann: »Jawoll …«.
+    Genau.«): ein Stapel führt die Verschachtelungstiefe, das Zitat endet erst bei Tiefe 0. Ist das erste Guillemet im Absatz
+    ein », gilt « nur als Schließer (deutsche Form), sonst umgekehrt (»…« bzw. «…»); ebenso › und ‹. Eine Quellenklammer direkt
+    hinter dem schließenden Zeichen gehört zum Zitat. Ein nie geschlossenes „, », «, › bzw. ‹ gilt bis zum Satzende; ein nie
+    geschlossenes “ oder " ist vermutlich ein einzelnes Zeichen und wird nicht maskiert."""
     masken: dict[int, str] = {}
     absaetze: dict[int, list[dict]] = {}
     for s in saetze:
@@ -827,15 +876,30 @@ def zitat_masken(saetze: list[dict]) -> dict[int, str]:
             grenzen.append((pos, pos + len(s["text"])))
             text += s["text"] + "\n"
             pos = len(text)
-        spannen, offen, start, art = [], None, 0, ""
-        for i, ch in enumerate(text):
-            if offen is None:
-                if ch in OEFFNER:
-                    offen, start, art = OEFFNER[ch], i, ch
-            elif ch in offen:
-                spannen.append((start, i + 1))
-                offen = None
-        if offen is not None and art in "„»«":
+        erst_g = next((ch for ch in text if ch in "»«"), "»")
+        erst_e = next((ch for ch in text if ch in "›‹"), "›")
+        oeffner = {"„": "“”", "“": "”", '"': '"', erst_g: "«" if erst_g == "»" else "»", erst_e: "‹" if erst_e == "›" else "›"}
+        spannen: list[tuple[int, int]] = []
+        stapel: list[tuple[str, str, int]] = []  # (Öffner, Schließer, Start)
+        i = 0
+        while i < len(text):
+            ch = text[i]
+            # schließt das Zeichen eine offene Ebene? (die innerste zuerst; nicht geschlossene innere Ebenen fallen mit weg)
+            ebene = next((k for k in range(len(stapel) - 1, -1, -1) if ch in stapel[k][1]), None)
+            if ebene is not None:
+                start = stapel[ebene][2]
+                del stapel[ebene:]
+                if not stapel:
+                    ende = _beleg_ende(text, i + 1)
+                    spannen.append((start, ende))
+                    i = max(i + 1, ende)
+                    continue
+            elif ch in oeffner:
+                stapel.append((ch, oeffner[ch], i))
+            i += 1
+        offen = next((x for x in stapel if x[0] in "„»«›‹"), None)
+        if offen is not None:
+            start = offen[2]
             ende = next((e for a, e in grenzen if a <= start < e), len(text))
             spannen.append((start, ende))
         zeichen = list(text)
@@ -1727,6 +1791,7 @@ class Lauf:
         # Nominalketten je Satz (Genitiv-/von-Ketten wie analyse.py): kein Nominalisierungsauftrag in Sätze mit ≥ 3 Nomen in
         # Folge, wenn der Bericht ohnehin „Wortwahl einfacher“ als Hebel führt
         self.kette_max: dict[int, int] = {}
+        self.gender_info: list[str] = []  # Gender-Restformen nur in wörtlichen Zitaten: Info statt Auftrag
 
     def absatz_anzahl(self, sim: list[list[int]]) -> list[int]:
         """Sätze je Absatz im Fokus für einen Simulationszustand (Bündeln −1, Teilen +1 im Absatz des Satzes)."""
@@ -1779,7 +1844,8 @@ class Lauf:
 
     def beginnt_im_zitat(self, s: dict) -> bool:
         """Satzanfang liegt in einem wörtlichen Zitat: Anfangswörter dürfen nicht geändert werden."""
-        return self.masken.get(s["nr"], s["text"]).lstrip().startswith(MASKE)
+        mk = self.masken.get(s["nr"], s["text"])
+        return mk[fuehrende_quelle(s["text"]):].lstrip().startswith(MASKE)
 
     def pendelt(self, typ: str, *nrn: int) -> bool:
         """Wurde an einem dieser Sätze früher der gegenteilige Auftrag gegeben (erst bündeln, dann teilen …)?"""
@@ -4442,7 +4508,7 @@ def _absatz_trennbar(L: Lauf, liste: list[dict], k_: int) -> bool:
         return False
     if any(s["nr"] in (h.get("weitere_nr") or []) for h in L.hinweise):
         return False  # Satz soll in diesem Durchgang mit dem vorigen verbunden werden (Bündeln, Zickzack, Strohmann-Paar)
-    mv, ms = L.masken[vor["nr"]].rstrip(), L.masken[s["nr"]].lstrip()
+    mv, ms = L.masken[vor["nr"]].rstrip(), L.masken[s["nr"]][fuehrende_quelle(s["text"]):].lstrip()
     if mv[-1:] == MASKE and ms[:1] == MASKE:
         return False  # mitten in einem wörtlichen Zitat
     if vor["text"].rstrip().endswith(":") or ANKUENDIGUNG_ENDE_RE.search(vor["text"]):
@@ -4607,19 +4673,55 @@ def _vorgaben(L: Lauf) -> None:
     _striche(L)
 
 
+def _gender_maskulin_saetze(L: Lauf, maskulin: str, schl: str) -> list[int]:
+    """Sätze, in denen die Maskulinform außerhalb wörtlicher Zitate schon steht (Teilumsetzung)."""
+    stamm = GENDER_MASKULIN.get(schl, (None, None))[1] or maskulin.split("-")[-1]
+    stamm_re = re.compile(r"(?<![\w-])" + re.escape(gender_schluessel(stamm)) + r"(?:e|en|er|ern|n|s)?(?![\wäöüß*:_/-])",
+                          re.IGNORECASE)
+    schon = []
+    for x in L.saetze:
+        mk = L.masken.get(x["nr"], x["text"])
+        belegt = [(f["start"], f["start"] + len(f["wort"])) for f in gender_funde(mk)]
+        if any(not any(a <= t.start() < e for a, e in belegt) for t in stamm_re.finditer(mk)):
+            schon.append(x["nr"])
+    return schon
+
+
 def _gender(L: Lauf) -> None:
-    """Ein Hinweis je Wortstamm mit allen Satznummern im ganzen Text und der abgeleiteten Maskulinform; steht die
-    Maskulinform schon im Text (Teilumsetzung), wird daraus ein Vereinheitlichungsauftrag."""
+    """Ein Hinweis je Wortstamm mit allen Satznummern im ganzen Text und der abgeleiteten Maskulinform (Vorgabe, ändert den
+    Score nicht); steht die Maskulinform schon im Text (Teilumsetzung), wird daraus ein Vereinheitlichungsauftrag. Gezählt wird
+    nur außerhalb wörtlicher Zitate: Stehen alle Restformen in Zitaten, gibt es keinen Auftrag, sondern die Info „Rest steht in
+    wörtlichen Zitaten – so lassen“. Zielformen im Hochschulkontext: „Lehrende“ → „Lehrkräfte“ oder „Dozenten“ (nie „Lehrer“),
+    unbekannte Formen „eine passende maskuline Bezeichnung“."""
     gruppen: dict[str, dict] = {}
+    im_zitat: dict[str, dict] = {}
     for s in L.saetze:
-        if not L.nutzbar(s):
+        if s["woerter"] < MIN_WOERTER:
             continue
-        for f in gender_funde(L.masken[s["nr"]]):
+        mk = L.masken[s["nr"]]
+        eigen = gender_funde(mk) if L.nutzbar(s) else []
+        for f in eigen:
             g = gruppen.setdefault(f["schluessel"], {"formen": Counter(), "saetze": [], "maskulin": f["maskulin"], "im_fokus": False})
             g["formen"][f["wort"]] += 1
             if s["nr"] not in g["saetze"]:
                 g["saetze"].append(s["nr"])
             g["im_fokus"] |= L.von <= s["nr"] <= L.bis
+        for f in gender_funde(s["text"]):
+            if MASKE in mk[f["start"]:f["start"] + len(f["wort"])]:
+                z = im_zitat.setdefault(f["schluessel"], {"formen": Counter(), "saetze": [], "maskulin": f["maskulin"]})
+                z["formen"][f["wort"]] += 1
+                if s["nr"] not in z["saetze"]:
+                    z["saetze"].append(s["nr"])
+    L.gender_info = []
+    for schl, z in sorted(im_zitat.items(), key=lambda x: x[1]["saetze"][0]):
+        if schl in gruppen or not any(L.von <= n <= L.bis for n in z["saetze"]):
+            continue
+        # alle Restformen stehen in wörtlichen Zitaten: kein Auftrag; als Info nur, wenn der eigene Text schon umgestellt ist
+        vorher_genannt = any(("gender", f"gender:{schl}") in schl_ for _, schl_ in L.frueher)
+        if vorher_genannt or (z["maskulin"] and _gender_maskulin_saetze(L, z["maskulin"], schl)):
+            wort = z["formen"].most_common(1)[0][0]
+            L.gender_info.append(f"„{wort}“ steht nur noch in wörtlichen Zitaten ({_nr_liste(z['saetze'])}) – Rest steht in wörtlichen "
+                                 "Zitaten, so lassen.")
     for schl, g in sorted(gruppen.items(), key=lambda x: x[1]["saetze"][0]):
         if not g["im_fokus"]:
             continue  # gemeldet wird, wenn der Abschnitt mit dieser Form im Fokus ist
@@ -4628,32 +4730,34 @@ def _gender(L: Lauf) -> None:
         wo = f"in Satz {nrn[0]}" if len(nrn) == 1 else f"in Satz {', '.join(map(str, nrn[:-1]))} und {nrn[-1]}"
         weitere_formen = [w for w in g["formen"] if w != wort]
         formen = f"„{wort}“" + (f" (auch {', '.join(f'„{w}“' for w in weitere_formen[:2])})" if weitere_formen else "")
-        ziel = f"„{g['maskulin']}“" if g["maskulin"] else "die übliche maskuline Personenbezeichnung"
+        ziel = f"„{g['maskulin']}“" if g["maskulin"] else (GENDER_ZIELTEXT.get(schl) or GENDER_UNBEKANNT)
         misch = ""
         if g["maskulin"]:
-            stamm = GENDER_MASKULIN.get(schl, (None, None))[1] or g["maskulin"].split("-")[-1]
-            stamm_re = re.compile(r"(?<![\w-])" + re.escape(gender_schluessel(stamm)) + r"(?:e|en|er|ern|n|s)?(?![\wäöüß*:_/-])",
-                                  re.IGNORECASE)
-            schon = []
-            for x in L.saetze:
-                mk = L.masken.get(x["nr"], x["text"])
-                belegt = [(f["start"], f["start"] + len(f["wort"])) for f in gender_funde(mk)]
-                if any(not any(a <= t.start() < e for a, e in belegt) for t in stamm_re.finditer(mk)):
-                    schon.append(x["nr"])
+            schon = _gender_maskulin_saetze(L, g["maskulin"], schl)
             if schon:
                 misch = (f" Die Maskulinform steht schon in Satz {', '.join(map(str, schon[:4]))}{' …' if len(schon) > 4 else ''}: "
-                         "Mischform, alle Stellen auf eine Form bringen.")
+                         "Mischform, alle Stellen außerhalb wörtlicher Zitate auf eine Form bringen.")
+        z = im_zitat.get(schl)
+        if z:
+            misch += f" In wörtlichen Zitaten ({_nr_liste(z['saetze'])}) bleibt die Form stehen."
         s0 = L.nach_nr[nrn[0]] if len(nrn) == 1 else None
         if s0:
             text_ = f"{zitat(s0)}: {formen} → {ziel} (Vorgabe generisches Maskulinum).{misch}"
         else:
             text_ = f"{formen} {wo} → {ziel} (Vorgabe generisches Maskulinum), im ganzen Text einheitlich.{misch}"
         # Partizip- bzw. Zeichenformen und Maskulinform als „ersetzbar“: inhalt_check wertet die verlangte Umstellung dann
-        # nicht als verschwundenen Begriff („bewerbend“)
-        ersetzbar = list(g["formen"]) + ([g["maskulin"]] if g["maskulin"] else [])
+        # nicht als verschwundenen Begriff („bewerbend“); die neue Form als „erwartet“ (kein neuer Begriff)
+        if g["maskulin"]:
+            erwartet = [g["maskulin"].lower(), g["maskulin"].split("-")[-1].lower()]
+        elif schl in GENDER_ZIELTEXT:
+            erwartet = [w.lower() for w in re.findall(r"„([^“]+)“", GENDER_ZIELTEXT[schl]) if w.lower() != "lehrer"]
+        else:
+            erwartet = []
+        ersetzbar = list(g["formen"]) + ([g["maskulin"]] if g["maskulin"] else []) + erwartet
         if L.hinweis("gender", s0, text_, 1.5, absatz=s0["absatz"] if s0 else None, fund=wort, anfang=f"gender:{schl}",
                      ersetzbar=ersetzbar):
             L.hinweise[-1]["saetze"] = nrn
+            L.hinweise[-1]["erwartet"] = sorted(set(erwartet) | {gender_schluessel(w) for w in erwartet})
 
 
 def _konsistenz(L: Lauf) -> None:

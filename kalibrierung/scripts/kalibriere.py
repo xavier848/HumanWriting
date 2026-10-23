@@ -10,16 +10,19 @@ Schritte:
      Dokument (HW02), typische Messunsicherheit se_typ (HW18)
   4. Redundante Kennzahlen bündeln: Cluster |r| ≥ 0,7 in den menschlichen Abschnitten, Gewicht gedeckelt (HW14)
   5. Funktionswort-Profil (NegBin-Log-Likelihood-Quotient, HW07) und Gewichte der KI-Muster aus den Häufigkeiten
-  6. Logistisches Modell auf z-Werten, die auf ±Z_CLIP begrenzt sind (S1, wie analyse.bewerte); Merkmalszahl und
-     L2-Stärke per wiederholter gruppierter Kreuzvalidierung (5×5, Thema) nach der Ein-Standardfehler-Regel
-     (erst k, dann das größte λ), Evaluation von Modell und Score out-of-fold (AUROC, Brier, ECE, Reliabilität),
-     finales Modell auf allen Daten; Schwellen score_schwelle und ziel_p_mensch (P10 der menschlichen OOF-p)
+  6. Logistisches Modell auf z-Werten, die auf ±Z_CLIP begrenzt sind (S1, wie analyse.bewerte); vorher wird jedes
+     Merkmal einseitig am menschlichen Band gekappt (v7: auf der der KI abgewandten Seite höchstens bis P90 bzw. P10,
+     analyse.kappe_von). Merkmalszahl und L2-Stärke per wiederholter gruppierter Kreuzvalidierung (5×5, Thema) nach
+     der Ein-Standardfehler-Regel (erst k, dann das größte λ), Evaluation von Modell, Score und einseitigem Score
+     (score_ki) out-of-fold (AUROC, Brier, ECE, Reliabilität), finales Modell auf allen Daten; Schwellen
+     score_schwelle, ziel_p_mensch (P10 der menschlichen OOF-p), ziel_score und ziel_score_ki (P10 der menschlichen
+     OOF-Scores)
   7. Diagnosen: kontrafaktische Goodhart-Sensitivität des Modells, AUROC je Quelle und Texttyp, Korrelation mit
      dem Erscheinungsjahr (HW19)
   8. Wort-/Phrasenlisten: was KI über- und was Menschen überdurchschnittlich nutzen
      (log-odds mit informativem Dirichlet-Prior, Monroe et al. 2008)
 
-    python3 kalibriere.py [--korpus ../korpus] [--aus ../ergebnisse] [--baselines PFAD] [--muster PFAD]
+    python3 kalibriere.py [--korpus ../korpus] [--aus ../ergebnisse] [--baselines PFAD] [--muster PFAD] [--ohne-kappung]
 
 Achtung: schreibt baselines.json, ki_muster.json (Gewichte) und wortlisten.json neben baselines.json.
 Für Probeläufe --aus, --baselines und --muster auf ein Arbeitsverzeichnis setzen.
@@ -645,9 +648,11 @@ def paare_bilden(daten: list[dict]) -> list[tuple[dict, dict]]:
 
 
 def kalibriere_daten(zeilen: list[dict], keys: list[str], muster_liste: list[dict], fw_woerter: list[str],
-                     boot_n: int = BOOTSTRAP_N, mit_se: bool = False) -> dict:
+                     boot_n: int = BOOTSTRAP_N, mit_se: bool = False, kappung: bool = True) -> dict:
     """Schätzt alles, was aus Trainingsdaten kommt: Muster-Gewichte, Funktionswort-Profil, Perzentile,
-    Trennschärfe, Paar-Gate, Cluster und Gewichte, Rangliste der Modellmerkmale (samt Standardisierung)."""
+    Trennschärfe, Paar-Gate, Cluster und Gewichte, Rangliste der Modellmerkmale samt einseitiger Kappung (v7,
+    analyse.kappe_von mit den Perzentilen dieser Daten; kappung=False: keine) und Standardisierung (Mittel und SD
+    der gekappten Werte)."""
     mg, tok = muster_gewichte(zeilen, muster_liste)
     gew = {mid: v["gewicht"] for mid, v in mg.items()}
     profil = fw_profil_schaetzen(zeilen, fw_woerter)
@@ -725,26 +730,34 @@ def kalibriere_daten(zeilen: list[dict], keys: list[str], muster_liste: list[dic
             rang.append(k)
         if len(rang) >= max(MODELL_K):
             break
+    kappen = {}
+    if kappung:
+        for k in rang:
+            kp = analyse.kappe_von(metriken[k])
+            if kp:
+                kappen[k] = kp
     mu_, sd_ = {}, {}
     for k in rang:
-        xs = [z[k] for z in daten if z.get(k) is not None]
+        xs = [analyse.gekappt(z[k], kappen.get(k)) for z in daten if z.get(k) is not None]
         mu_[k] = analyse.mittel(xs)
         sd_[k] = analyse.sd(xs) or 1.0
-    return {"metriken": metriken, "cluster": dict(cluster), "rang": rang, "mittel": mu_, "sd": sd_,
+    return {"metriken": metriken, "cluster": dict(cluster), "rang": rang, "mittel": mu_, "sd": sd_, "kappen": kappen,
             "gew": gew, "muster": mg, "token": tok, "profil": profil, "daten": daten, "n_paare": len(paare)}
 
 
-def z_wert(x, mittel: float, sd: float) -> float:
-    """S1: z = max(−Z_CLIP, min(Z_CLIP, (x − mittel)/sd)), identisch mit analyse.bewerte(); fehlend = 0 (Mittelwert).
-    Die Begrenzung verhindert, dass ein einzelner Ausreißer (z. B. 40 Semikolons pro 1000) die Wahrscheinlichkeit
-    allein bestimmt."""
+def z_wert(x, mittel: float, sd: float, kappe: dict | None = None) -> float:
+    """S1: z = max(−Z_CLIP, min(Z_CLIP, (x' − mittel)/sd)), identisch mit analyse.bewerte(); fehlend = 0 (Mittelwert).
+    x' = x nach der einseitigen Kappung am menschlichen Band (v7, analyse.gekappt; ohne kappe x' = x).
+    Das Clipping verhindert, dass ein einzelner Ausreißer (z. B. 40 Semikolons pro 1000) die Wahrscheinlichkeit
+    allein bestimmt; die Kappung, dass Werte jenseits des menschlichen Bands auf der Gegenseite als „noch menschlicher“
+    zählen."""
     if x is None:
         return 0.0
-    return max(-Z_CLIP, min(Z_CLIP, (x - mittel) / (sd or 1.0)))
+    return max(-Z_CLIP, min(Z_CLIP, (analyse.gekappt(x, kappe) - mittel) / (sd or 1.0)))
 
 
 def _standardisiert(paket: dict, z: dict, k: str) -> float:
-    return z_wert(z.get(k), paket["mittel"][k], paket["sd"][k])
+    return z_wert(z.get(k), paket["mittel"][k], paket["sd"][k], (paket.get("kappen") or {}).get(k))
 
 
 def fit_modell(paket: dict, k: int, lam: float, start=None) -> dict:
@@ -759,8 +772,9 @@ def p_mensch(modell: dict, paket: dict, z: dict) -> float:
     return vorhersage(modell["w"], modell["b"], [_standardisiert(paket, z, m) for m in modell["merkmale"]])
 
 
-def score(metriken: dict, z: dict) -> float:
-    """Menschlichkeits-Score wie analyse.bewerte: grün 1, gelb 0,5, rot 0, gewichtet mit den gedeckelten Gewichten."""
+def score(metriken: dict, z: dict, einseitig: bool = False) -> float:
+    """Menschlichkeits-Score wie analyse.bewerte: grün 1, gelb 0,5, rot 0, gewichtet mit den gedeckelten Gewichten.
+    einseitig=True: score_ki (v7), Abweichungen auf der Gegenseite der KI (analyse.seite_von) zählen wie grün."""
     gs = gp = 0.0
     for k, v in metriken.items():
         if not v["bewertet"] or z.get(k) is None:
@@ -769,9 +783,16 @@ def score(metriken: dict, z: dict) -> float:
             continue  # wie bewerte(): Reihenfolgemaß bei < 30 Sätzen nicht bewertet
         m, x = v["mensch"], z[k]
         st = 1.0 if m["p25"] <= x <= m["p75"] else 0.5 if m["p10"] <= x <= m["p90"] else 0.0
+        if einseitig and st < 1.0 and analyse.seite_von(x, v) == "gegen":
+            st = 1.0
         gs += v["gewicht"]
         gp += v["gewicht"] * st
     return 100 * gp / gs if gs else 0.0
+
+
+def score_ki(metriken: dict, z: dict) -> float:
+    """Einseitiger Score (v7) wie analyse.bewerte()['score_ki']."""
+    return score(metriken, z, einseitig=True)
 
 
 def score_schwelle_von(gruppen, scores) -> float:
@@ -818,14 +839,17 @@ def gruppen_folds(themen: list[str], folds: int, rnd: random.Random) -> dict:
 
 
 def kreuzvalidierung(zeilen, keys, muster_liste, fw_woerter, wiederholungen=CV_WIEDERHOLUNGEN, folds=CV_FOLDS,
-                     seed=CV_SEED, k_gitter=MODELL_K, lam_gitter=MODELL_LAMBDA, boot_n=BOOTSTRAP_N, log=None) -> dict:
-    """Pro Fold die komplette Kalibrierung auf den Train-Themen, Bewertung auf den zurückgehaltenen Themen.
-    Gibt Fold-Ergebnisse je Modellkonfiguration (k, λ) und für den Score sowie Out-of-fold-Werte je Zeile zurück."""
+                     seed=CV_SEED, k_gitter=MODELL_K, lam_gitter=MODELL_LAMBDA, boot_n=BOOTSTRAP_N, log=None,
+                     kappung: bool = True) -> dict:
+    """Pro Fold die komplette Kalibrierung auf den Train-Themen (samt Kappungsgrenzen, v7), Bewertung auf den
+    zurückgehaltenen Themen. Gibt Fold-Ergebnisse je Modellkonfiguration (k, λ), für den Score und den einseitigen
+    Score sowie Out-of-fold-Werte je Zeile zurück."""
     rnd = random.Random(seed)
     gruppen = [z["gruppe"] for z in zeilen]
     erg_modell = {(k, lam): [] for k in k_gitter for lam in lam_gitter}
     oof_modell = {kl: defaultdict(list) for kl in erg_modell}
     erg_score, oof_score = [], defaultdict(list)
+    erg_score_ki, oof_score_ki = [], defaultdict(list)
     bewertet_zaehl, gate_zaehl = Counter(), Counter()
     for r in range(wiederholungen):
         zuordnung = gruppen_folds([z["thema"] for z in zeilen], folds, rnd)
@@ -833,7 +857,7 @@ def kreuzvalidierung(zeilen, keys, muster_liste, fw_woerter, wiederholungen=CV_W
             t0 = time.time()
             train = [z for z in zeilen if zuordnung[z["thema"]] != f]
             test_idx = [i for i, z in enumerate(zeilen) if zuordnung[z["thema"]] == f]
-            paket = kalibriere_daten(train, keys, muster_liste, fw_woerter, boot_n=boot_n)
+            paket = kalibriere_daten(train, keys, muster_liste, fw_woerter, boot_n=boot_n, kappung=kappung)
             bewertet_zaehl.update(k for k, v in paket["metriken"].items() if v["bewertet"])
             gate_zaehl.update(k for k, v in paket["metriken"].items() if v["gate"])
             test = [abgeleitet(zeilen[i], paket["gew"], paket["profil"]) for i in test_idx]
@@ -844,6 +868,12 @@ def kreuzvalidierung(zeilen, keys, muster_liste, fw_woerter, wiederholungen=CV_W
             erg_score.append(evaluiere(g_test, s_test, schwelle))
             for i, s in zip(test_idx, s_test):
                 oof_score[i].append(s)
+            schwelle_ki = score_schwelle_von([z["gruppe"] for z in paket["daten"]],
+                                             [score_ki(paket["metriken"], z) for z in paket["daten"]])
+            ski_test = [score_ki(paket["metriken"], z) for z in test]
+            erg_score_ki.append(evaluiere(g_test, ski_test, schwelle_ki))
+            for i, s in zip(test_idx, ski_test):
+                oof_score_ki[i].append(s)
             for k in k_gitter:
                 start = None
                 for lam in lam_gitter:
@@ -857,6 +887,7 @@ def kreuzvalidierung(zeilen, keys, muster_liste, fw_woerter, wiederholungen=CV_W
                 log(f"  CV {r + 1}.{f + 1}: {len(train)} Train-/{len(test)} Test-Abschnitte, "
                     f"{paket['n_paare']} Paare, {time.time() - t0:.1f} s")
     return {"modell": erg_modell, "oof_modell": oof_modell, "score": erg_score, "oof_score": oof_score,
+            "score_ki": erg_score_ki, "oof_score_ki": oof_score_ki,
             "bewertet_haeufigkeit": bewertet_zaehl, "gate_haeufigkeit": gate_zaehl,
             "folds_gesamt": wiederholungen * folds}
 
@@ -974,7 +1005,8 @@ def ziel_score_von(scores_mensch: list[float]) -> float:
 
 
 def ziel_erreicht_anteil(gruppen, oof_p, oof_s, ziel_p, ziel_s) -> dict:
-    """Anteil der Abschnitte je Gruppe, die beide Ziele (p ≥ ziel_p_mensch und Score ≥ ziel_score) out-of-fold erreichen."""
+    """Anteil der Abschnitte je Gruppe, die beide Ziele (p ≥ ziel_p_mensch und Score ≥ Ziel) out-of-fold erreichen;
+    v7: oof_s = einseitiger Score (score_ki) mit ziel_score_ki, zum Vergleich auch der zweiseitige mit ziel_score."""
     erg = {}
     for g in ("mensch", "ki"):
         paare = [(p, s) for gg, p, s in zip(gruppen, oof_p, oof_s) if gg == g and p is not None and s is not None]
@@ -1018,7 +1050,7 @@ def goodhart_analyse(modell: dict, paket: dict, ziel_p: float, top_n: int = GOOD
         return {}
     koef = dict(zip(merkmale, modell["w"]))
     p50 = {m: paket["metriken"][m]["mensch"]["p50"] for m in merkmale}
-    z50 = {m: z_wert(p50[m], paket["mittel"][m], paket["sd"][m]) for m in merkmale}
+    z50 = {m: z_wert(p50[m], paket["mittel"][m], paket["sd"][m], (paket.get("kappen") or {}).get(m)) for m in merkmale}
     zs = [{m: _standardisiert(paket, z, m) for m in merkmale} for z in ki]
     basis = [modell["b"] + sum(koef[m] * zz[m] for m in merkmale) for zz in zs]
 
@@ -1139,7 +1171,10 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
           "Pro Fold komplette Kalibrierung auf den Train-Themen (Muster-Gewichte, Funktionswort-Profil, Perzentile, Gate, "
           "Cluster, Merkmalsauswahl, Modell), Bewertung auf den zurückgehaltenen Themen. Mittelwert ± SD über die Folds.", "",
           "| Verfahren | AUROC | Genauigkeit | bal. Genauigkeit | Median Mensch | Median KI |", "|---|---|---|---|---|---|"]
-    for name, key in (("Modell P(menschlich)", "modell_cv"), ("Menschlichkeits-Score", "score_cv")):
+    for name, key in (("Modell P(menschlich)", "modell_cv"), ("Menschlichkeits-Score", "score_cv"),
+                      ("Score einseitig (score_ki)", "score_ki_cv")):
+        if key not in ev:
+            continue
         e = ev[key]
         z.append(f"| {name} | {_pm(e, 'auroc')} | {_pm(e, 'genauigkeit')} | {_pm(e, 'bal_genauigkeit')} | "
                  f"{_pm(e, 'median_mensch', 2)} | {_pm(e, 'median_ki', 2)} |")
@@ -1150,6 +1185,11 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
           f"sind (z = max(−{Z_CLIP:g}, min({Z_CLIP:g}, (x − Mittel)/SD)), identisch in Fit, Out-of-fold-Vorhersage, Schwellen, Goodhart-Analyse "
           f"und analyse.bewerte). λ-Gitter (log-gleichabständig, halbe Dekaden): {', '.join(f'{x:g}' for x in MODELL_LAMBDA[::-1])}; "
           f"k-Gitter: {', '.join(str(x) for x in MODELL_K)}.", "",
+          ("Einseitige Kappung (v7): Vor der Standardisierung wird jedes Modellmerkmal auf der der KI abgewandten Seite "
+           "höchstens bis zum menschlichen P90 (KI niedriger) bzw. P10 (KI höher) gesetzt, in jedem Fold mit den Perzentilen "
+           "der Train-Themen; die KI-Seite bleibt offen (nur z-Clipping). Werte jenseits des menschlichen Bands gelten damit "
+           "nicht als „noch menschlicher“." if hp.get("kappung", True) else
+           "Ohne einseitige Kappung (Vergleichslauf, --ohne-kappung)."), "",
           "Ein-Standardfehler-Regel auf dem balancierten Log-Loss out-of-fold (SE = SD über die Folds / √Folds), Reihenfolge:", ""]
     if aw:
         b_ = aw["bestes"]
@@ -1163,8 +1203,9 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
     else:
         z += [f"Gewählt: {hp['k']} Merkmale, λ = {hp['lambda']}."]
     z += ["", f"Out-of-fold gepoolt (Mittel über die Wiederholungen je Abschnitt): Modell-AUROC {ev['modell_oof_auroc']}, "
-          f"Score-AUROC {ev['score_oof_auroc']}. In-sample (finales Modell auf allen Daten): Modell-AUROC "
-          f"{ev['modell_alle']['auroc']}, Score-AUROC {ev['score_alle']['auroc']}.", "",
+          f"Score-AUROC {ev['score_oof_auroc']}, AUROC einseitiger Score {ev.get('score_ki_oof_auroc', '–')}. In-sample "
+          f"(finales Modell auf allen Daten): Modell-AUROC {ev['modell_alle']['auroc']}, Score-AUROC "
+          f"{ev['score_alle']['auroc']}.", "",
           "| k | λ | AUROC | bal. Genauigkeit | Log-Loss (bal.) |", "|---|---|---|---|---|"]
     for zeile in diag["gitter"]:
         mark = " ◀" if (zeile["k"], zeile["lambda"]) == (hp["k"], hp["lambda"]) else ""
@@ -1196,12 +1237,18 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
           f"- **ziel_p_mensch = {t['ziel_p_mensch']}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-"
           f"Wahrscheinlichkeiten, begrenzt auf [{ZIEL_P_MIN}; {ZIEL_P_MAX}], auf 2 Stellen gerundet "
           f"({100 - round(100 * ZIEL_P_PERZENTIL)} % der menschlichen Abschnitte erreichen es).",
-          f"- **ziel_score = {t.get('ziel_score')}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Scores; "
-          "Untergrenze für „Ziel erreicht“ im Coach (der Score trennt schwächer als das Modell)."]
-    za = ev.get("ziel_erreicht_anteil_oof")
-    if za and za.get("mensch") is not None and za.get("ki") is not None:
-        pz = lambda x: f"{100 * x:.1f}".replace(".", ",")
-        z.append(f"- **Beide Ziele erreicht (out-of-fold):** Mensch {pz(za['mensch'])} %, KI {pz(za['ki'])} %.")
+          f"- **ziel_score = {t.get('ziel_score')}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Scores "
+          "(zweiseitig).",
+          f"- **ziel_score_ki = {t.get('ziel_score_ki')}**: P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Werte "
+          "des einseitigen Scores (Abweichungen auf der Gegenseite der KI zählen wie grün); Untergrenze für „Ziel erreicht“ "
+          "im Coach (v7). Ein Text, der menschlicher als typisch ist, verfehlt das Ziel damit nicht mehr."]
+    pz = lambda x: f"{100 * x:.1f}".replace(".", ",")  # noqa: E731
+    for titel, schluessel in (("p ≥ ziel_p_mensch und score_ki ≥ ziel_score_ki", "ziel_erreicht_anteil_oof"),
+                              ("zum Vergleich, Regel bis v6: p ≥ ziel_p_mensch und Score ≥ ziel_score",
+                               "ziel_erreicht_anteil_oof_zweiseitig")):
+        za = ev.get(schluessel)
+        if za and za.get("mensch") is not None and za.get("ki") is not None:
+            z.append(f"- **Ziel erreicht (out-of-fold, {titel}):** Mensch {pz(za['mensch'])} %, KI {pz(za['ki'])} %.")
     gh = t.get("goodhart")
     if gh:
         name = analyse.NAMEN.get
@@ -1254,8 +1301,11 @@ def bericht(b: dict, diag: dict, muster_bericht: list, wortlisten: dict) -> str:
     mod = t["modell"]
     z += ["", f"## Modell ({len(mod['koeffizienten'])} Merkmale, λ = {mod.get('lambda')})", "",
           "Logistische Regression auf standardisierten Kennzahlen (positiv = spricht für menschlich):", ""]
+    kappen = mod.get("kappen") or {}
     for k, c in sorted(mod["koeffizienten"].items(), key=lambda kv: -abs(kv[1])):
-        z.append(f"- {analyse.NAMEN.get(k, k)}: {c:+.3f}")
+        kp = kappen.get(k)
+        kp_txt = (f" (gekappt {'oben bei P90' if kp['seite'] == 'oben' else 'unten bei P10'} = {kp['wert']:.4g})" if kp else "")
+        z.append(f"- {analyse.NAMEN.get(k, k)}: {c:+.3f}{kp_txt}")
     fw = t.get("fw_profil")
     if fw:
         verh = sorted(fw["woerter"], key=lambda w: fw["rate_ki"][w] / fw["rate_mensch"][w])
@@ -1307,7 +1357,10 @@ def main(argv=None) -> int:
     ap.add_argument("--cv-wiederholungen", type=int, default=CV_WIEDERHOLUNGEN)
     ap.add_argument("--cv-folds", type=int, default=CV_FOLDS)
     ap.add_argument("--bootstrap", type=int, default=BOOTSTRAP_N, help="Bootstrap-Ziehungen für das Paar-Gate")
+    ap.add_argument("--ohne-kappung", action="store_true",
+                    help="Modellmerkmale nicht einseitig am menschlichen Band kappen (Vergleichslauf wie vor v7)")
     args = ap.parse_args(argv)
+    kappung = not args.ohne_kappung
     if args.max_abschnitte < 1:
         ap.error("--max-abschnitte muss >= 1 sein")
     if args.cv_folds < 2 or args.cv_wiederholungen < 1:
@@ -1409,20 +1462,24 @@ def main(argv=None) -> int:
 
     # --- Kreuzvalidierung -------------------------------------------------------
     cv = kreuzvalidierung(zeilen, keys, muster_json["muster"], fw_woerter, args.cv_wiederholungen, args.cv_folds,
-                          boot_n=args.bootstrap, log=log)
+                          boot_n=args.bootstrap, log=log, kappung=kappung)
     auswahl = {}
     k_best, lam_best = waehle_konfiguration(cv["modell"], auswahl)
     gruppen = [z["gruppe"] for z in zeilen]
     oof_p = [analyse.mittel(cv["oof_modell"][(k_best, lam_best)][i]) if cv["oof_modell"][(k_best, lam_best)][i] else None
              for i in range(len(zeilen))]
     oof_s = [analyse.mittel(cv["oof_score"][i]) if cv["oof_score"][i] else None for i in range(len(zeilen))]
+    oof_ski = [analyse.mittel(cv["oof_score_ki"][i]) if cv["oof_score_ki"][i] else None for i in range(len(zeilen))]
     ziel_p = ziel_p_mensch_von([p for p, g in zip(oof_p, gruppen) if g == "mensch" and p is not None])
     schwelle = round(score_schwelle_von([g for g, s in zip(gruppen, oof_s) if s is not None], [s for s in oof_s if s is not None]), 1)
     ziel_s = ziel_score_von([s for s, g in zip(oof_s, gruppen) if g == "mensch" and s is not None])
-    ziel_anteil = ziel_erreicht_anteil(gruppen, oof_p, oof_s, ziel_p, ziel_s)
+    ziel_ski = ziel_score_von([s for s, g in zip(oof_ski, gruppen) if g == "mensch" and s is not None])
+    ziel_anteil = ziel_erreicht_anteil(gruppen, oof_p, oof_ski, ziel_p, ziel_ski)  # v7: p und einseitiger Score
+    ziel_anteil_zweiseitig = ziel_erreicht_anteil(gruppen, oof_p, oof_s, ziel_p, ziel_s)  # Regel bis v6
 
     # --- Finale Kalibrierung auf allen Daten --------------------------------------
-    paket = kalibriere_daten(zeilen, keys, muster_json["muster"], fw_woerter, boot_n=args.bootstrap, mit_se=True)
+    paket = kalibriere_daten(zeilen, keys, muster_json["muster"], fw_woerter, boot_n=args.bootstrap, mit_se=True,
+                             kappung=kappung)
     modell = fit_modell(paket, k_best, lam_best)
     daten = paket["daten"]
     metriken = paket["metriken"]
@@ -1444,29 +1501,38 @@ def main(argv=None) -> int:
     with open(args.muster, "w", encoding="utf-8") as f:
         json.dump(muster_json, f, ensure_ascii=False, indent=1)
 
-    spalten = list(META) + [k for k in keys] + [k for k in ("fw_profil_llr_pro_1000",) if k not in keys]
-    with open(os.path.join(args.aus, "features.csv"), "w", newline="", encoding="utf-8") as f:
-        wtr = csv.DictWriter(f, fieldnames=spalten, extrasaction="ignore")
-        wtr.writeheader()
-        wtr.writerows(daten)
-
     # --- Evaluation -----------------------------------------------------------------
     p_alle = [p_mensch(modell, paket, z) for z in daten]
     s_alle = [score(metriken, z) for z in daten]
+    ski_alle = [score_ki(metriken, z) for z in daten]
+
+    # features.csv mit den In-sample-Werten des finalen Modells (Konsistenzprüfung Kalibrierung ↔ Laufzeit)
+    spalten = (list(META) + [k for k in keys] + [k for k in ("fw_profil_llr_pro_1000",) if k not in keys]
+               + ["final_p_mensch", "final_score", "final_score_ki"])
+    with open(os.path.join(args.aus, "features.csv"), "w", newline="", encoding="utf-8") as f:
+        wtr = csv.DictWriter(f, fieldnames=spalten, extrasaction="ignore")
+        wtr.writeheader()
+        for z, p_, s_, ski_ in zip(daten, p_alle, s_alle, ski_alle):
+            wtr.writerow({**z, "final_p_mensch": round(p_, 6), "final_score": round(s_, 4), "final_score_ki": round(ski_, 4)})
     erg_best = cv["modell"][(k_best, lam_best)]
     gitter = [dict(mittel_sd(v), k=kl[0], **{"lambda": kl[1]}) for kl, v in sorted(cv["modell"].items())]
     ok_p = [(g, p) for g, p in zip(gruppen, oof_p) if p is not None]
     ok_s = [(g, s) for g, s in zip(gruppen, oof_s) if s is not None]
+    ok_ski = [(g, s) for g, s in zip(gruppen, oof_ski) if s is not None]
+    schwelle_ki = round(score_schwelle_von([g for g, _ in ok_ski], [s for _, s in ok_ski]), 1)
     eval_ = {
         "methode": f"{args.cv_wiederholungen}×{args.cv_folds} gruppierte Kreuzvalidierung (Thema = basis_id bzw. doc_id)",
         "modell_cv": mittel_sd(erg_best),
         "score_cv": mittel_sd(cv["score"]),
+        "score_ki_cv": mittel_sd(cv["score_ki"]),
         "modell_oof_auroc": round(auroc([p for g, p in ok_p if g == "mensch"], [p for g, p in ok_p if g == "ki"]), 3),
         "score_oof_auroc": round(auroc([s for g, s in ok_s if g == "mensch"], [s for g, s in ok_s if g == "ki"]), 3),
+        "score_ki_oof_auroc": round(auroc([s for g, s in ok_ski if g == "mensch"], [s for g, s in ok_ski if g == "ki"]), 3),
         "modell_alle": {k: round(v, 3) for k, v in evaluiere(gruppen, p_alle, 0.5).items()},
         "score_alle": {k: round(v, 3) for k, v in evaluiere(gruppen, s_alle, schwelle).items()},
+        "score_ki_alle": {k: round(v, 3) for k, v in evaluiere(gruppen, ski_alle, schwelle_ki).items()},
         "modell_oof_kalibrierung": kalibrierungs_guete([p for _, p in ok_p], [int(g == "mensch") for g, _ in ok_p]),
-        "hyperparameter": {"k": k_best, "lambda": lam_best, "z_clip": Z_CLIP,
+        "hyperparameter": {"k": k_best, "lambda": lam_best, "z_clip": Z_CLIP, "kappung": kappung,
                            "auswahl": auswahl_json(auswahl)},
         "score_schwelle": schwelle,
         "ziel_p_mensch": ziel_p,
@@ -1475,12 +1541,17 @@ def main(argv=None) -> int:
         "score_schwelle_methode": "Mitte zwischen den Medianen der Out-of-fold-Scores von Mensch und KI",
         "ziel_score": ziel_s,
         "ziel_score_methode": f"P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Scores",
+        "ziel_score_ki": ziel_ski,
+        "ziel_score_ki_methode": f"P{round(100 * ZIEL_P_PERZENTIL)} der menschlichen Out-of-fold-Werte des einseitigen "
+                                 "Scores (Abweichungen auf der Gegenseite der KI zählen wie grün)",
         "ziel_erreicht_anteil_oof": ziel_anteil,
+        "ziel_erreicht_methode": "p_mensch ≥ ziel_p_mensch und score_ki ≥ ziel_score_ki (out-of-fold)",
+        "ziel_erreicht_anteil_oof_zweiseitig": ziel_anteil_zweiseitig,
     }
 
     n_m = sum(g == "mensch" for g in gruppen)
     baselines = {
-        "version": "3",  # v3: z-Clipping (S1), λ nach 1-SE-Regel Richtung stärkerer Strafe, Goodhart-Feld
+        "version": "4",  # v4: einseitige Kappung der Modellmerkmale (modell.kappen), score_ki/ziel_score_ki (v7)
         "beschreibung": "Referenzwerte für analyse.py, berechnet von kalibrierung/scripts/kalibriere.py. "
                         f"Abschnitte à {args.laenge} bereinigte Wörter; Zielbereich = mittlere 50 % der menschlichen "
                         "Abschnitte (P25–P75, dokumentgewichtet).",
@@ -1503,11 +1574,13 @@ def main(argv=None) -> int:
                            "intercept": round(modell["b"], 4),
                            "mittel": {k: round(paket["mittel"][k], 5) for k in modell["merkmale"]},
                            "sd": {k: round(paket["sd"][k], 5) for k in modell["merkmale"]},
-                           "lambda": lam_best, "z_clip": Z_CLIP},
+                           "lambda": lam_best, "z_clip": Z_CLIP,
+                           "kappen": {k: paket["kappen"][k] for k in modell["merkmale"] if k in paket["kappen"]}},
                 "fw_profil": paket["profil"],
                 "score_schwelle": schwelle,
                 "ziel_p_mensch": ziel_p,
                 "ziel_score": ziel_s,
+                "ziel_score_ki": ziel_ski,
                 "goodhart": goodhart,
                 "satzlaengen_verteilung_mensch": analyse.verteilung(satzlaengen["mensch"]),
                 "satzlaengen_verteilung_ki": analyse.verteilung(satzlaengen["ki"]),

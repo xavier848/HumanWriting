@@ -486,7 +486,7 @@ class EndeZuEnde(unittest.TestCase):
         self.assertGreaterEqual(t["ziel_p_mensch"], 0.5)
         self.assertLessEqual(t["ziel_p_mensch"], 0.95)
         self.assertIn("score_schwelle", t)
-        self.assertEqual(self.b["version"], "3")
+        self.assertEqual(self.b["version"], "4")  # v4: einseitige Kappung (v7)
         self.assertEqual(t["modell"]["z_clip"], kalibriere.Z_CLIP)
         self.assertIn(t["modell"]["lambda"], kalibriere.MODELL_LAMBDA)
         gh = t["goodhart"]
@@ -534,7 +534,8 @@ class EndeZuEnde(unittest.TestCase):
         k0 = next(iter(mod["koeffizienten"]))
         werte[k0] = mod["mittel"][k0] + 10 * mod["sd"][k0]
         erg["metriken"][k0] = werte[k0]
-        logit = mod["intercept"] + sum(c * kalibriere.z_wert(werte.get(k), mod["mittel"][k], mod["sd"][k])
+        kappen = mod.get("kappen") or {}  # v7: einseitige Kappung vor der Standardisierung, wie bewerte()
+        logit = mod["intercept"] + sum(c * kalibriere.z_wert(werte.get(k), mod["mittel"][k], mod["sd"][k], kappen.get(k))
                                        for k, c in mod["koeffizienten"].items())
         self.assertAlmostEqual(analyse.bewerte(erg, self.b)["p_mensch"], 1 / (1 + math.exp(-logit)), delta=0.0006)
 
