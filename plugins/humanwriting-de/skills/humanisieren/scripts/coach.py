@@ -270,9 +270,16 @@ GENDER_MASKULIN = {"studierend": ("Studenten", "Student"), "dozierend": ("Dozent
                    "antwortend": ("Befragten", "Befragte"), "beantwortend": ("Befragten", "Befragte"), "lernend": ("Lerner", "Lerner"),
                    "vortragend": ("Referenten", "Referent"), "tragend": ("Träger", "Träger"), "fangend": ("Fänger", "Fänger"),
                    "tanzend": ("Tänzer", "Tänzer"), "singend": ("Sänger", "Sänger"), "hochschullehrend": ("Hochschullehrer", "Hochschullehrer")}
-# Zielformen im Hochschulkontext, die kein einzelnes Wort sind: „Lehrende“ sind Lehrkräfte bzw. Dozenten – „Lehrer“ meint die
-# Schule und verschiebt die Zuordnung (v6-Prüfung, fhws: „Aufgabe der Lehrer beziehungsweise der Hochschule“)
-GENDER_ZIELTEXT = {"lehrend": "„Lehrkräfte“ oder „Dozenten“ (im Hochschulkontext nicht „Lehrer“)"}
+# Zielformen im Hochschulkontext, die kein einzelnes Wort sind: „Lehrende“ sind Dozenten bzw. Hochschullehrer – „Lehrer“ meint
+# die Schule und verschiebt die Zuordnung (v6-Prüfung, fhws: „Aufgabe der Lehrer beziehungsweise der Hochschule“); „Lehrkräfte“
+# ist kein generisches Maskulinum und klingt ebenfalls nach Schule (v7-Prüfung, fhws)
+GENDER_ZIELTEXT = {"lehrend": "„Dozenten“ bzw. „Hochschullehrer“ (im Hochschulkontext nicht „Lehrer“ oder „Lehrkräfte“)"}
+GENDER_ZIELFORMEN = {"lehrend": ["Dozenten", "Hochschullehrer"]}  # die angebotenen Formen („erwartet“ im Verlauf)
+# Nutzer-Vorgaben (v7.1): Standard generisches Maskulinum und keine Gedankenstriche; abschaltbar mit --vorgaben („keine“ oder eine
+# Teilmenge). Gendert ein Text durchgehend (≥ GENDER_DURCHGEHEND verschiedene Stämme oder ein Genderzeichen, außerhalb wörtlicher
+# Zitate, ohne Mischform), fragt der Coach bei der Standardeinstellung einmal nach, statt jede Form als Auftrag zu nennen.
+VORGABEN_STANDARD = frozenset({"gender", "gedankenstrich"})
+GENDER_DURCHGEHEND = 3
 GENDER_UNBEKANNT = "eine passende maskuline Bezeichnung"
 # Übliche Personenbezeichnungen auf „-er“, die sich aus einem Partizip ableiten lassen („Teilnehmende“ → „Teilnehmer“). Nur diese
 # werden als Ersatz genannt; sonst entstünden erfundene Wörter („Wartende“ → „Warter“, „Alleinstehende“ → „Alleinsteher“). Ein
@@ -1758,6 +1765,7 @@ class Lauf:
         self.text, self.verlauf = text, verlauf
         self.muster = analyse.lade_muster()
         baselines = analyse.lade_baselines()
+        self.baselines = baselines
         self.ts = (baselines or {}).get("textsorten", {}).get("hochschule", {})
         self.ref = self.ts.get("metriken", {})
         if hasattr(analyse, "analysiere_und_bewerte"):
@@ -1842,6 +1850,11 @@ class Lauf:
         self.kette_max: dict[int, int] = {}
         self.gender_info: list[str] = []  # Gender-Restformen nur in wörtlichen Zitaten: Info statt Auftrag
         self.fw_teilsatz_gesperrt: set[tuple[int, str]] = set()  # (Satz, Typ): Funktionswort-Umbau höbe das Verhältnis 2:1
+        # Vorgaben des Nutzers (v7.1, abschaltbar über --vorgaben); explizit = vom Nutzer gesetzt, dann keine Rückfrage
+        self.vorgaben: set[str] = set(VORGABEN_STANDARD)
+        self.vorgaben_explizit = False
+        self.gender_durchgehend: dict | None = None  # Text gendert durchgehend: eine Rückfrage statt Einzelaufträgen
+        self.verklebt_voll: list[dict] = []  # verklebte Stellen vollständig, mit automatisch getrennter Fassung
 
     def absatz_anzahl(self, sim: list[list[int]]) -> list[int]:
         """Sätze je Absatz im Fokus für einen Simulationszustand (Bündeln −1, Teilen +1 im Absatz des Satzes)."""
