@@ -21,7 +21,15 @@ und kleingeschriebene typische Claude-Wörter (wortlisten.json, z. B. „lässt�
 „häufig“). Fachnomen (großgeschrieben mitten im Satz) bleiben geschützt. Mit
 --verlauf werden zusätzlich die Wörter übergangen, die coach.py in einer Messung
 unter "ersetzbar" gespeichert hat (samt Flexionsformen, nicht aber Komposita oder
-Nomen, die im Original nur als Platzhalter in einer Floskel stehen).
+Nomen, die im Original nur als Platzhalter in einer Floskel stehen). Formen, die der
+Coach unter "erwartet" speichert (Maskulinform beim Gendern, beim Teilen wiederholtes
+Nomen, Abkürzungen), zählen mit --verlauf nicht als „Neuer häufiger Begriff“ bzw. neue
+Abkürzung.
+
+Gender-Paare gelten auch ohne Verlauf als derselbe Begriff: Partizip- und Maskulinform
+(Bewerbende/Bewerber, Mitarbeitende/Mitarbeiter, Studierende/Studenten, Lehrende/
+Lehrkräfte bzw. Dozenten), movierte Formen (Nutzerinnen/Nutzer) und Genderzeichen
+(Bewerber*innen). „Lehrer“ für „Lehrende“ bleibt eine Meldung wert.
 
 Bedeutungsgleichheit einzelner Aussagen kann ein Skript nicht prüfen – das
 übernimmt das Modell anhand des Inhaltsinventars. Dieses Skript fängt die
@@ -121,12 +129,11 @@ GENDER_INFIX = [(re.compile(r"studierenden(?=[a-zäöüß]{3})"), "studenten"),
                 (re.compile(r"(?:lehrenden|dozierenden)(?=[a-zäöüß]{3})"), "lehrkraft"),
                 (re.compile(r"absolvierenden(?=[a-zäöüß]{3})"), "absolventen")]
 # regelmäßig: substantiviertes Partizip „X-ende(n)“ ↔ Nomen auf „X-er“ (Bewerbende/Bewerber, Mitarbeitende/Mitarbeiter,
-# Teilnehmende/Teilnehmer); alle Formen auf -end(e…) werden gleich behandelt, damit Adjektiv und Adverb („zunehmend“,
-# „zunehmende“) denselben Schlüssel behalten
-PARTIZIP_RE = re.compile(r"([a-zäöüß]{4,}?)end(?:e|en|er|em|es)?")
-PARTIZIP_INFIX_RE = re.compile(r"([a-zäöüß]{4,}?)enden(?=[a-zäöüß]{4})")
-# Movierte Formen: Plural „-innen“ (auch Binnen-I) immer, Singular „-in“ nur nach typischen Personen-Endungen, damit
-# „Verein“, „Termin“, „Protein“ ihren Schlüssel behalten
+# Teilnehmende/Teilnehmer). Nur großgeschrieben (Nomen) und nur, wenn die Maskulinform als Nomen in einem der beiden Texte
+# vorkommt – Verben und Adjektive („verwenden“, „fehlende“ neben „Fehler“) behalten ihren bisherigen Schlüssel
+PARTIZIP_RE = re.compile(r"([a-zäöüß]{4,}?)end(?:e|en|er|em|es)")
+# Movierte Formen: Plural „-innen“ (auch Binnen-I), Singular „-in“ nur nach typischen Personen-Endungen; ebenfalls nur
+# großgeschrieben und nur, wenn die Grundform („Nutzer“, „Kunden“) in einem der beiden Texte vorkommt
 INNEN_RE = re.compile(r"([a-zäöüß]{3,})innen")
 INNEN_NICHT = ("ginnen", "winnen", "pinnen", "sinnen", "rinnen")
 IN_RE = re.compile(r"([a-zäöüß]{2,}(?:er|ent|ant|ist|or|eur|nd|og|eg|ekt|är|ar)|[a-zäöüß]{3,}at)in")
@@ -231,32 +238,41 @@ def stamm(w: str) -> str:
     return grundform(w)[:9]
 
 
-def gender_form(w: str) -> str:
-    """Wortform in Kleinschreibung mit Gender-Paaren auf die Maskulinform gebracht (siehe GENDER_GRUPPEN)."""
+def gender_form(w: str, formen: set | None = None) -> str:
+    """Wortform in Kleinschreibung, Gender-Paare auf die Maskulinform gebracht (siehe GENDER_GRUPPEN). formen: Wortformen
+    beider Texte (wortformen); die regelmäßigen Regeln greifen nur bei großgeschriebenen Wörtern und nur, wenn die
+    Gegenform dort großgeschrieben vorkommt (None = ohne diese Prüfung)."""
     wl = w.lower()
-    for rx, ersatz in GENDER_GRUPPEN:
+    for rx, ersatz in GENDER_GRUPPEN + GENDER_INFIX:
         neu = rx.sub(ersatz, wl, count=1)
         if neu != wl:
             return neu
-    for rx, ersatz in GENDER_INFIX:
-        neu = rx.sub(ersatz, wl, count=1)
-        if neu != wl:
-            return neu
+    if not w[:1].isupper():
+        return wl
+
+    def gibt(basis, endungen):
+        return formen is None or any(basis[:1].upper() + basis[1:] + e in formen for e in endungen)
+
     m = INNEN_RE.fullmatch(wl)
-    if m and not wl.endswith(INNEN_NICHT):
+    if m and not wl.endswith(INNEN_NICHT) and gibt(m.group(1), ("", "e", "en", "n", "s")):
         return m.group(1)
     m = IN_RE.fullmatch(wl)
-    if m:
+    if m and gibt(m.group(1), ("", "e", "en", "n", "s")):
         return m.group(1)
     m = PARTIZIP_RE.fullmatch(wl)
-    if m:
+    if m and gibt(m.group(1) + "er", ("", "n", "s")):
         return m.group(1) + "er"
-    return PARTIZIP_INFIX_RE.sub(r"\1er", wl, count=1)
+    return wl
 
 
-def begriff_stamm(w: str) -> str:
+def begriff_stamm(w: str, formen: set | None = None) -> str:
     """Schlüssel für den Begriffsvergleich: Stamm nach Angleichung der Gender-Paare („Bewerbende“ = „Bewerber“)."""
-    return stamm(gender_form(w))
+    return stamm(gender_form(w, formen))
+
+
+def wortformen(*texte: str) -> set:
+    """Alle Wortformen der Texte (Schreibung wie im Text) – Bezugsmenge für gender_form."""
+    return {x for t in texte for x in WORT_RE.findall(t)}
 
 
 def kontext(t: str, pos, laenge: int = 0, breite: int = 70) -> str:
@@ -542,21 +558,22 @@ def _ist_begriff(t: str, m: re.Match) -> bool:
     return w.lower() in NOMEN_HOMOGRAPHE and w[0].isupper() and not _satzanfang(t, m.start())
 
 
-def begriffe(t: str, ohne: set | None = None) -> Counter:
+def begriffe(t: str, ohne: set | None = None, formen: set | None = None) -> Counter:
     """Stämme der Inhaltswörter (Gender-Paare angeglichen, begriff_stamm); ohne = Startpositionen von Wörtern, die nicht
-    als Begriff zählen (ersetzbare_stellen)."""
+    als Begriff zählen (ersetzbare_stellen); formen = Wortformen beider Texte (wortformen), Standard: dieser Text."""
+    formen = wortformen(t) if formen is None else formen
     t = quellen(t)[1]
-    return Counter(begriff_stamm(m.group(0)) for m in WORT_RE.finditer(t)
+    return Counter(begriff_stamm(m.group(0), formen) for m in WORT_RE.finditer(t)
                    if _ist_begriff(t, m) and not (ohne and m.start() in ohne))
 
 
-def _anzeige(t: str) -> dict:
+def _anzeige(t: str, formen: set) -> dict:
     """Begriffsschlüssel → Stamm der ersten Wortform im Text (für Meldungen: „lehrend“ statt des Schlüssels „lehrkraft“)."""
     t = quellen(t)[1]
     out: dict = {}
     for m in WORT_RE.finditer(t):
         if _ist_begriff(t, m):
-            out.setdefault(begriff_stamm(m.group(0)), stamm(m.group(0)))
+            out.setdefault(begriff_stamm(m.group(0), formen), stamm(m.group(0)))
     return out
 
 
@@ -676,6 +693,29 @@ def ersetzbar_aus_verlauf(daten) -> set:
         messungen = daten if isinstance(daten, list) else []
     listen += [m.get("ersetzbar") or [] for m in messungen if isinstance(m, dict)]
     return {x.lower() for liste in listen if isinstance(liste, list) for e in liste for x in WORT_RE.findall(str(e))}
+
+
+def erwartet_aus_verlauf(daten) -> set:
+    """Vereinigung aller "erwartet"-Listen eines Coach-Verlaufs (ab v7): Wortformen, die durch die Aufträge des Coaches
+    neu entstehen dürfen (Maskulinform beim Gendern, wiederholtes Nomen beim Teilen, ausgeschriebene Abkürzungen).
+    Ältere Verläufe ohne das Feld ergeben eine leere Menge."""
+    listen = []
+    if isinstance(daten, dict):
+        listen.append(daten.get("erwartet") or [])
+        messungen = daten.get("messungen") or []
+    else:
+        messungen = daten if isinstance(daten, list) else []
+    listen += [m.get("erwartet") or [] for m in messungen if isinstance(m, dict)]
+    return {x.lower() for liste in listen if isinstance(liste, list) for e in liste for x in WORT_RE.findall(str(e))}
+
+
+def _erwartet_schluessel(erwartet, formen: set | None = None) -> set:
+    """Schlüssel, unter denen erwartete Formen im Begriffsvergleich auftauchen: Wortform, Stamm und begriff_stamm."""
+    out = set()
+    for e in erwartet:
+        for x in WORT_RE.findall(str(e)):
+            out |= {x.lower(), stamm(x), begriff_stamm(x, formen)}
+    return out
 
 
 def fussnoten(t: str) -> list[tuple[str, int]]:
@@ -823,11 +863,16 @@ def _vergleiche_zitate(alt, neu, res):
                                      "hinweis": "Neuer Begriff in Anführungszeichen – " + kontext(neu, z["pos"], z["laenge"], 50)})
 
 
-def pruefe(alt: str, neu: str, ersetzbar=()) -> dict:
-    """ersetzbar: Wörter, die der Coach zum Ersetzen empfohlen hat (z. B. aus ersetzbar_aus_verlauf)."""
+def pruefe(alt: str, neu: str, ersetzbar=(), erwartet=()) -> dict:
+    """ersetzbar: Wörter, die der Coach zum Ersetzen empfohlen hat (z. B. aus ersetzbar_aus_verlauf).
+    erwartet: Wortformen, die durch die Aufträge des Coaches neu entstehen dürfen (erwartet_aus_verlauf); sie zählen
+    nicht als „Neuer häufiger Begriff“ und ihre Abkürzungen nicht als neu. Harte Funde (Zahlen, Quellen, Zitate,
+    Fußnoten) bleiben davon unberührt."""
     alt = unicodedata.normalize("NFC", alt)
     neu = unicodedata.normalize("NFC", neu)
     res: dict = {"harte_verluste": [], "erfindungen": [], "warnungen": [], "kennzahlen": {}}
+    formen = wortformen(alt, neu)      # Bezugsmenge für die Gender-Paare: Gegenform in einem der beiden Texte
+    erw = _erwartet_schluessel(erwartet, formen)
 
     q_alt, rest_alt = quellen(alt)
     q_neu, rest_neu = quellen(neu)
@@ -841,37 +886,47 @@ def pruefe(alt: str, neu: str, ersetzbar=()) -> dict:
     for f in dict.fromkeys(fehlt):
         res["warnungen"].append({"typ": "Abkürzung", "wert": f, "kontext_original": kontext(alt, alt.find(f), len(f))})
     for d in dict.fromkeys(dazu):
+        if d.lower() in erw:
+            continue    # vom Coach verlangt (z. B. Nomen beim Teilen wiederholt: „Die ESRS wurden …“)
         res["warnungen"].append({"typ": "Abkürzung", "wert": d, "kontext_neu": kontext(neu, neu.find(d), len(d))})
 
     # Fachbegriffe: mehrfach im Original, ganz verschwunden in der Überarbeitung. Wörter, die der Coach zum Ersetzen
-    # empfiehlt (Floskel-Auslöser, typische Claude-Wörter, Verlauf), zählen im Original nicht als Begriff.
+    # empfiehlt (Floskel-Auslöser, typische Claude-Wörter, Verlauf), zählen im Original nicht als Begriff. Schlüssel ist
+    # begriff_stamm: Gender-Paare („Bewerbende“/„Bewerber“) gelten als derselbe Begriff.
     ohne = ersetzbare_stellen(alt, ersetzbar)
-    b_roh, b_neu = begriffe(alt), begriffe(neu)
-    b_alt = begriffe(alt, ohne)
+    b_roh, b_neu = begriffe(alt, formen=formen), begriffe(neu, formen=formen)
+    b_alt = begriffe(alt, ohne, formen)
+    zeig_alt, zeig_neu = _anzeige(alt, formen), _anzeige(neu, formen)
     verschwunden = [s for s, n in b_alt.most_common() if n >= 2 and b_neu[s] == 0]
     if verschwunden:
-        res["warnungen"].append({"typ": "Begriff verschwunden", "wert": ", ".join(verschwunden[:25]),
+        res["warnungen"].append({"typ": "Begriff verschwunden", "wert": ", ".join(zeig_alt.get(s, s) for s in verschwunden[:25]),
                                  "hinweis": "Kommt im Original mehrfach vor, in der Überarbeitung gar nicht mehr. Synonym-Ersatz bei Fachbegriffen vermeiden."})
     # lange Fachwörter (Nomen, nicht am Satzanfang) schon bei einmaligem Verschwinden melden
     r_alt, r_neu = quellen(alt)[1], quellen(neu)[1]
     lang = [m.group(0) for m in re.finditer(r"(?<=[\wäöüß,;:)\]] )[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜa-zäöüß]+)*", r_alt)
-            if len(m.group(0)) >= 13 and b_alt[stamm(m.group(0))] < 2 and m.group(0).lower() not in NICHT_AUTOR
+            if len(m.group(0)) >= 13 and b_alt[begriff_stamm(m.group(0), formen)] < 2 and m.group(0).lower() not in NICHT_AUTOR
             and m.group(0).lower() not in STOP and m.start() not in ohne]
-    staemme_neu = {stamm(x) for x in WORT_RE.findall(r_neu)}
-    ersetzt = [w for w in dict.fromkeys(lang) if stamm(w) not in staemme_neu]
+    staemme_neu = {begriff_stamm(x, formen) for x in WORT_RE.findall(r_neu)}
+    ersetzt = [w for w in dict.fromkeys(lang) if begriff_stamm(w, formen) not in staemme_neu]
     if ersetzt:
         res["warnungen"].append({"typ": "Fachwort ersetzt?", "wert": ", ".join(ersetzt[:15]),
                                  "hinweis": "Langes Fachwort aus dem Original fehlt in der Überarbeitung – Synonym oder gestrichene Aussage?"})
     # zur Nachvollziehbarkeit: was ohne die Coach-Ausnahmen gemeldet worden wäre
-    gemeldet = set(verschwunden) | {stamm(w) for w in ersetzt}
+    gemeldet = set(verschwunden) | {begriff_stamm(w, formen) for w in ersetzt}
     res["nicht_gemeldet"] = sorted({m.group(0).lower() for m in WORT_RE.finditer(r_alt)
-                                    if m.start() in ohne and _ist_begriff(r_alt, m) and b_neu[stamm(m.group(0))] == 0
-                                    and stamm(m.group(0)) not in gemeldet
-                                    and (b_roh[stamm(m.group(0))] >= 2 or (len(m.group(0)) >= 13 and m.group(0)[0].isupper()))})
-    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_roh[s] == 0]
+                                    if m.start() in ohne and _ist_begriff(r_alt, m)
+                                    and b_neu[begriff_stamm(m.group(0), formen)] == 0
+                                    and begriff_stamm(m.group(0), formen) not in gemeldet
+                                    and (b_roh[begriff_stamm(m.group(0), formen)] >= 2
+                                         or (len(m.group(0)) >= 13 and m.group(0)[0].isupper()))})
+    # neue häufige Begriffe; vom Coach erwartete Formen (Verlauf "erwartet") zählen nicht
+    neu_haeufig = [s for s, n in b_neu.most_common() if n >= 3 and b_roh[s] == 0 and s not in erw]
     if neu_haeufig:
-        res["warnungen"].append({"typ": "Neuer häufiger Begriff", "wert": ", ".join(neu_haeufig[:15]),
+        res["warnungen"].append({"typ": "Neuer häufiger Begriff", "wert": ", ".join(zeig_neu.get(s, s) for s in neu_haeufig[:15]),
                                  "hinweis": "Taucht neu und mehrfach auf – prüfen, ob dadurch Inhalt hinzugekommen ist."})
+    erw_neu = sorted({zeig_neu.get(s, s) for s, n in b_neu.items() if n >= 3 and b_roh[s] == 0 and s in erw})
+    if erw_neu:
+        res["erwartet_neu"] = erw_neu
 
     h_alt, h_neu = UEBERSCHRIFT_RE.findall(alt), UEBERSCHRIFT_RE.findall(neu)
     if [norm(h) for h in h_alt] != [norm(h) for h in h_neu]:
@@ -925,6 +980,8 @@ def bericht(res: dict) -> str:
             out.append(f"- {e['typ']}: {e['wert']}" + (f" – {e['hinweis']}" if e.get("hinweis") else ""))
     if res.get("nicht_gemeldet"):
         out.append("\n_Nicht als Verlust gewertet (vom Coach zum Ersetzen empfohlen): " + ", ".join(res["nicht_gemeldet"][:20]) + "._")
+    if res.get("erwartet_neu"):
+        out.append("\n_Nicht als neuer Begriff gewertet (vom Coach verlangte Form): " + ", ".join(res["erwartet_neu"][:20]) + "._")
     return "\n".join(out)
 
 
@@ -934,15 +991,17 @@ def main(argv=None) -> int:
     ap.add_argument("neu")
     ap.add_argument("--format", choices=["md", "json"], default="md")
     ap.add_argument("--verlauf", help="Verlaufsdatei von coach.py (TEXT.coach.json): dort unter \"ersetzbar\" "
-                                      "gespeicherte Wörter gelten nicht als verschwundene Begriffe")
+                                      "gespeicherte Wörter gelten nicht als verschwundene Begriffe, unter \"erwartet\" "
+                                      "gespeicherte nicht als neue Begriffe")
     args = ap.parse_args(argv)
-    ersetzbar = set()
+    ersetzbar, erwartet = set(), set()
     if args.verlauf:
         daten = _lade_json(args.verlauf)
         if not daten and not os.path.exists(args.verlauf):
             print(f"Hinweis: Verlaufsdatei {args.verlauf} nicht gefunden – geprüft wird ohne Coach-Liste.", file=sys.stderr)
         ersetzbar = ersetzbar_aus_verlauf(daten)
-    res = pruefe(lesen(args.original), lesen(args.neu), ersetzbar)
+        erwartet = erwartet_aus_verlauf(daten)
+    res = pruefe(lesen(args.original), lesen(args.neu), ersetzbar, erwartet)
     if args.format == "json":
         json.dump(res, sys.stdout, ensure_ascii=False, indent=1)
         print()

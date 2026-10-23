@@ -29,6 +29,13 @@ Messkonventionen (ausführlich: references/kennzahlen-methodik.md):
   (Länge der Kalibrierabschnitte); kürzere Texte werden am Stück gemessen.
 - Blockmodus (analysiere_und_bewerte): Texte über 1200 Wörtern werden in Blöcke von etwa 800 Wörtern zerlegt und
   blockweise bewertet; die Gesamtbewertung nutzt je Kennzahl den Median über die Blöcke.
+- v7: Transkriptnotation ((lacht), (unv.), (I: …)) und Belege in eckigen Klammern mit Jahr fallen vor der Satztrennung
+  weg; info meldet verklebte Wörter aus der PDF-Extraktion ('verklebt', mit Warnung), den Anteil der Wörter in
+  wörtlichen Zitaten ('zitat_anteil') und die entfernte Transkriptnotation ('transkript_notation'). Autorenlisten vor
+  einer Jahresangabe zählen nicht als Dreierliste.
+- v7: bewerte() gibt je Kennzahl die Seite der Abweichung ('ki'/'gegen') und 'jenseits_band' aus, dazu den einseitigen
+  Score 'score_ki' (Abweichungen auf der Gegenseite der KI zählen wie grün). Das Modell kappt jedes Merkmal vorher
+  einseitig am menschlichen Band (modell['kappen']): Übertreibung jenseits P10/P90 zählt nicht als „noch menschlicher“.
 """
 from __future__ import annotations
 

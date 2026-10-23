@@ -140,8 +140,9 @@ def fw_typische(fw_profil: dict | None, n: int = 4) -> tuple[list[str], list[str
     return ki[:n], mensch[:n]
 
 
-def hebel_warum(h: str, ref: dict, daten: str = "", fw_profil: dict | None = None) -> str:
-    """Hebeltext mit den Medianen aus den Referenzwerten; ohne Daten der feste Text."""
+def hebel_warum(h: str, ref: dict, daten: str = "", fw_profil: dict | None = None, vorhanden: set[str] | None = None) -> str:
+    """Hebeltext mit den Medianen aus den Referenzwerten; ohne Daten der feste Text. vorhanden: Konnektoren, die im Text
+    tatsächlich stehen (der Konnektor-Hebel nennt nur diese, nie „zugleich“ in einem Text ohne „zugleich“)."""
     text = HEBEL_TEXT[h][1].format(satzlaenge_daten=daten)
     if h == "funktionswoerter" and fw_profil:
         ki, mensch = fw_typische(fw_profil)
@@ -151,12 +152,18 @@ def hebel_warum(h: str, ref: dict, daten: str = "", fw_profil: dict | None = Non
                     "durch Einstreuen.")
     if h == "konnektoren":
         stark = sorted((k for k in KONNEKTOR_KORPUS if (konnektor_verhaeltnis(k) or 0) > KONN_STARK), key=lambda k: -konnektor_verhaeltnis(k))
+        if vorhanden is not None:
+            stark = [k for k in stark if k in vorhanden]
         allein = [k for k in stark if konnektor_verhaeltnis(k) > KONN_ALLEIN]
         rest = [k for k in stark if k not in allein]
         # keine „menschlichen“ Konnektoren als Ersatz anpreisen: Austauschen wäre Wort-Einstreuen (Grundsatz 6) und senkt die
         # Konnektor-Dichte nicht. Gestrichen wird nur an den genannten Stellen (einzeln nur, was mehr als 4× so häufig ist)
-        text = (f"Claude nutzt mehr Satzverknüpfer als Menschen, vor allem {', '.join(f'„{k}“' for k in allein)} (mehr als viermal so "
-                f"häufig)" + (f"; {', '.join(f'„{k}“' for k in rest)} sind gut doppelt so häufig" if rest else "")
+        teile = []
+        if allein:
+            teile.append(f"{', '.join(f'„{k}“' for k in allein)} (bei Claude mehr als viermal so häufig)")
+        if rest:
+            teile.append(f"{', '.join(f'„{k}“' for k in rest)} (gut doppelt so häufig)")
+        text = ("Claude nutzt mehr Satzverknüpfer als Menschen" + (f"; in diesem Text vor allem {' und '.join(teile)}" if teile else "")
                 + ". Nur an den genannten Stellen streichen, nicht verschieben und nicht durch einen anderen Konnektor ersetzen.")
     beleg = HEBEL_BELEG.get(h)
     if beleg and beleg[0] in ref and (ref[beleg[0]].get("ki") or {}).get("p50") is not None:
@@ -397,6 +404,8 @@ KONN_HAEUFUNG = {"jedoch": 3}  # Häufung im selben Absatz (sonst 2): „jedoch�
 MAX_KONNEKTOR = 2  # Konnektor-Aufträge je Runde
 MAX_KONNEKTOR_P90 = 5  # über P90: Kontingent bis zum Median, höchstens so viele
 KONN_TEXTWEIT = 3  # über P90: derselbe Konnektor so oft im Fokus gilt als Häufung (je Absatz höchstens eine Stelle)
+# Erster Teil einer Korrelatkonstruktion im selben Satz vor dem Konnektor: „nicht nur … zudem“, „zwar … jedoch“, „einerseits …“
+KORRELAT_VOR_RE = re.compile(r"\b(?:nicht\s+nur|nicht\s+allein|zwar|einerseits|zum\s+einen|sowohl)\b", re.IGNORECASE)
 
 
 def konnektor_verhaeltnis(wort: str) -> float | None:
@@ -1950,7 +1959,9 @@ def _waechter(L: Lauf) -> None:
                 continue
             r = ref[k]["mensch"]
             iqr = (r["p75"] - r["p25"]) or ((r["p90"] - r["p10"]) / 2) or 1e-9
-            bewertet = bool(ref[k].get("bewertet"))
+            # Satzanfangs-Wiederholung ist unbewertet, zählt aber wie eine bewertete Kennzahl: eine Anknüpfung, die den Anfang des
+            # Vorsatzes wiederholt, soll schon bei Gelb mit deutlicher Verschiebung auffallen (v6-Prüfung, haw 0,024 → 0,071)
+            bewertet = bool(ref[k].get("bewertet")) or k == "satzanfang_wiederholung"
             st1, seite1 = status_von(v1, ref[k]), seite_von(v1, ref[k])
             for runde, werte in vergleiche:
                 v0 = werte.get(k)
@@ -2843,6 +2854,38 @@ def klammer_logit(L: Lauf, sim: dict, plus: float) -> float:
     return modell["koeffizienten"][k] * (z(alt + plus / sim["n"]) - z(alt))
 
 
+# „um … zu“ als Präpositionalgruppe („zur Verbesserung …“) nur mit gebräuchlicher -ung-Form: Verben mit üblichem Verbalnomen auf -ung
+# (dazu alle auf -ieren → -ierung) – nicht bei Dativverben bzw. Dativobjekt („um dem Anspruch zu entsprechen“)
+UM_ZU_UNG = set("""verbessern sichern sicherstellen erhöhen steigern senken unterstützen fördern vermeiden erreichen gewährleisten
+überprüfen prüfen bewerten messen erfassen ermitteln beschreiben darstellen klären lösen umsetzen entwickeln gestalten planen steuern
+beantworten vorbereiten stärken begrenzen herstellen erstellen einführen ergänzen erweitern vertiefen verringern gewinnen erhalten
+bewältigen beurteilen untersuchen erklären begründen verdeutlichen veranschaulichen überwinden ordnen einordnen bündeln vereinfachen
+beschleunigen verkürzen entlasten absichern festigen erleichtern auswerten befragen abgrenzen eingrenzen herleiten
+ableiten verknüpfen vernetzen bestimmen festlegen abbilden aufbereiten bereitstellen versorgen erzeugen anpassen sammeln beobachten
+dokumentieren vermitteln""".split()) - {"ermöglichen"}
+DATIV_VERBEN = {"entsprechen", "helfen", "dienen", "folgen", "begegnen", "widersprechen", "zustimmen", "schaden", "nützen",
+                "gerecht", "genügen", "vertrauen", "gehorchen", "zuvorkommen", "ausweichen", "entgegenwirken", "vorbeugen", "zuhören"}
+_DATIV_RE = re.compile(r"\b(?:dem|einem|diesem|jedem|keinem|ihm|ihnen|ihrem|seinem|unserem)\b", re.IGNORECASE)
+
+
+def um_zu_nominalisierbar(rest: str) -> bool:
+    """Lässt sich der „um … zu“-Teil (Text nach „um“) als Präpositionalgruppe mit gebräuchlicher -ung-Form fassen?"""
+    teil = re.split(r"[,;:.]", rest, maxsplit=1)[0]
+    w = [x for x in analyse.tokens(teil) if analyse.ist_wort(x)]
+    if not w:
+        return False
+    verb = None
+    for i, x in enumerate(w):
+        low = x.lower()
+        if low == "zu" and i + 1 < len(w):
+            verb = w[i + 1].lower()
+        elif re.fullmatch(r"[a-zäöüß]{2,}zu[a-zäöüß]{3,}en", low) and not low.startswith(("zu", "dazu", "hinzu")):
+            verb = re.sub(r"^([a-zäöüß]+?)zu([a-zäöüß]+en)$", r"\1\2", low)  # „sicherzustellen“ → „sicherstellen“
+    if not verb or verb in DATIV_VERBEN or _DATIV_RE.search(teil):
+        return False
+    return verb in UM_ZU_UNG or verb.endswith("ieren")
+
+
 def _satzklammer(L: Lauf) -> None:
     """Satzklammer füllen, simuliert am Mittel der Klammerspannen (Kontingent bis zum menschlichen Median, höchstens
     KLAMMER_MAX je Runde). Techniken, je Satz die mit dem größten Zuwachs: Angabe aus dem Vorfeld ins Mittelfeld (Subjekt
@@ -2892,6 +2935,9 @@ def _satzklammer(L: Lauf) -> None:
         if q and q.group("w") == "um" and "um" in L.schutz:
             L.unterdrueckt["klammer_um"] += 1
             q = None  # „um … zu“ → Präpositionalgruppe entfernt „um“ und „zu“, die hier ohnehin seltener sind als bei Menschen
+        if q and q.group("w") == "um" and not um_zu_nominalisierbar(mk[q.end():]):
+            L.unterdrueckt["klammer_um_ung"] += 1
+            q = None  # keine gebräuchliche -ung-Form bzw. Dativobjekt: „um den Platz zu entsprechen“ → „zur Entsprechung des Platzes“
         nachbar = L.fokus[i + 1] if i + 1 < len(L.fokus) and L.fokus[i + 1]["absatz"] == s["absatz"] else None
         if q:
             teil = {"um": "„um … zu“-Teil", "ohne": "„ohne … zu“-Teil"}.get(q.group("w"), f"„{q.group('w')}“-Satz")
@@ -3424,6 +3470,41 @@ def _bezug_text(kand: list[str], a: dict) -> str:
     return f"das Bezugswort aus Satz {a['nr']} ausdrücklich nennen"
 
 
+def vorfeld(text: str) -> list[str] | None:
+    """Wörter vor dem finiten Verb (Vorfeld eines Hauptsatzes), höchstens sieben; None, wenn kein Verb erkennbar ist."""
+    toks = [t for t in analyse.tokens(text.lstrip("„\"(»")) if analyse.ist_wort(t)]
+    for i in range(1, min(8, len(toks))):
+        low = toks[i].lower()
+        if low in analyse.FINIT or low in analyse.FINIT_MEHRDEUTIG:
+            return toks[:i]
+        if toks[i].islower() and low not in analyse.FUNKTIONSWOERTER and len(low) >= 4 and re.search(r"(?:t|te|ten|en|st)$", low) \
+                and toks[i - 1].lower() not in _KEIN_VERB_DAVOR and not (i + 1 < len(toks) and toks[i + 1][:1].isupper()):
+            return toks[:i]
+    return None
+
+
+def bezug_am_satzanfang(L: Lauf, a: dict, kand: list[str]) -> bool:
+    """Ist der Bezug eines Pronomens bzw. Possessivs in Satz b das Subjekt am Anfang von Satz a? Das Vorfeld von a ist eine
+    Nominalgruppe (Artikel bzw. Nomen, keine Präposition) und enthält einen der Kandidaten – oder es gibt keinen Kandidaten außer ihr.
+    Die Ersetzung wiederholte dann nur den Satzanfang von a."""
+    vf = vorfeld(L.masken.get(a["nr"], a["text"]))
+    if not vf:
+        return False
+    erstes = vf[0].lower()
+    if erstes in analyse.PRAEPOSITIONEN | {"im", "am", "zum", "zur", "beim", "vom", "ins"}:
+        return False  # Angabe im Vorfeld („Zum Schluss der Studie geht …“): das Subjekt steht nicht vorn
+    nomen = {w.lower() for w in vf[1:] if w[:1].isupper()}
+    if erstes not in _AKTEUR_DET | {"der", "die", "das", "den", "dem"}:
+        if erstes in analyse.FUNKTIONSWOERTER or erstes in _ADVERB_ANFANG or len(vf) > 3:
+            return False  # „Dabei …“, „So …“: kein Subjekt am Satzanfang
+        nomen.add(erstes)  # Name bzw. Nomen ohne Artikel („Hypothesen stammen …“, „Stiehler sieht …“)
+    if not nomen:
+        return False
+    if not kand:
+        return True
+    return any(w.lower() in nomen for k in kand for w in k.split() if w[:1].isupper())
+
+
 def _anknuepfung(L: Lauf, k_begriffe: int, cap: int) -> int:
     n = 0
     if not cap or "anknuepfung" in L.ausgesetzt:
@@ -3458,6 +3539,11 @@ def _anknuepfung(L: Lauf, k_begriffe: int, cap: int) -> int:
             wort = mt.group("dem") or mt.group("pron") or mt.group("poss")
             sinnvoll, kand = bezug_vorschlag(L, a, b, art, wort)
             if not sinnvoll:
+                continue
+            if art in ("pron", "poss") and bezug_am_satzanfang(L, a, kand):
+                # der Bezug ist das Subjekt am Anfang des Vorsatzes: das Pronomen ist eindeutig, die Ersetzung wiederholte nur den
+                # Satzanfang (v6-Prüfung, haw S3/S4: „Die Hypothesen … Die Hypothesen …“, Score 80 → 78)
+                L.unterdrueckt["anknuepfung_subjekt_vorn"] += 1
                 continue
             bezug = _bezug_text(kand, a)
             if art == "dem":
@@ -3782,6 +3868,9 @@ def _fw_bilanz(L: Lauf, kid: str, s: dict, mk: str, t: re.Match) -> tuple[Counte
         if FOLGERUNG_RE.search(t.group(0)) and not doppelpunkt_ok(L):
             weg.pop("dass", None)  # Folgerung über „folgt, dass“: der „dass“-Satz bleibt
     elif kid == "laesst_sich":
+        if lassen_gesperrt(mk, t):
+            L.unterdrueckt["fw_lassen_leicht"] += 1
+            return None  # „lässt sich leicht/einfach …“ bzw. „… verarbeiten und … herausziehen“: nur „kann … werden“ ginge, länger
         weg["sich"] = 1
         dazu["werden" if re.search(r"\blassen\b|\bließen\b", t.group(0), re.IGNORECASE) else "wird"] = 1
     elif kid in ("zeigt_sich", "ergibt_sich"):
@@ -3813,6 +3902,24 @@ def _fw_bilanz(L: Lauf, kid: str, s: dict, mk: str, t: re.Match) -> tuple[Counte
             return None  # dieselbe Nominalisierung wie beim Nebensatz-Auftrag, dieselben Sperren (Konjunktiv, Koordination, Kette, Kopula)
         weg["dass"] = 1
     return weg, dazu
+
+
+# „lässt sich“ mit Adverb der Leichtigkeit bzw. Schwierigkeit oder mit koordinierten Infinitiven: gemeint ist eine Möglichkeit, es
+# bliebe nur „kann … werden“ – länger, doppeltes Passiv, neue kurze Satzklammer (v6-Prüfung, haw S43: Score 80 → 77)
+LEICHT_ADV_RE = re.compile(r"\b(?:einfach|leicht|gut|schwer|kaum|problemlos|mühelos|ohne\s+weiteres)\b", re.IGNORECASE)
+KOORD_INF_RE = re.compile(r"\b[a-zäöüß]\w*(?:en|ern|eln)\s+(?:und|oder|sowie)\s+(?:[^,;:.]*\s)?[a-zäöüß]\w*(?:en|ern|eln)\s*$")
+
+
+def lassen_gesperrt(mk: str, t: re.Match) -> bool:
+    """„lässt sich“ nicht umbauen: Leichtigkeitsadverb in der Wendung bzw. im Teilsatz oder koordinierte Infinitive am Teilsatzende."""
+    a = max(mk.rfind(",", 0, t.start()), mk.rfind(";", 0, t.start())) + 1
+    e = len(mk)
+    for z in ",;:":
+        k = mk.find(z, t.end())
+        if k >= 0:
+            e = min(e, k)
+    teil = mk[a:e].rstrip(" .!?“”\"»«)")
+    return bool(LEICHT_ADV_RE.search(teil) or KOORD_INF_RE.search(teil))
 
 
 FW_MIT_MODALVERB = {"dient_als", "gilt_als", "versteht_sich_als", "ergibt_sich", "zeigt_sich"}
@@ -4169,6 +4276,16 @@ def _muster(L: Lauf) -> None:
                 grund = f"Kontrast „{paar[0]}“ ↔ „{paar[1]}“"
             elif x_worte and len(x_worte) <= 2 and all(w[:1].islower() for w in x_worte) and not ADDITIV_RE.search(fund):
                 grund = "Kontrast zweier Eigenschaften"
+            elif not ADDITIV_RE.search(fund):
+                # begründete Gegenüberstellung: Aussage einer Quelle bzw. mit Redeverb, wiedergegebene Rede im Konjunktiv oder ein
+                # X, das kurz vorher genannt wird – „nur umformulieren“ wäre dieselbe Figur in anderer Oberfläche (v6-Prüfung,
+                # bt-wd9 S4: „Y und nicht X“ brachte allein Score 54 → 59, Detektor-Umgehung statt Stilverbesserung)
+                if L.quelle.get(s["nr"]) or REDEVERB_RE.search(mk) or personen_subjekt(mk):
+                    grund = "Aussage einer Quelle"
+                elif konjunktiv_indirekt(L, s):
+                    grund = "wiedergegebene Rede im Konjunktiv"
+                elif x_genannt:
+                    grund = "X wird kurz vorher genannt, die Gegenüberstellung ist begründet"
             if grund:
                 # kein Auftrag: der Kontrast ist die Aussage. Einmal als Info-Zeile („Bewusst stehen lassen“), nie in der
                 # Aufgabenliste und nie im Limit; in Folgerunden gar nicht mehr
@@ -4183,10 +4300,6 @@ def _muster(L: Lauf) -> None:
                     continue  # „nicht mehr nur“ trägt einen Wandel – „neben/außer … auch“ verlöre ihn
                 technik, ersatz = gegenfolie_technik(x_worte, gf_technik)
                 gf_technik[technik] += 1
-            elif L.quelle.get(s["nr"]) or REDEVERB_RE.search(mk):
-                ersatz = "Aussage einer Quelle bzw. Redeverb: nur umformulieren (z. B. zwei Aussagen nacheinander), X behalten."
-            elif x_genannt:
-                ersatz = "X wird kurz vorher im Text genannt, die Gegenüberstellung ist begründet: nur umformulieren, X behalten."
         # nur Auslöser-Wörter als ersetzbar melden, nie Platzhalter des Musters (die sind Inhalt des Nutzers)
         worte = [w for w in floskel_kopfwoerter(mk, _a, _e, mu["_re"])
                  if w.lower() not in analyse.FUNKTIONSWOERTER and len(w) > 2] if typ == "floskel" else []
@@ -4197,6 +4310,25 @@ def _muster(L: Lauf) -> None:
             entfernt += g
             if typ == "gegenfolie":
                 gf_rest -= 1
+
+
+# Konjunktiv der indirekten Rede (I und als Ersatz II): „sei“, „habe“, „gäbe“, „hätte“ … im Satz oder im Satz davor (Absatz)
+KONJ_INDIREKT_RE = re.compile(r"\b(?:sei|seien|habe|hätte|hätten|wäre|wären|gäbe|gäben|könne|müsse|solle|werde|dürfe|wolle|"
+                              r"lägen?|stünden?|bestehe|fehle|führe|zeige)\b", re.IGNORECASE)
+
+
+def konjunktiv_indirekt(L: Lauf, s: dict) -> bool:
+    """Wiedergegebene Rede im Konjunktiv: der Satz selbst oder der Satz davor im selben Absatz steht im Konjunktiv."""
+    if KONJ_INDIREKT_RE.search(L.masken.get(s["nr"], s["text"])):
+        return True
+    vor = L.nach_nr.get(s["nr"] - 1)
+    return bool(vor and vor["absatz"] == s["absatz"] and KONJ_INDIREKT_RE.search(L.masken.get(vor["nr"], vor["text"])))
+
+
+def personen_subjekt(mk: str) -> bool:
+    """Personen als Urheber der Aussage im Hauptsatz („sehen Experten den Grund …“, „Die Autoren führen …“)."""
+    haupt = hauptsatz_teile(mk)
+    return any(t[:1].isupper() and ist_person(t) and t.lower() not in ("personen", "menschen") for t in analyse.tokens(haupt)[1:])
 
 
 GEGENFOLIE_MAX = 4  # Gegenfolie-Aufträge je Text (alle Runden zusammen); die Technik wechselt, damit kein neues Muster entsteht
@@ -4282,6 +4414,9 @@ def _konnektoren(L: Lauf) -> None:
         mk = L.masken[s["nr"]]
         off = len(mk) - len(mk.lstrip("„\"'(»"))
         for t_ in KONNEKTOR_RE.finditer(mk):
+            if KORRELAT_VOR_RE.search(mk[:t_.start()]):
+                L.unterdrueckt["konnektor_korrelat"] += 1
+                continue  # „nicht nur …, er hat zudem …“: der Konnektor ist Korrelat – gestrichen hinge „nicht nur“ in der Luft
             funde.append((s["absatz"], s, t_.group(1), t_.start() > off))
     haeufung = Counter((a, w.lower()) for a, _s, w, _m in funde)
     textweit = Counter(w.lower() for _a, _s, w, _m in funde) if ueber_p90 else Counter()
@@ -5750,6 +5885,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
     fw_text = _fw_hebeltext(L, any(h["typ"] in FW_TYPEN or set(h.get("typen") or []) & set(FW_TYPEN) for h in auswahl))
 
     mit_stellen = {x["hebel"] for x in eindeutig} | {TYP_HEBEL.get(t, t) for x in eindeutig for t in x.get("typen") or []}
+    konn_vorhanden = {t.group(1).lower() for s in L.fokus for t in KONNEKTOR_RE.finditer(L.masken.get(s["nr"], s["text"]))}
 
     def hebel_eintrag(h: str) -> dict:
         typen = set(HEBEL_TYPEN.get(h, set()))
@@ -5757,7 +5893,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             typen = {"mitte"} if diag.get("modus") == "mitte" else {"buendeln"}
         aus = bool(typen) and typen <= L.ausgesetzt and not any(x["hebel"] == h for x in auswahl)
         gruende = sorted({g for t in typen for g in L.aussetz_grund.get(t, [])}) if aus else []
-        warum = fw_text if h == "funktionswoerter" and fw_text else hebel_warum(h, L.ref, daten, L.fw_profil)
+        warum = fw_text if h == "funktionswoerter" and fw_text else hebel_warum(h, L.ref, daten, L.fw_profil, konn_vorhanden)
         # ohne einen einzigen Auftrag dieser Runde ist der Hebel kein Arbeitsauftrag, sondern nur Orientierung (mit Technik)
         stellenlos = not aus and h not in mit_stellen
         selbst = SELBSTHILFE_HEBEL.get(h) if stellenlos else None
@@ -5770,6 +5906,13 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             selbst = abk_selbsthilfe(L) or ("keine weiteren einbauen – schon eine weitere Abkürzung läge über dem menschlichen Median"
                                             if abk_plan(L)[2] <= 0 else
                                             "keine einstreuen – im Text steht keine ausgeschriebene Abkürzung, die sich kürzen ließe")
+        if stellenlos and h == "konnektoren":
+            # nur Konnektoren, die im Text stehen (v6-Prüfung, ssoar: Selbsthilfe „zugleich streichen“ ohne ein „zugleich“)
+            typisch = [k for k in sorted(konn_vorhanden, key=lambda k: -(konnektor_verhaeltnis(k) or 0))
+                       if (konnektor_verhaeltnis(k) or 0) > KONN_STARK]
+            selbst = (f"{' bzw. '.join(f'„{k}“' for k in typisch[:3])} streichen, wo der Bezug klar ist (nicht nach „nicht nur“, "
+                      "„zwar“, „einerseits“); andere Satzverknüpfer nur, wenn derselbe im Absatz gehäuft steht") if typisch else \
+                "Erlaubt bleibt: die übrigen Konnektoren stehen lassen – im Text steht keiner, der bei Claude deutlich häufiger ist"
         if stellenlos and h == "floskeln":
             rest_m = muster_rest(L)[0]
             selbst = muster_selbsthilfe(rest_m) or (muster_kein_rest(L) if L.kz.get("ki_muster_pro_1000") else selbst)
@@ -6113,8 +6256,9 @@ def bericht(c: dict) -> str:
     if c.get("stehen_lassen"):
         # trifft ein anderer Auftrag denselben Satz, ausdrücklich sagen, dass er trotzdem gilt (sonst liest sich das als Widerspruch)
         auch = sorted({x["satz"] for x in c["stehen_lassen"]} & {h.get("satz") for h in c["hinweise"]})
-        out.append("\n_Bewusst stehen lassen: " + ", ".join(f"S{x['satz']}" for x in c["stehen_lassen"])
-                   + " (der Kontrast „nicht …, sondern …“ ist dort die Aussage – kein Auftrag dazu"
+        out.append("\n_Bewusst stehen lassen: " + ", ".join(f"S{x['satz']}" + (f" ({x['grund']})" if x.get("grund") else "")
+                                                         for x in c["stehen_lassen"])
+                   + " – der Kontrast „nicht …, sondern …“ ist dort begründet bzw. die Aussage (kein Auftrag dazu"
                    + (f"; der andere Auftrag zu {', '.join(f'S{n}' for n in auch)} oben gilt trotzdem, der Kontrast bleibt" if auch else "")
                    + ")._")
     if c.get("diagnose"):
