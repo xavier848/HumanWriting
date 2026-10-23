@@ -11,13 +11,12 @@ Skripte (falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt ist: `find ~/.claude -path 
 - Coach: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/coach.py" DATEI --verlauf DATEI.coach.json`
 - Analyse (Detailwerte): `python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" DATEI`
 - Inhaltscheck: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/inhalt_check.py" ORIGINAL NEU --verlauf DATEI.coach.json` (mit `--verlauf` gelten Wörter, die der Coach selbst zum Ersetzen empfohlen hat, nicht als Verlust)
-- KI-Protokoll: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/humanisieren/scripts/ki_protokoll.py" DATEI.coach.json --kapitel "2 Grundlagen" --prompt "…"` (Zeile für die KI-Dokumentationstabelle der Hochschule)
 
 ## Welcher Modus?
 
-**Coach-Modus (Standard).** Immer, wenn nicht ausdrücklich „schreib es um“ / „überarbeite du es“ verlangt wird – und grundsätzlich für Texte, die als eigene Leistung abgegeben werden (Hausarbeit, Bachelorarbeit, Prüfungsleistung mit Eigenständigkeitserklärung). Claude formuliert dabei keine Sätze des Textes neu, sondern sagt präzise, was zu ändern ist. Die Worte stammen vom Nutzer. Das entspricht Hochschulregeln, die KI als Feedbackwerkzeug für selbst geschriebene Texte erlauben (z. B. MBS Research Guidelines 2026, Teil C 4.3, Kurzfassung in `../menschlich-schreiben/references/hochschulvorgaben-mbs.md`); dokumentiert wird die Nutzung trotzdem (Schritt 7).
+**Coach-Modus (Standard).** Immer, wenn nicht ausdrücklich „schreib es um“ / „überarbeite du es“ verlangt wird – besonders für Texte, in denen KI-Formulierungen nicht erlaubt sind. Claude formuliert dabei keine Sätze des Textes neu, sondern sagt präzise, was zu ändern ist. Die Worte stammen vom Nutzer.
 
-**Überarbeiten-Modus.** Nur wenn der Nutzer ausdrücklich möchte, dass Claude selbst umschreibt. Dann vorher einmal kurz darauf hinweisen: Von Claude formulierter Text trägt Anthropics Text-Wasserzeichen (statistisch in der Wortwahl, für Bildungseinrichtungen über eine Erkennungs-Schnittstelle prüfbar). Stilistische Überarbeitung ändert daran nichts. Für eigene Prüfungsleistungen den Coach-Modus empfehlen und auf die KI-Regeln der Hochschule hinweisen. An der MBS gelten von Claude umformulierte Sätze als KI-Formulierungen, die auch dokumentiert nur sparsam in die Arbeit dürfen (Teil C, 4.2).
+**Überarbeiten-Modus.** Wenn der Nutzer möchte, dass Claude selbst umschreibt, oder der Text ein Entwurf von Claude ist. Ohne weiteren Hinweis überarbeiten. Nur wenn der Nutzer sagt, dass KI-Texte in dieser Arbeit nicht erlaubt sind, vorher einmal kurz hinweisen: Von Claude formulierter Text kann Anthropics Text-Wasserzeichen tragen (statistisch in der Wortwahl, für Bildungseinrichtungen prüfbar), daran ändert Stil nichts; dann den Coach-Modus empfehlen.
 
 Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder KI-Detektoren zu umgehen.
 
@@ -45,9 +44,6 @@ Niemals Techniken anbieten oder anwenden, die darauf zielen, Wasserzeichen oder 
    - Wird eine Kennzahl besser, während andere schlechter werden, das offen benennen. Ziel ist der Gesamtstil, nicht eine einzelne Zahl.
 5. **Inhalt sichern:** Nach jeder Runde `inhalt_check.py ORIGINAL NEU --verlauf text.coach.json` gegen die Ausgangsfassung laufen lassen und fehlende Zahlen, Quellen oder Zitate melden. Außerdem selbst darauf achten, ob beim Zusammenführen von Sätzen eine Aussage einer anderen Quelle zugeordnet oder eine Begründung umgedreht wurde – das erkennt das Skript nicht.
 6. **Fertig**, wenn der Coach „Ziel erreicht“ meldet (Modell-Wahrscheinlichkeit „menschlich“ und der einseitige Score über Schwellen, die jeweils 90 % echter Hochschulabschnitte erreichen) oder der Nutzer zufrieden ist. Der einseitige Score zählt nur Abweichungen in Richtung KI; wer in manchem „menschlicher als typisch“ schreibt, verliert dadurch keine Punkte. Das Modell belohnt Übertreibung jenseits des menschlichen Bands nicht. Einzelne rote Kennzahlen sind kein Grund weiterzumachen: Auch echte Arbeiten haben bei 800 Wörtern im Mittel etwa sechs rote Kennzahlen, weil einzelne Kennzahlen auf kurzen Texten stark streuen. Nicht jede rote Zahl „reparieren“ lassen.
-7. **Dokumentieren** (bei Prüfungsleistungen; viele Hochschulen verlangen ein Verzeichnis der KI-Nutzung, an der MBS die Tabelle nach Anhang 3): Vor jeder Runde eine datierte Fassung sichern lassen (z. B. `kapitel2_2026-10-23.md`); sie belegt den eigenen Arbeitsprozess. Am Ende die Tabellenzeile erzeugen:
-   `ki_protokoll.py DATEI.coach.json --kapitel "2 Theoretische Grundlagen" --prompt "…"`
-   Als Prompts 1–3 tatsächliche Bitten des Nutzers aus dem Gespräch einsetzen, als Werkzeug den eigenen Modellnamen, falls bekannt (`--werkzeug "Claude … in Claude Code mit Plugin humanwriting-de"`), bei englischer Arbeit `--sprache en`, mehrere Kapitel mit je einem Verlauf und `--kapitel`. Die Zeile ist ein Vorschlag: Der Nutzer prüft sie und ergänzt, was das Skript nicht weiß (z. B. weitere KI-Werkzeuge).
 
 Fragen des Nutzers („Wie mache ich einen Satz länger, ohne Inhalt zu erfinden?“) mit den Techniken aus `references/techniken.md` beantworten, gern mit eigenen neutralen Beispielsätzen.
 
@@ -62,7 +58,7 @@ Nur nach ausdrücklichem Wunsch und dem Hinweis oben.
 2. Höchstens 3–4 Hebel pro Runde, **nur die genannten Stellen** mit dem Edit-Werkzeug ändern (Techniken: `references/techniken.md`). Keine neuen Inhalte, Zahlen, Quellen oder Beispiele. Zahlen, Quellenverweise, wörtliche Zitate, Fachbegriffe, Überschriften und Fußnotenmarker bleiben unangetastet. Generisches Maskulinum, keine Gedankenstriche, keine Floskeln aus `../menschlich-schreiben/references/ki-muster.md`.
 3. `coach.py` erneut (Fortschritt prüfen) und `inhalt_check.py <name>.original.md <name>.md --verlauf <name>.coach.json`. Bei ❌ sofort korrigieren; jede Aussage des Inventars muss sinngleich erhalten sein. Meldet der Coach „Mechanisch verlängert“, die Änderungen der Runde durch Verdichten ersetzen statt weiter zu verlängern.
 4. Wiederholen, bis „Ziel erreicht“, höchstens 6 Runden; nach zwei Runden ohne Fortschritt stoppen und erklären, woran es hängt.
-5. Abschluss: Vorher/Nachher-Tabelle (Score, Modell, bewertete Kennzahlen), Ergebnis des Inhaltschecks, Pfad zur Datei. Bei Prüfungsleistungen die Zeile für das KI-Verzeichnis mit `ki_protokoll.py … --modus ueberarbeiten` anbieten.
+5. Abschluss: Vorher/Nachher-Tabelle (Score, Modell, bewertete Kennzahlen), Ergebnis des Inhaltschecks, Pfad zur Datei.
 
 ## Grenzen (dem Nutzer bei Bedarf sagen)
 

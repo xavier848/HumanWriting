@@ -25,7 +25,6 @@ Die Analyse funktioniert auch ohne Claude:
 python3 plugins/humanwriting-de/skills/text-analyse/scripts/analyse.py meine_arbeit.docx
 python3 plugins/humanwriting-de/skills/humanisieren/scripts/coach.py meine_arbeit.md --verlauf meine_arbeit.coach.json
 python3 plugins/humanwriting-de/skills/humanisieren/scripts/inhalt_check.py alt.md neu.md
-python3 plugins/humanwriting-de/skills/humanisieren/scripts/ki_protokoll.py meine_arbeit.coach.json --kapitel "2 Grundlagen"
 ```
 
 Nur Python 3.8+ (Standardbibliothek), keine Installation nötig.
@@ -39,7 +38,7 @@ plugins/humanwriting-de/
   skills/
     menschlich-schreiben/  SKILL.md, references/{hintergrund,beispiele,hochschulvorgaben-mbs}.md, references/{zielwerte,ki-muster,persoenlicher-wortschatz}.md (generiert)
     text-analyse/          SKILL.md, scripts/analyse.py, data/{baselines,ki_muster,wortlisten}.json, references/kennzahlen*.md
-    humanisieren/          SKILL.md, scripts/{coach,inhalt_check,ki_protokoll}.py, references/techniken.md
+    humanisieren/          SKILL.md, scripts/{coach,inhalt_check}.py, references/techniken.md
 kalibrierung/              Korpus-Pipeline, Kalibrierung, Ergebnisse (siehe kalibrierung/README.md)
 tests/                     python3 -m unittest discover -s tests
 ```
@@ -67,9 +66,9 @@ Eine englische Variante kommt als eigenes Plugin (`humanwriting-en`), damit jede
 
 Fazit: Der Coach ist für **selbst geschriebene Texte** gebaut. Einen Claude-Entwurf statistisch „menschlich“ zu machen, gelingt durch Nachbessern nicht ohne Überkorrektur – und das Text-Wasserzeichen bleibt ohnehin.
 
-## Hochschulregeln (Munich Business School)
+## Hochschulvorgaben (Munich Business School)
 
-`references/hochschulvorgaben-mbs.md` fasst die MBS Research Guidelines 2026 für die Skills zusammen: APA 7, Formvorgaben, Abstract auf Englisch und die KI-Regeln aus Teil C. Danach ist KI als Feedbackwerkzeug für den eigenen Text erlaubt, von KI formulierte Sätze dürfen auch dokumentiert nur sparsam in die Arbeit, und jede KI-Nutzung gehört in die Dokumentationstabelle (Anhang 3). Der Coach-Modus entspricht diesem erlaubten Weg; `ki_protokoll.py` erzeugt aus dem Coach-Verlauf die passende Tabellenzeile (deutsch oder englisch).
+`references/hochschulvorgaben-mbs.md` fasst die Form- und Zitiervorgaben der MBS Research Guidelines 2026 zusammen (APA 7, Gliederung, Seitenformat, Abstract auf Englisch). `menschlich-schreiben` nutzt sie, wenn an der MBS geschrieben wird. Ob und wie viel KI in einer Arbeit erlaubt ist, entscheidet der Dozent; die Skills schränken das nicht ein.
 
 ## Grenzen
 
