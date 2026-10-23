@@ -2678,6 +2678,8 @@ def _bremse(L: Lauf) -> None:
     # das menschliche Band getrieben haben – dann wie bisher Teilen-Aufträge
     verlaengert = any(isinstance(h, dict) and h.get("typ") and set(h.get("typen") or [h["typ"]]) & {"buendeln", "klammer_zusatz", "zickzack"}
                       and _befolgt(L, h) for mess in L.messungen for h in mess.get("hinweise") or [])
+    # alter Verlauf (v1) ohne gespeicherte Aufträge: die Überkorrektur im Verlauf gilt wie bisher als Folge der Coach-Aufträge
+    verlaengert = verlaengert or (bool(L.messungen) and not any("hinweise" in mess for mess in L.messungen))
     diag["ueberkorrektur"] = verlaengert and any(u["id"] in lang_ids and u["art"] == "Überkorrektur" for u in L.ueberkorrektur)
     diag["ueber_p90"] = bool(laengen) and (diag["anteil_lange"] > (L.p_("anteil_lange_saetze", "p90") or 1)
                                            or diag["mittel"] > (L.p_("satzlaenge_mittel", "p90") or 99))

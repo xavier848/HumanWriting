@@ -307,13 +307,32 @@ class Auftragsgrenze(unittest.TestCase):
                             if h.get("fw_weg") or h.get("fw_dazu")))
 
     def test_absatz_simulation_trifft_messung(self):
-        # gleichmäßige Absätze: die simulierte Netto-Wirkung des Absatz-Auftrags liegt nahe an der gemessenen
+        # gleichmäßige Absätze: die simulierte Netto-Wirkung des Absatz-Auftrags liegt nahe an der gemessenen (Summe der
+        # Modellbeiträge nach dem Umsetzen minus vorher)
         text = gleichmaessig(8, 5)
         c = coach.coache(text, None, 40, roh=True)
-        h = next((x for x in c["hinweise_roh"] if x["typ"] in ("absatz_teilen", "absatz_zusammen")), None)
-        if h is None:
-            self.skipTest("kein Absatz-Auftrag")
+        h = next(x for x in c["hinweise_roh"] if x["typ"] in ("absatz_teilen", "absatz_zusammen"))
         self.assertGreater(h["netto_logit"], 0)
+        absaetze = {}
+        for x in saetze_von(text):
+            absaetze.setdefault(x["absatz"], []).append(x)
+        neu = []
+        for nr in sorted(absaetze):
+            liste = absaetze[nr]
+            if h["typ"] == "absatz_teilen" and nr == h["absatz"]:
+                k = next(i for i, x in enumerate(liste) if x["nr"] == h["satz"])
+                neu += [liste[:k], liste[k:]]
+            elif h["typ"] == "absatz_zusammen" and nr == h["absatz"] + 1:
+                neu[-1] = neu[-1] + liste
+            else:
+                neu.append(liste)
+        text_neu = "\n\n".join(" ".join(x["text"] for x in p) for p in neu)
+
+        def summe(t):
+            _e, bew = analyse.analysiere_und_bewerte(t, analyse.lade_muster(), analyse.lade_baselines())
+            return sum(b["beitrag"] for b in bew["modell_beitraege"])
+        gemessen = summe(text_neu) - summe(text)
+        self.assertAlmostEqual(h["netto_logit"], gemessen, delta=max(0.3, 0.35 * abs(gemessen)))
 
 
 def c_diag(text):
