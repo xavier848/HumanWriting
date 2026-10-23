@@ -20,19 +20,23 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/text-analyse/scripts/analyse.py" TEXTDATEI
 - Falls `${CLAUDE_PLUGIN_ROOT}` nicht ersetzt wurde: Skript suchen mit `find ~/.claude -path '*text-analyse/scripts/analyse.py' 2>/dev/null | head -1`.
 - Nur Python-Standardbibliothek nötig, keine Installation.
 
-Überschriften, Listenpunkte, Tabellen, Code, Fußnotenmarker, Quellenverweise in Klammern („(Müller 2019, S. 12)“) und alles ab „Literaturverzeichnis“ werden für die Messung ausgeblendet, damit nur der Fließtext zählt.
+Überschriften, Listenpunkte, Tabellen, Code, Blockzitate (Zeilen mit `>`), Fußnotenmarker, Quellenverweise in runden oder eckigen Klammern („(Müller, 2019, S. 12)“, „[Wolfram 2009]“), Transkriptnotation in Interviewzitaten („(lacht)“, „(unv.)“, „(I: Ja.)“) und alles ab „Literaturverzeichnis“ werden für die Messung ausgeblendet, damit nur der Fließtext zählt.
+
+**Eingabeprüfung** (vor dem Lesen der Werte beachten):
+- **Verklebte Wörter** (`info.verklebt`, Warnung im Bericht): Aus PDF-Kopien fehlen oft Leerzeichen („Modell,wiesichdie…“). Solche Stellen verfälschen Satz- und Wortlängen; erst trennen lassen, dann messen.
+- **Zitatanteil** (`info.zitat_anteil`): Anteil der Wörter in wörtlichen Zitaten. Ist er hoch, misst die Analyse zu einem guten Teil fremden Wortlaut; das dem Nutzer sagen.
 
 ## Ergebnis lesen
 
 Der Bericht enthält:
 
-1. **Menschlichkeits-Score (0–100)**: gewichteter Anteil der trennscharfen Kennzahlen im menschlichen Zielbereich (grün = 1, gelb = 0,5, rot = 0). Gewicht = Trennschärfe der Kennzahl in der Kalibrierung.
-2. **Modell-Einschätzung**: logistisches Modell über die trennschärfsten, wenig korrelierten Kennzahlen, kalibriert auf menschlichen vs. KI-Abschnitten. Wahrscheinlichkeit „menschlich“.
+1. **Menschlichkeits-Score (0–100)**: gewichteter Anteil der trennscharfen Kennzahlen im menschlichen Zielbereich (grün = 1, gelb = 0,5, rot = 0). Gewicht = Trennschärfe der Kennzahl in der Kalibrierung. Daneben steht der **einseitige Score** („nur KI-Seite“, im JSON `score_ki`): Er zählt nur Abweichungen in Richtung KI; eine Kennzahl, die auf der der KI abgewandten Seite aus dem Band fällt (z. B. sehr viele lange Sätze, sehr wenige Konnektoren), kostet dort keine Punkte. „Ziel erreicht“ heißt: Modell-Wahrscheinlichkeit und einseitiger Score über den Schwellen, die jeweils 90 % echter Hochschulabschnitte erreichen (`ziel_p_mensch`, `ziel_score_ki`).
+2. **Modell-Einschätzung**: logistisches Modell über die trennschärfsten, wenig korrelierten Kennzahlen, kalibriert auf menschlichen vs. KI-Abschnitten. Wahrscheinlichkeit „menschlich“. Jedes Merkmal wird auf der der KI abgewandten Seite am menschlichen P90 bzw. P10 gekappt: Übertreiben über das Band echter Texte hinaus bringt im Modell nichts.
 3. **Kennzahl-Tabelle**:
    - 🟢 innerhalb der mittleren 50 % menschlicher Texte (P25–P75)
    - 🟡 innerhalb der mittleren 80 % (P10–P90)
    - 🔴 außerhalb, „KI-typisch“ = näher am KI-Median als am Mensch-Median
-   - „↑ erhöhen / ↓ senken“ zeigt die Richtung zum Zielbereich.
+   - „↑ erhöhen / ↓ senken“ zeigt die Richtung zum Zielbereich, aber nur auf der KI-Seite. Liegt ein Wert auf der Gegenseite außerhalb des Bands, steht dort „kein Auftrag (Gegenseite, kein KI-Signal)“ (im JSON `seite: "gegen"`, `jenseits_band: true`). Bei einem selbst geschriebenen Text ist das kein Fehler; bei einem von Claude geschriebenen Entwurf ist es meist Übertreibung und wird zurückgenommen.
 4. **Satzlängen-Verteilung** als Histogramm und **Satzlängen im Verlauf** (Rhythmus sichtbar machen).
 5. **Auffällige Stellen**: Sätze mit Markierungen, z. B. `konnektor_anfang`, `konnektor_mitte` (Konnektor im Satzinneren – eher streichen als verschieben), `dies_anfang`, `gleicher_satzanfang`, `gedankenstrich`, `dreierliste`, `sehr_lang`, `muster:<id>` (KI-Floskel). Die Markierung `gleichfoermig` (Folge fast gleich langer Sätze) ist nur ein Hinweis auf die Stelle: Ähnlich lange Sätze hintereinander sind auch bei Menschen normal. Entscheidend ist die Verteilung insgesamt, nicht einzelne Folgen.
 6. **Grenzfall** (Zusatz an einer gelben oder roten Kennzahl, im JSON `unsicher: true`): Der Wert liegt näher an P25/P75 als die halbe typische Messunsicherheit eines 800-Wörter-Abschnitts; bei längeren Texten schrumpft diese Spanne mit √(800 / Wörter). Gelbe Grenzfälle nicht als Hebel nennen. Weil einzelne Kennzahlen bei dieser Textlänge stark streuen, ist die Modell-Einschätzung das verlässlichere Gesamturteil.
