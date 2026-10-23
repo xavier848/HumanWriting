@@ -135,7 +135,7 @@ PARTIZIP_RE = re.compile(r"([a-zäöüß]{4,}?)end(?:e|en|er|em|es)")
 # Movierte Formen: Plural „-innen“ (auch Binnen-I), Singular „-in“ nur nach typischen Personen-Endungen; ebenfalls nur
 # großgeschrieben und nur, wenn die Grundform („Nutzer“, „Kunden“) in einem der beiden Texte vorkommt
 INNEN_RE = re.compile(r"([a-zäöüß]{3,})innen")
-INNEN_NICHT = ("ginnen", "winnen", "pinnen", "sinnen", "rinnen")
+INNEN_NICHT = ("beginnen", "gewinnen", "spinnen", "besinnen", "ersinnen", "entrinnen", "zerrinnen")  # Verben
 IN_RE = re.compile(r"([a-zäöüß]{2,}(?:er|ent|ant|ist|or|eur|nd|og|eg|ekt|är|ar)|[a-zäöüß]{3,}at)in")
 # Endung hinter Genderzeichen („Bewerber*innen“, „Nutzer:innen“, „Absolvent/-innen“) ist kein eigener Begriff
 GENDER_ZEICHEN_RE = re.compile(r"[*:_/·]-?$")

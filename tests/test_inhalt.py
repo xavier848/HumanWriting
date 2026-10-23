@@ -696,6 +696,153 @@ class CoachErsetzbar(unittest.TestCase):
         self.assertEqual({e["typ"] for e in res["harte_verluste"]}, {"Quellenverweis", "Zahl"})
 
 
+class GenderUndErwartet(unittest.TestCase):
+    """v7-Regressionen aus den Coach-Evaluationen: Die verlangte Umstellung auf das generische Maskulinum („Bewerbende“ →
+    „Bewerber“, „Studierende“ → „Studenten“) und das beim Teilen wiederholte Nomen („Die ESRS …“) lösten Fehlalarme aus
+    („Neuer häufiger Begriff: bewerb/student“, „Abkürzung: ESRS“). Gender-Paare gelten jetzt auch ohne Verlauf als derselbe
+    Begriff; was der Coach unter "erwartet" speichert, zählt mit --verlauf nicht als neu."""
+
+    TYPEN = ("Begriff verschwunden", "Fachwort ersetzt?", "Neuer häufiger Begriff")
+
+    def gemeldet(self, res, typen=TYPEN):
+        return ", ".join(w["wert"] for w in res["warnungen"] if w["typ"] in typen).lower()
+
+    def ohne_coach_daten(self):
+        alt = (inhalt_check.MUSTER_PFAD, inhalt_check.WORTLISTEN_PFAD)
+        inhalt_check.MUSTER_PFAD = inhalt_check.WORTLISTEN_PFAD = os.path.join(REPO, "gibt-es-nicht.json")
+        self.addCleanup(lambda: setattr(inhalt_check, "MUSTER_PFAD", alt[0]))
+        self.addCleanup(lambda: setattr(inhalt_check, "WORTLISTEN_PFAD", alt[1]))
+
+    # Employer Branding (Coach-Evaluation v6, dreimal derselbe Fehlalarm „Neuer häufiger Begriff: bewerb“)
+    ALT_BEWERB = ("Bewerbende achten zuerst auf das Gehalt. Viele Bewerbende informieren sich vorab auf Bewertungsportalen. "
+                  "Für Bewerbende zählt außerdem das Betriebsklima. Den Bewerbenden fehlt oft ein realistisches Bild der Arbeit.")
+    NEU_BEWERB = ("Bewerber achten zuerst auf das Gehalt. Viele Bewerber informieren sich vorab auf Bewertungsportalen. "
+                  "Für Bewerber zählt außerdem das Betriebsklima. Den Bewerbern fehlt oft ein realistisches Bild der Arbeit.")
+
+    def test_bewerbende_bewerber_ohne_verlauf(self):
+        for coach_daten in (True, False):
+            with self.subTest(coach_daten=coach_daten):
+                if not coach_daten:
+                    self.ohne_coach_daten()
+                res = inhalt_check.pruefe(self.ALT_BEWERB, self.NEU_BEWERB)
+                self.assertTrue(res["ok"])
+                self.assertEqual(self.gemeldet(res), "")
+        # Rückrichtung und Gendersternchen / Doppelnennung
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(self.NEU_BEWERB, self.ALT_BEWERB)), "")
+        stern = self.ALT_BEWERB.replace("Bewerbenden", "Bewerber*innen").replace("Bewerbende", "Bewerber*innen")
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(stern, self.NEU_BEWERB)), "")
+        doppel = self.ALT_BEWERB.replace("Bewerbenden", "Bewerberinnen und Bewerbern").replace(
+            "Bewerbende", "Bewerberinnen und Bewerber")
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(doppel, self.NEU_BEWERB)), "")
+
+    # echter menschlicher Abschnitt (Coach-Evaluation v7): „Neuer häufiger Begriff: student“
+    ALT_STUDENT = ("Die Absolvierenden bewerten ihr Studium rückblickend positiv. Studierende mit hoher Motivation brechen "
+                   "seltener ab. Für die Studierenden ist die Betreuung entscheidend. Bachelorstudierenden fehlt oft der "
+                   "Kontakt zu den Lehrenden. Die Lehrenden sehen das ähnlich. Studierende nennen außerdem die Finanzierung.")
+    NEU_STUDENT = ("Die Absolventen bewerten ihr Studium rückblickend positiv. Studenten mit hoher Motivation brechen "
+                   "seltener ab. Für die Studenten ist die Betreuung entscheidend. Bachelorstudenten fehlt oft der "
+                   "Kontakt zu den Dozenten. Die Dozenten sehen das ähnlich. Studenten nennen außerdem die Finanzierung.")
+
+    def test_studierende_studenten_lehrende_dozenten(self):
+        res = inhalt_check.pruefe(self.ALT_STUDENT, self.NEU_STUDENT)
+        self.assertTrue(res["ok"])
+        self.assertEqual(self.gemeldet(res), "")
+        # „Lehrkräfte“ ebenso; „Lehrer“ ist an der Hochschule eine andere Gruppe und bleibt eine Meldung
+        res = inhalt_check.pruefe(self.ALT_STUDENT, self.NEU_STUDENT.replace("Dozenten", "Lehrkräfte"))
+        self.assertEqual(self.gemeldet(res), "")
+        res = inhalt_check.pruefe(self.ALT_STUDENT, self.NEU_STUDENT.replace("Dozenten", "Lehrer"))
+        self.assertIn("lehrend", self.gemeldet(res, ("Begriff verschwunden",)))
+
+    def test_mitarbeitende_und_movierte_formen(self):
+        alt = ("Mitarbeitende wünschen sich mehr Feedback. Viele Mitarbeitende arbeiten hybrid. Den Mitarbeitenden fehlt Zeit. "
+               "Kundinnen und Kunden erwarten schnelle Antworten. Kundinnen beschweren sich seltener.")
+        neu = ("Mitarbeiter wünschen sich mehr Feedback. Viele Mitarbeiter arbeiten hybrid. Den Mitarbeitern fehlt Zeit. "
+               "Kunden erwarten schnelle Antworten. Kunden beschweren sich seltener.")
+        self.assertEqual(self.gemeldet(inhalt_check.pruefe(alt, neu)), "")
+
+    def test_gender_regeln_ohne_falsche_freunde(self):
+        formen = inhalt_check.wortformen("Der Verein plant Termine. Proteine fehlen. Wir verwenden Fehler und fehlende "
+                                         "Daten. Die Kunden beginnen.")
+        for w in ("Verein", "Termin", "Protein", "verwenden", "fehlende", "beginnen", "Gewinnen", "zunehmende"):
+            with self.subTest(wort=w):
+                self.assertEqual(inhalt_check.begriff_stamm(w, formen), inhalt_check.stamm(w))
+        # regelmäßige Paare nur, wenn die Gegenform im Text steht
+        self.assertEqual(inhalt_check.begriff_stamm("Forschende", inhalt_check.wortformen("Forscher fehlen.")),
+                         inhalt_check.stamm("Forscher"))
+        self.assertEqual(inhalt_check.begriff_stamm("Forschende", inhalt_check.wortformen("Forschung fehlt.")),
+                         inhalt_check.stamm("Forschende"))
+        # echter Begriffsverlust bleibt gemeldet
+        res = inhalt_check.pruefe("Die Bewerbenden nennen das Gehalt. Bewerbende vergleichen Angebote.",
+                                  "Die Firmen nennen das Gehalt. Firmen vergleichen Angebote.")
+        self.assertIn("bewerb", self.gemeldet(res, ("Begriff verschwunden",)))
+
+    # CSRD (Coach-Evaluation v6): Teilung mit wiederholtem Nomen → „Abkürzung: ESRS“
+    ALT_ESRS = ("Die ESRS gelten für berichtspflichtige Unternehmen ab dem Geschäftsjahr 2025 und verlangen eine doppelte "
+                "Wesentlichkeitsanalyse, die viele KMU überfordert.")
+    NEU_ESRS = ("Die ESRS gelten für berichtspflichtige Unternehmen ab dem Geschäftsjahr 2025. Die ESRS verlangen eine "
+                "doppelte Wesentlichkeitsanalyse, die viele KMU überfordert.")
+
+    def test_esrs_nach_teilung_mit_erwartet(self):
+        ohne = inhalt_check.pruefe(self.ALT_ESRS, self.NEU_ESRS)
+        self.assertIn("ESRS", [w["wert"] for w in ohne["warnungen"] if w["typ"] == "Abkürzung"])
+        mit = inhalt_check.pruefe(self.ALT_ESRS, self.NEU_ESRS, erwartet={"esrs"})
+        self.assertEqual([w for w in mit["warnungen"] if w["typ"] == "Abkürzung"], [])
+        # eine wirklich neue Abkürzung bleibt gemeldet
+        res = inhalt_check.pruefe(self.ALT_ESRS, self.NEU_ESRS.replace("KMU", "KMU (EFRAG)"), erwartet={"esrs"})
+        self.assertEqual([w["wert"] for w in res["warnungen"] if w["typ"] == "Abkürzung"], ["EFRAG"])
+
+    ALT_TEILUNG = ("Die Studie stützt sich auf zwölf Interviews mit Personalleitern. Sie dauerten je eine Stunde. Sie wurden "
+                   "vollständig transkribiert. Sie wurden danach in zwei Durchgängen codiert.")
+    NEU_TEILUNG = ("Die Studie stützt sich auf zwölf Interviews mit Personalleitern. Die Gespräche dauerten je eine Stunde. "
+                   "Die Gespräche wurden vollständig transkribiert. Die Gespräche wurden danach in zwei Durchgängen codiert.")
+
+    def test_erwartet_kein_neuer_haeufiger_begriff(self):
+        ohne = inhalt_check.pruefe(self.ALT_TEILUNG, self.NEU_TEILUNG)
+        self.assertIn("gespräch", self.gemeldet(ohne, ("Neuer häufiger Begriff",)))
+        # Stamm genügt: „gespräche“ im Verlauf deckt auch „Gespräch“, „Gesprächen“
+        mit = inhalt_check.pruefe(self.ALT_TEILUNG, self.NEU_TEILUNG, erwartet={"gespräche"})
+        self.assertEqual(self.gemeldet(mit, ("Neuer häufiger Begriff",)), "")
+        self.assertEqual(mit["erwartet_neu"], ["gespräch"])
+        self.assertIn("Nicht als neuer Begriff gewertet", inhalt_check.bericht(mit))
+
+    def test_harte_funde_bleiben_trotz_erwartet(self):
+        res = inhalt_check.pruefe("Müller (2019) befragte 45 Betriebe.", "Schulz (2021) befragte 54 Betriebe.",
+                                  erwartet={"schulz", "2021", "54"})
+        self.assertFalse(res["ok"])
+        self.assertEqual({e["typ"] for e in res["erfindungen"]}, {"Quellenverweis", "Zahl"})
+
+    def test_erwartet_aus_verlauf(self):
+        verlauf = {"messungen": [{"ersetzbar": ["bewerbende"], "erwartet": ["Bewerber", "esrs"]}, {"score": 60},
+                                 {"erwartet": ["die Gespräche"]}]}
+        self.assertEqual(inhalt_check.erwartet_aus_verlauf(verlauf), {"bewerber", "esrs", "die", "gespräche"})
+        self.assertEqual(inhalt_check.erwartet_aus_verlauf({"messungen": [{"ersetzbar": ["x"]}]}), set())
+        self.assertEqual(inhalt_check.erwartet_aus_verlauf(None), set())
+
+    def test_verlauf_cli_mit_erwartet(self):
+        import contextlib
+        import io
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            pfade = {}
+            for name, inhalt in (("alt.md", self.ALT_ESRS + "\n\n" + self.ALT_TEILUNG),
+                                 ("neu.md", self.NEU_ESRS + "\n\n" + self.NEU_TEILUNG),
+                                 ("alt.coach.json", json.dumps({"messungen": [{"ersetzbar": []}]})),
+                                 ("neu.coach.json", json.dumps({"messungen": [{"ersetzbar": [], "erwartet": ["esrs"]},
+                                                                             {"erwartet": ["gespräche"]}]}))):
+                pfade[name] = os.path.join(d, name)
+                with open(pfade[name], "w", encoding="utf-8") as f:
+                    f.write(inhalt)
+            for verlauf, erwartet_leer in (("alt.coach.json", False), ("neu.coach.json", True)):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    rc = inhalt_check.main([pfade["alt.md"], pfade["neu.md"], "--format", "json", "--verlauf", pfade[verlauf]])
+                res = json.loads(out.getvalue())
+                with self.subTest(verlauf=verlauf):
+                    self.assertEqual(rc, 0)
+                    warn = [w for w in res["warnungen"] if w["typ"] in ("Abkürzung", "Neuer häufiger Begriff")]
+                    self.assertEqual(warn == [], erwartet_leer, warn)
+
+
 class Zitate(unittest.TestCase):
     def test_gerade_anfuehrungszeichen_paaren_richtig(self):
         t = 'Der Begriff "KMU" ist ebenso unscharf wie "Mittelstand". Werner nennt es "die Fähigkeit, sich zu erholen".'

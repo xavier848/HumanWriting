@@ -3494,7 +3494,7 @@ def bezug_am_satzanfang(L: Lauf, a: dict, kand: list[str]) -> bool:
     if erstes in analyse.PRAEPOSITIONEN | {"im", "am", "zum", "zur", "beim", "vom", "ins"}:
         return False  # Angabe im Vorfeld („Zum Schluss der Studie geht …“): das Subjekt steht nicht vorn
     nomen = {w.lower() for w in vf[1:] if w[:1].isupper()}
-    if erstes not in _AKTEUR_DET | {"der", "die", "das", "den", "dem"}:
+    if erstes not in _AKTEUR_DET | {"der", "die", "das"}:
         if erstes in analyse.FUNKTIONSWOERTER or erstes in _ADVERB_ANFANG or len(vf) > 3:
             return False  # „Dabei …“, „So …“: kein Subjekt am Satzanfang
         nomen.add(erstes)  # Name bzw. Nomen ohne Artikel („Hypothesen stammen …“, „Stiehler sieht …“)
