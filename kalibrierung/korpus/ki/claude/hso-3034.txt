@@ -1,0 +1,35 @@
+## Imagetransfer von Hersteller- und Handelsmarken auf die Marke Aldi Süd
+
+Im Folgenden werden die Ergebnisse der explorativen Analyse dargestellt. Im Mittelpunkt steht die Frage, inwieweit die im Sortiment von Aldi Süd geführten Hersteller- und Handelsmarken ihr Image auf die Betriebstypenmarke übertragen und welche Imagedimensionen davon in besonderem Maße betroffen sind.
+
+Gegenstand der Untersuchung waren 23 Eigenmarken von Aldi Süd, darunter Rio d'Oro, Belight, Knusperkrone, Karlskrone, Alpenmark und Tandil, sowie die sieben Herstellermarken Coca-Cola, Haribo, Nivea, Ferrero, Ritter Sport, Baileys und Wrigley. Die Stichprobe setzt sich zu 66 % aus Männern und zu 34 % aus Frauen zusammen; 92 % der Befragten sind zwischen 20 und 29 Jahre alt. Die Stichprobe ist damit stark von jüngeren, überwiegend männlichen Befragten geprägt und nicht repräsentativ für die Kundschaft von Aldi Süd, was bei der Interpretation der Ergebnisse zu berücksichtigen ist.
+
+### Bekanntheit der Marken
+
+Die gestützte Bekanntheit der Herstellermarken liegt durchweg auf sehr hohem Niveau. Coca-Cola, Haribo und Nivea erreichen jeweils 99 %, Ferrero und Ritter Sport jeweils 98 %. Selbst die schwächsten Herstellermarken, Baileys mit 89 % und Wrigley mit 81 %, liegen damit noch über der bekanntesten Eigenmarke Rio d'Oro, die auf 79 % kommt. Dieser Abstand ist insofern plausibel, als Herstellermarken in der Regel überregional beworben werden und in vielen Handelsunternehmen erhältlich sind, während Eigenmarken nur in den Filialen des jeweiligen Händlers präsent sind.
+
+### Gesamttransfer
+
+Der Gesamttransfer wurde über eine Aussage zur Wirkung des jeweiligen Markenangebots auf das Bild von Aldi Süd erfasst, die auf einer fünfstufigen Ratingskala von 1 (sehr positiv) bis 5 (sehr negativ) zu bewerten war. Für alle sieben Herstellermarken zeigt sich ein positiver Imagetransfer. Keines der untersuchten Markenangebote wirkt sich demnach nachteilig auf die Wahrnehmung des Discounters aus. Das Angebot von Markenartikeln verbessert somit das Image der Betriebstypenmarke Aldi Süd.
+
+Um zu prüfen, ob die Stärke einer Marke die Höhe des Transfereffekts beeinflusst, wurde eine Regression mit der Bekanntheit als unabhängiger und dem Transfereffekt als abhängiger Variable gerechnet. Die Bekanntheit dient dabei als Proxy für die Markenstärke. Es ergibt sich ein Korrelationskoeffizient nach Pearson von r = -0,77 bei einem Bestimmtheitsmaß von R² = 0,5877. Rund 59 % der Varianz des Transfereffekts lassen sich somit durch die Bekanntheit der Marke erklären. Das negative Vorzeichen ist auf die Skalierung zurückzuführen, bei der niedrige Werte einen positiven Transfer anzeigen: Je höher die Bekanntheit einer Marke, desto positiver fällt der Transfer auf Aldi Süd aus. Einschränkend ist anzumerken, dass Bekanntheit zwar eine notwendige, jedoch keine hinreichende Bedingung für Markenstärke ist und die Analyse lediglich auf sieben Marken beruht. Dennoch stützt das Ergebnis den Befund aus der Literatur, dass starke Herstellermarken zur Profilierung von Händlern beitragen (Jacoby/Mazursky, 1984). Für Aldi Süd bedeutet dies, dass vor allem die Listung bekannter und damit starker Herstellermarken einen Beitrag zur eigenen Profilierung leisten kann.
+
+### Differenzierte Betrachtung der Imagedimensionen
+
+Neben dem Gesamttransfer wurden die Effekte auf drei Imagedimensionen gesondert gemessen: das Qualitätsbild, das Preis-Leistungs-Bild und das Preisgünstigkeitsbild. Hierfür kam eine Zustimmungsskala von 1 (volle Zustimmung) bis 5 (keine Zustimmung) zum Einsatz. Die differenzierte Messung ermöglicht es, genauer zu bestimmen, auf welche Bestandteile des Images der positive Gesamteffekt zurückzuführen ist.
+
+Beim Qualitätsbild fällt der Transfer für alle sieben Herstellermarken positiv aus. Die Spitzenmarken schneiden hier etwas schwächer ab als beim Gesamteffekt, während die Schlusslichter Wrigley und Baileys etwas besser bewertet werden. Die Unterschiede zwischen den Marken sind beim Qualitätsbild somit insgesamt geringer ausgeprägt als beim Gesamttransfer.
+
+Das Preis-Leistungs-Bild bildet die subjektiv wahrgenommene Angemessenheit des Preises im Verhältnis zur gebotenen Qualität ab. Die Effekte sind hier deutlich schwächer als beim Qualitätsbild, fallen aber mehrheitlich positiv aus. Der Top-2-Box-Wert, also der Anteil der Antworten in den beiden zustimmenden Kategorien, liegt selbst bei Wrigley bei 53 % und bei Baileys bei 55 %. Die höheren Preise der Markenartikel werden offenbar durch die wahrgenommene Qualität überkompensiert. Aus Sicht der Befragten steht dem höheren Preis also eine entsprechend höhere Qualität gegenüber.
+
+Anders stellt sich das Preisgünstigkeitsbild dar. Bei Wrigley, Coca-Cola, Ferrero und Baileys liegen die Mittelwerte über 2,5. Bei Nivea, Wrigley, Coca-Cola, Ferrero und Baileys entfallen weniger als 50 % der Antworten auf die beiden oberen Zustimmungskategorien. Für diese Marken fällt die Zustimmung zu einer positiven Wirkung auf die wahrgenommene Preisgünstigkeit also vergleichsweise verhalten aus. Hier zeigt sich ein Risiko für das Preisimage von Aldi Süd, da Markenartikel offenbar mit einem höheren Preisniveau assoziiert werden, das nicht ohne Weiteres zum Bild eines Discounters passt.
+
+Als Zwischenfazit lässt sich festhalten, dass die positiven Effekte überwiegen: Das Angebot von Herstellermarken wirkt sich sowohl insgesamt als auch auf das Qualitäts- und das Preis-Leistungs-Bild positiv aus. Ein Risiko besteht jedoch hinsichtlich der wahrgenommenen Preisgünstigkeit.
+
+### Vergleich mit den Eigenmarken
+
+Um die Effekte der Herstellermarken einordnen zu können, wurden sie den Transfereffekten der Eigenmarken gegenübergestellt. Dazu wurde jeweils ein ungewichteter Mittelwert-Index über die sieben Herstellermarken und über die sieben besten der 23 Handelsmarken gebildet. Durch die Auswahl der jeweils stärksten Eigenmarken wird ein strenger Vergleichsmaßstab angelegt, der die Leistungsfähigkeit der Handelsmarken eher über- als unterschätzt.
+
+Beim Qualitätsbild übertreffen die Herstellermarken selbst die besten Eigenmarken, namentlich Cucina, Desira, Ombia, Choceur, Milfina, Rio d'Oro und Sun Snacks. Dieses Ergebnis stützt die Trading-up-Strategie, mit der Aldi Süd sein Sortiment in den vergangenen Jahren zunehmend um Markenartikel erweitert hat (Schneider, 2015).
+
+Beim Preis-Leistungs-Bild und beim Preisgünstigkeitsbild kehrt sich das Verhältnis hingegen um; hier liegen die Eigenmarken vorn. Für einen Discounter ist dieser Befund problematisch, da sein Wettbewerbsvorteil historisch auf der Kostenführerschaft und der daraus folgenden Preisführerschaft beruht (Schneider, 2015). Die Aufnahme von Markenartikeln stärkt damit zwar die Qualitätswahrnehmung, kann aber zugleich genau jene Imagedimension schwächen, die den Kern der Positionierung von Aldi Süd ausmacht. Für die Positionierung des Discounters ergibt sich daraus ein Zielkonflikt: Das Angebot von Markenartikeln muss so gestaltet werden, dass die Qualitätsvorteile genutzt werden, ohne die Wahrnehmung als preisgünstiger Anbieter zu gefährden.

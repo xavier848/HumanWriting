@@ -1,0 +1,10 @@
+{
+  "beschreibung": "Persönlicher Wortschatz von Xavier: Wörter aus seinen eigenen Chat-Nachrichten, die auch in einer Hausarbeit funktionieren (Stichprobe, nach Wortart, nicht nach Häufigkeit). Quelle: Auswertung in einem separaten Claude-Chat, Oktober 2026. referenzen.py vergleicht jedes Wort mit den Kalibrierungskorpora und erzeugt daraus menschlich-schreiben/references/persoenlicher-wortschatz.md.",
+  "gruppen": {
+    "Verben": ["verstehen", "erklären", "beschreiben", "vergleichen", "entwickeln", "beeinflussen", "verstärken", "mildern", "ermöglichen", "abdecken", "aufbauen", "gründen", "übernehmen", "vorschlagen", "festlegen", "lösen", "verbessern", "ändern", "entsprechen", "herausfinden", "vorgehen", "wiederholen", "zitieren", "wahrnehmen", "sich konzentrieren", "(eine These) aufstellen", "vorgeben", "sich lohnen"],
+    "Nomen: Denken und Argumentieren": ["Konzept", "Konstrukt", "System", "These", "Theorie", "Methode", "Aussage", "Quelle", "Beispiel", "Unterschied", "Vergleich", "Erklärung", "Beschreibung", "Lösung", "Thema", "Detail", "Kontext", "Ablauf", "Anforderung", "Meinung"],
+    "Nomen: Wirtschaft und Gesellschaft": ["Ziel", "Wert", "Risiko", "Chance", "Variable", "Wahrnehmung", "Gegenbewegung", "Kultur", "Markt", "Zielmarkt", "Unternehmen", "Strategie", "Transformation", "Partner", "Investor", "Fonds", "Anteile", "Rendite", "Liquidität", "Preisgestaltung", "Expansion", "Erweiterung", "Ausbau", "Kampagne", "Individualismus", "Lebensstil", "Werkzeug", "Werdegang", "Kaufverhalten", "Macht"],
+    "Adjektive und Adverbien": ["strukturell", "kulturell", "kontrollierbar", "kollektivistisch", "dynamisch", "finanziell", "endgültig", "vollständig", "persönlich", "wahrscheinlich", "realistisch", "unrealistisch", "wertbeständig", "international", "national", "generell", "einzeln"],
+    "Wendungen": ["im Vergleich zu", "basierend auf", "anhand von", "an sich", "im Detail", "Schritt für Schritt"]
+  }
+}

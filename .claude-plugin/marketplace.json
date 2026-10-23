@@ -1,0 +1,16 @@
+{
+  "name": "humanwriting",
+  "owner": {
+    "name": "Xavier Haas"
+  },
+  "metadata": {
+    "description": "Skills für menschlich klingende Hochschultexte – gemessen an quantitativen Kennzahlen menschlichen Schreibens."
+  },
+  "plugins": [
+    {
+      "name": "humanwriting-de",
+      "source": "./plugins/humanwriting-de",
+      "description": "Deutsch: Hochschultexte menschlich schreiben, statistisch analysieren und mit einem Stil-Coach in einer Messschleife überarbeiten."
+    }
+  ]
+}

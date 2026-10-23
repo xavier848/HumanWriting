@@ -1,0 +1,2407 @@
+{
+ "ki_typisch": [
+  {
+   "ngramm": "etwa",
+   "z": 14.19,
+   "ki_pro_1000": 1.969,
+   "mensch_pro_1000": 0.369,
+   "docs_ki": 327,
+   "docs_mensch": 156
+  },
+  {
+   "ngramm": "zugleich",
+   "z": 10.8,
+   "ki_pro_1000": 0.96,
+   "mensch_pro_1000": 0.139,
+   "docs_ki": 206,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "lässt",
+   "z": 10.39,
+   "ki_pro_1000": 1.774,
+   "mensch_pro_1000": 0.553,
+   "docs_ki": 301,
+   "docs_mensch": 248
+  },
+  {
+   "ngramm": "lässt sich",
+   "z": 10.36,
+   "ki_pro_1000": 1.384,
+   "mensch_pro_1000": 0.352,
+   "docs_ki": 269,
+   "docs_mensch": 174
+  },
+  {
+   "ngramm": "als",
+   "z": 10.34,
+   "ki_pro_1000": 10.104,
+   "mensch_pro_1000": 6.617,
+   "docs_ki": 403,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "sich",
+   "z": 10.09,
+   "ki_pro_1000": 12.739,
+   "mensch_pro_1000": 8.862,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "auf diese weise",
+   "z": 8.58,
+   "ki_pro_1000": 0.514,
+   "mensch_pro_1000": 0.054,
+   "docs_ki": 141,
+   "docs_mensch": 34
+  },
+  {
+   "ngramm": "diese weise",
+   "z": 8.58,
+   "ki_pro_1000": 0.514,
+   "mensch_pro_1000": 0.054,
+   "docs_ki": 141,
+   "docs_mensch": 34
+  },
+  {
+   "ngramm": "hinzu",
+   "z": 8.04,
+   "ki_pro_1000": 0.57,
+   "mensch_pro_1000": 0.092,
+   "docs_ki": 160,
+   "docs_mensch": 65
+  },
+  {
+   "ngramm": "damit",
+   "z": 7.84,
+   "ki_pro_1000": 2.508,
+   "mensch_pro_1000": 1.274,
+   "docs_ki": 349,
+   "docs_mensch": 356
+  },
+  {
+   "ngramm": "häufig",
+   "z": 7.35,
+   "ki_pro_1000": 1.087,
+   "mensch_pro_1000": 0.389,
+   "docs_ki": 215,
+   "docs_mensch": 189
+  },
+  {
+   "ngramm": "lassen sich",
+   "z": 7.26,
+   "ki_pro_1000": 0.833,
+   "mensch_pro_1000": 0.252,
+   "docs_ki": 192,
+   "docs_mensch": 148
+  },
+  {
+   "ngramm": "auf diese",
+   "z": 7.25,
+   "ki_pro_1000": 0.597,
+   "mensch_pro_1000": 0.134,
+   "docs_ki": 156,
+   "docs_mensch": 96
+  },
+  {
+   "ngramm": "sodass",
+   "z": 7.22,
+   "ki_pro_1000": 0.585,
+   "mensch_pro_1000": 0.129,
+   "docs_ki": 153,
+   "docs_mensch": 62
+  },
+  {
+   "ngramm": "kaum",
+   "z": 7.16,
+   "ki_pro_1000": 0.864,
+   "mensch_pro_1000": 0.274,
+   "docs_ki": 181,
+   "docs_mensch": 153
+  },
+  {
+   "ngramm": "während",
+   "z": 7.14,
+   "ki_pro_1000": 1.483,
+   "mensch_pro_1000": 0.652,
+   "docs_ki": 275,
+   "docs_mensch": 252
+  },
+  {
+   "ngramm": "ergibt sich",
+   "z": 7.08,
+   "ki_pro_1000": 0.502,
+   "mensch_pro_1000": 0.097,
+   "docs_ki": 135,
+   "docs_mensch": 69
+  },
+  {
+   "ngramm": "hinzu kommt",
+   "z": 6.88,
+   "ki_pro_1000": 0.331,
+   "mensch_pro_1000": 0.035,
+   "docs_ki": 99,
+   "docs_mensch": 27
+  },
+  {
+   "ngramm": "ergibt",
+   "z": 6.78,
+   "ki_pro_1000": 0.57,
+   "mensch_pro_1000": 0.139,
+   "docs_ki": 146,
+   "docs_mensch": 91
+  },
+  {
+   "ngramm": "sondern",
+   "z": 6.69,
+   "ki_pro_1000": 1.895,
+   "mensch_pro_1000": 0.976,
+   "docs_ki": 298,
+   "docs_mensch": 330
+  },
+  {
+   "ngramm": "lassen",
+   "z": 6.67,
+   "ki_pro_1000": 1.263,
+   "mensch_pro_1000": 0.548,
+   "docs_ki": 242,
+   "docs_mensch": 261
+  },
+  {
+   "ngramm": "jedoch",
+   "z": 6.59,
+   "ki_pro_1000": 2.309,
+   "mensch_pro_1000": 1.29,
+   "docs_ki": 341,
+   "docs_mensch": 322
+  },
+  {
+   "ngramm": "dagegen",
+   "z": 6.31,
+   "ki_pro_1000": 0.536,
+   "mensch_pro_1000": 0.142,
+   "docs_ki": 139,
+   "docs_mensch": 83
+  },
+  {
+   "ngramm": "selbst",
+   "z": 6.24,
+   "ki_pro_1000": 1.517,
+   "mensch_pro_1000": 0.757,
+   "docs_ki": 259,
+   "docs_mensch": 277
+  },
+  {
+   "ngramm": "weitgehend",
+   "z": 6.2,
+   "ki_pro_1000": 0.458,
+   "mensch_pro_1000": 0.108,
+   "docs_ki": 122,
+   "docs_mensch": 66
+  },
+  {
+   "ngramm": "unmittelbar",
+   "z": 6.08,
+   "ki_pro_1000": 0.356,
+   "mensch_pro_1000": 0.065,
+   "docs_ki": 95,
+   "docs_mensch": 49
+  },
+  {
+   "ngramm": "ein",
+   "z": 6.01,
+   "ki_pro_1000": 7.996,
+   "mensch_pro_1000": 6.123,
+   "docs_ki": 401,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "bemerkenswert",
+   "z": 5.89,
+   "ki_pro_1000": 0.195,
+   "mensch_pro_1000": 0.01,
+   "docs_ki": 62,
+   "docs_mensch": 9
+  },
+  {
+   "ngramm": "nutzerinnen und",
+   "z": 5.78,
+   "ki_pro_1000": 0.161,
+   "mensch_pro_1000": 0.002,
+   "docs_ki": 25,
+   "docs_mensch": 2
+  },
+  {
+   "ngramm": "die",
+   "z": 5.66,
+   "ki_pro_1000": 44.94,
+   "mensch_pro_1000": 40.822,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "hinaus",
+   "z": 5.64,
+   "ki_pro_1000": 0.858,
+   "mensch_pro_1000": 0.363,
+   "docs_ki": 215,
+   "docs_mensch": 175
+  },
+  {
+   "ngramm": "über",
+   "z": 5.59,
+   "ki_pro_1000": 3.863,
+   "mensch_pro_1000": 2.677,
+   "docs_ki": 371,
+   "docs_mensch": 402
+  },
+  {
+   "ngramm": "darüber hinaus",
+   "z": 5.59,
+   "ki_pro_1000": 0.718,
+   "mensch_pro_1000": 0.279,
+   "docs_ki": 194,
+   "docs_mensch": 142
+  },
+  {
+   "ngramm": "zudem",
+   "z": 5.57,
+   "ki_pro_1000": 1.22,
+   "mensch_pro_1000": 0.611,
+   "docs_ki": 259,
+   "docs_mensch": 207
+  },
+  {
+   "ngramm": "überwiegend",
+   "z": 5.54,
+   "ki_pro_1000": 0.39,
+   "mensch_pro_1000": 0.098,
+   "docs_ki": 104,
+   "docs_mensch": 62
+  },
+  {
+   "ngramm": "erscheint",
+   "z": 5.54,
+   "ki_pro_1000": 0.452,
+   "mensch_pro_1000": 0.129,
+   "docs_ki": 111,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "bemerkenswert ist",
+   "z": 5.5,
+   "ki_pro_1000": 0.155,
+   "mensch_pro_1000": 0.004,
+   "docs_ki": 50,
+   "docs_mensch": 4
+  },
+  {
+   "ngramm": "daher",
+   "z": 5.47,
+   "ki_pro_1000": 1.158,
+   "mensch_pro_1000": 0.576,
+   "docs_ki": 247,
+   "docs_mensch": 222
+  },
+  {
+   "ngramm": "lediglich",
+   "z": 5.38,
+   "ki_pro_1000": 0.693,
+   "mensch_pro_1000": 0.275,
+   "docs_ki": 173,
+   "docs_mensch": 145
+  },
+  {
+   "ngramm": "weise",
+   "z": 5.3,
+   "ki_pro_1000": 0.727,
+   "mensch_pro_1000": 0.301,
+   "docs_ki": 181,
+   "docs_mensch": 165
+  },
+  {
+   "ngramm": "mitarbeitenden",
+   "z": 5.3,
+   "ki_pro_1000": 0.217,
+   "mensch_pro_1000": 0.028,
+   "docs_ki": 31,
+   "docs_mensch": 7
+  },
+  {
+   "ngramm": "in der regel",
+   "z": 5.29,
+   "ki_pro_1000": 0.467,
+   "mensch_pro_1000": 0.147,
+   "docs_ki": 114,
+   "docs_mensch": 80
+  },
+  {
+   "ngramm": "der regel",
+   "z": 5.29,
+   "ki_pro_1000": 0.467,
+   "mensch_pro_1000": 0.147,
+   "docs_ki": 114,
+   "docs_mensch": 80
+  },
+  {
+   "ngramm": "umfasst",
+   "z": 5.25,
+   "ki_pro_1000": 0.399,
+   "mensch_pro_1000": 0.112,
+   "docs_ki": 102,
+   "docs_mensch": 80
+  },
+  {
+   "ngramm": "und nutzer",
+   "z": 5.25,
+   "ki_pro_1000": 0.13,
+   "mensch_pro_1000": 0.001,
+   "docs_ki": 23,
+   "docs_mensch": 1
+  },
+  {
+   "ngramm": "nutzerinnen und nutzer",
+   "z": 5.25,
+   "ki_pro_1000": 0.13,
+   "mensch_pro_1000": 0.001,
+   "docs_ki": 23,
+   "docs_mensch": 1
+  },
+  {
+   "ngramm": "während die",
+   "z": 5.23,
+   "ki_pro_1000": 0.328,
+   "mensch_pro_1000": 0.078,
+   "docs_ki": 92,
+   "docs_mensch": 60
+  },
+  {
+   "ngramm": "ist dabei",
+   "z": 5.23,
+   "ki_pro_1000": 0.306,
+   "mensch_pro_1000": 0.067,
+   "docs_ki": 91,
+   "docs_mensch": 52
+  },
+  {
+   "ngramm": "darüber",
+   "z": 5.21,
+   "ki_pro_1000": 0.957,
+   "mensch_pro_1000": 0.458,
+   "docs_ki": 230,
+   "docs_mensch": 219
+  },
+  {
+   "ngramm": "sondern als",
+   "z": 5.19,
+   "ki_pro_1000": 0.223,
+   "mensch_pro_1000": 0.033,
+   "docs_ki": 63,
+   "docs_mensch": 26
+  },
+  {
+   "ngramm": "eigene",
+   "z": 5.19,
+   "ki_pro_1000": 0.799,
+   "mensch_pro_1000": 0.354,
+   "docs_ki": 166,
+   "docs_mensch": 185
+  },
+  {
+   "ngramm": "befund",
+   "z": 5.11,
+   "ki_pro_1000": 0.198,
+   "mensch_pro_1000": 0.025,
+   "docs_ki": 51,
+   "docs_mensch": 16
+  },
+  {
+   "ngramm": "regel",
+   "z": 5.1,
+   "ki_pro_1000": 0.498,
+   "mensch_pro_1000": 0.173,
+   "docs_ki": 118,
+   "docs_mensch": 93
+  },
+  {
+   "ngramm": "gezielt",
+   "z": 5.09,
+   "ki_pro_1000": 0.3,
+   "mensch_pro_1000": 0.069,
+   "docs_ki": 79,
+   "docs_mensch": 49
+  },
+  {
+   "ngramm": "maßgeblich",
+   "z": 5.09,
+   "ki_pro_1000": 0.288,
+   "mensch_pro_1000": 0.063,
+   "docs_ki": 86,
+   "docs_mensch": 49
+  },
+  {
+   "ngramm": "nutzerinnen",
+   "z": 5.08,
+   "ki_pro_1000": 0.161,
+   "mensch_pro_1000": 0.012,
+   "docs_ki": 25,
+   "docs_mensch": 6
+  },
+  {
+   "ngramm": "bislang",
+   "z": 5.07,
+   "ki_pro_1000": 0.412,
+   "mensch_pro_1000": 0.126,
+   "docs_ki": 102,
+   "docs_mensch": 73
+  },
+  {
+   "ngramm": "folgenden werden",
+   "z": 5.06,
+   "ki_pro_1000": 0.201,
+   "mensch_pro_1000": 0.027,
+   "docs_ki": 64,
+   "docs_mensch": 21
+  },
+  {
+   "ngramm": "im folgenden werden",
+   "z": 5.06,
+   "ki_pro_1000": 0.201,
+   "mensch_pro_1000": 0.027,
+   "docs_ki": 64,
+   "docs_mensch": 21
+  },
+  {
+   "ngramm": "zeigt sich",
+   "z": 5.05,
+   "ki_pro_1000": 0.514,
+   "mensch_pro_1000": 0.184,
+   "docs_ki": 134,
+   "docs_mensch": 106
+  },
+  {
+   "ngramm": "dabei",
+   "z": 5.04,
+   "ki_pro_1000": 2.322,
+   "mensch_pro_1000": 1.508,
+   "docs_ki": 347,
+   "docs_mensch": 360
+  },
+  {
+   "ngramm": "bildet",
+   "z": 5.03,
+   "ki_pro_1000": 0.452,
+   "mensch_pro_1000": 0.149,
+   "docs_ki": 126,
+   "docs_mensch": 98
+  },
+  {
+   "ngramm": "ab",
+   "z": 5.01,
+   "ki_pro_1000": 0.953,
+   "mensch_pro_1000": 0.471,
+   "docs_ki": 202,
+   "docs_mensch": 250
+  },
+  {
+   "ngramm": "kommt",
+   "z": 5.01,
+   "ki_pro_1000": 0.792,
+   "mensch_pro_1000": 0.362,
+   "docs_ki": 196,
+   "docs_mensch": 197
+  },
+  {
+   "ngramm": "befragten",
+   "z": 4.97,
+   "ki_pro_1000": 0.892,
+   "mensch_pro_1000": 0.431,
+   "docs_ki": 90,
+   "docs_mensch": 108
+  },
+  {
+   "ngramm": "gerade",
+   "z": 4.94,
+   "ki_pro_1000": 0.808,
+   "mensch_pro_1000": 0.376,
+   "docs_ki": 189,
+   "docs_mensch": 177
+  },
+  {
+   "ngramm": "erheblich",
+   "z": 4.88,
+   "ki_pro_1000": 0.223,
+   "mensch_pro_1000": 0.039,
+   "docs_ki": 66,
+   "docs_mensch": 34
+  },
+  {
+   "ngramm": "rund",
+   "z": 4.83,
+   "ki_pro_1000": 0.455,
+   "mensch_pro_1000": 0.16,
+   "docs_ki": 103,
+   "docs_mensch": 92
+  },
+  {
+   "ngramm": "gelten",
+   "z": 4.82,
+   "ki_pro_1000": 0.384,
+   "mensch_pro_1000": 0.12,
+   "docs_ki": 103,
+   "docs_mensch": 87
+  },
+  {
+   "ngramm": "ergänzend",
+   "z": 4.8,
+   "ki_pro_1000": 0.161,
+   "mensch_pro_1000": 0.017,
+   "docs_ki": 52,
+   "docs_mensch": 13
+  },
+  {
+   "ngramm": "vielmehr",
+   "z": 4.79,
+   "ki_pro_1000": 0.56,
+   "mensch_pro_1000": 0.225,
+   "docs_ki": 145,
+   "docs_mensch": 137
+  },
+  {
+   "ngramm": "zentrale",
+   "z": 4.76,
+   "ki_pro_1000": 0.489,
+   "mensch_pro_1000": 0.183,
+   "docs_ki": 133,
+   "docs_mensch": 113
+  },
+  {
+   "ngramm": "eine",
+   "z": 4.75,
+   "ki_pro_1000": 10.142,
+   "mensch_pro_1000": 8.453,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "hingegen",
+   "z": 4.74,
+   "ki_pro_1000": 0.532,
+   "mensch_pro_1000": 0.21,
+   "docs_ki": 145,
+   "docs_mensch": 133
+  },
+  {
+   "ngramm": "sie",
+   "z": 4.73,
+   "ki_pro_1000": 4.907,
+   "mensch_pro_1000": 3.75,
+   "docs_ki": 379,
+   "docs_mensch": 398
+  },
+  {
+   "ngramm": "übrigen",
+   "z": 4.7,
+   "ki_pro_1000": 0.229,
+   "mensch_pro_1000": 0.046,
+   "docs_ki": 57,
+   "docs_mensch": 32
+  },
+  {
+   "ngramm": "die befragten",
+   "z": 4.68,
+   "ki_pro_1000": 0.294,
+   "mensch_pro_1000": 0.078,
+   "docs_ki": 54,
+   "docs_mensch": 39
+  },
+  {
+   "ngramm": "befunde",
+   "z": 4.68,
+   "ki_pro_1000": 0.257,
+   "mensch_pro_1000": 0.06,
+   "docs_ki": 62,
+   "docs_mensch": 36
+  },
+  {
+   "ngramm": "setzt",
+   "z": 4.66,
+   "ki_pro_1000": 0.399,
+   "mensch_pro_1000": 0.135,
+   "docs_ki": 106,
+   "docs_mensch": 100
+  },
+  {
+   "ngramm": "zeigt",
+   "z": 4.65,
+   "ki_pro_1000": 1.04,
+   "mensch_pro_1000": 0.562,
+   "docs_ki": 227,
+   "docs_mensch": 240
+  },
+  {
+   "ngramm": "sich damit",
+   "z": 4.6,
+   "ki_pro_1000": 0.195,
+   "mensch_pro_1000": 0.034,
+   "docs_ki": 54,
+   "docs_mensch": 25
+  },
+  {
+   "ngramm": "erforderlich",
+   "z": 4.56,
+   "ki_pro_1000": 0.306,
+   "mensch_pro_1000": 0.088,
+   "docs_ki": 84,
+   "docs_mensch": 55
+  },
+  {
+   "ngramm": "vergleichsweise",
+   "z": 4.56,
+   "ki_pro_1000": 0.276,
+   "mensch_pro_1000": 0.072,
+   "docs_ki": 73,
+   "docs_mensch": 46
+  },
+  {
+   "ngramm": "sich die",
+   "z": 4.52,
+   "ki_pro_1000": 1.371,
+   "mensch_pro_1000": 0.821,
+   "docs_ki": 269,
+   "docs_mensch": 335
+  },
+  {
+   "ngramm": "gemeinsam",
+   "z": 4.52,
+   "ki_pro_1000": 0.362,
+   "mensch_pro_1000": 0.119,
+   "docs_ki": 92,
+   "docs_mensch": 78
+  },
+  {
+   "ngramm": "dient",
+   "z": 4.51,
+   "ki_pro_1000": 0.371,
+   "mensch_pro_1000": 0.125,
+   "docs_ki": 101,
+   "docs_mensch": 90
+  },
+  {
+   "ngramm": "da",
+   "z": 4.48,
+   "ki_pro_1000": 2.204,
+   "mensch_pro_1000": 1.491,
+   "docs_ki": 325,
+   "docs_mensch": 345
+  },
+  {
+   "ngramm": "ist zudem",
+   "z": 4.47,
+   "ki_pro_1000": 0.139,
+   "mensch_pro_1000": 0.015,
+   "docs_ki": 43,
+   "docs_mensch": 13
+  },
+  {
+   "ngramm": "gewissermaßen",
+   "z": 4.46,
+   "ki_pro_1000": 0.142,
+   "mensch_pro_1000": 0.016,
+   "docs_ki": 43,
+   "docs_mensch": 12
+  },
+  {
+   "ngramm": "somit nicht",
+   "z": 4.46,
+   "ki_pro_1000": 0.145,
+   "mensch_pro_1000": 0.017,
+   "docs_ki": 42,
+   "docs_mensch": 15
+  },
+  {
+   "ngramm": "beide",
+   "z": 4.46,
+   "ki_pro_1000": 0.483,
+   "mensch_pro_1000": 0.193,
+   "docs_ki": 119,
+   "docs_mensch": 127
+  },
+  {
+   "ngramm": "bedeutet dies",
+   "z": 4.44,
+   "ki_pro_1000": 0.195,
+   "mensch_pro_1000": 0.037,
+   "docs_ki": 59,
+   "docs_mensch": 30
+  },
+  {
+   "ngramm": "kommt , dass",
+   "z": 4.42,
+   "ki_pro_1000": 0.167,
+   "mensch_pro_1000": 0.026,
+   "docs_ki": 51,
+   "docs_mensch": 20
+  },
+  {
+   "ngramm": "stärker",
+   "z": 4.41,
+   "ki_pro_1000": 0.424,
+   "mensch_pro_1000": 0.16,
+   "docs_ki": 113,
+   "docs_mensch": 92
+  },
+  {
+   "ngramm": "damit als",
+   "z": 4.41,
+   "ki_pro_1000": 0.105,
+   "mensch_pro_1000": 0.004,
+   "docs_ki": 33,
+   "docs_mensch": 4
+  },
+  {
+   "ngramm": "bleibt",
+   "z": 4.36,
+   "ki_pro_1000": 0.508,
+   "mensch_pro_1000": 0.213,
+   "docs_ki": 131,
+   "docs_mensch": 136
+  },
+  {
+   "ngramm": "deutlich",
+   "z": 4.36,
+   "ki_pro_1000": 1.071,
+   "mensch_pro_1000": 0.609,
+   "docs_ki": 222,
+   "docs_mensch": 249
+  },
+  {
+   "ngramm": "teilnehmenden",
+   "z": 4.36,
+   "ki_pro_1000": 0.282,
+   "mensch_pro_1000": 0.081,
+   "docs_ki": 43,
+   "docs_mensch": 37
+  },
+  {
+   "ngramm": "– etwa",
+   "z": 4.35,
+   "ki_pro_1000": 0.099,
+   "mensch_pro_1000": 0.003,
+   "docs_ki": 29,
+   "docs_mensch": 3
+  },
+  {
+   "ngramm": "vgl abb",
+   "z": 4.34,
+   "ki_pro_1000": 0.183,
+   "mensch_pro_1000": 0.034,
+   "docs_ki": 28,
+   "docs_mensch": 8
+  },
+  {
+   "ngramm": "daraus",
+   "z": 4.34,
+   "ki_pro_1000": 0.622,
+   "mensch_pro_1000": 0.29,
+   "docs_ki": 157,
+   "docs_mensch": 176
+  },
+  {
+   "ngramm": "mitarbeitende",
+   "z": 4.3,
+   "ki_pro_1000": 0.093,
+   "mensch_pro_1000": 0.002,
+   "docs_ki": 21,
+   "docs_mensch": 2
+  },
+  {
+   "ngramm": "etwa im",
+   "z": 4.3,
+   "ki_pro_1000": 0.108,
+   "mensch_pro_1000": 0.007,
+   "docs_ki": 32,
+   "docs_mensch": 6
+  },
+  {
+   "ngramm": "erweist",
+   "z": 4.27,
+   "ki_pro_1000": 0.155,
+   "mensch_pro_1000": 0.024,
+   "docs_ki": 48,
+   "docs_mensch": 20
+  },
+  {
+   "ngramm": "dies , dass",
+   "z": 4.27,
+   "ki_pro_1000": 0.152,
+   "mensch_pro_1000": 0.022,
+   "docs_ki": 46,
+   "docs_mensch": 18
+  },
+  {
+   "ngramm": "etwa in",
+   "z": 4.25,
+   "ki_pro_1000": 0.142,
+   "mensch_pro_1000": 0.019,
+   "docs_ki": 43,
+   "docs_mensch": 13
+  },
+  {
+   "ngramm": "hinzu kommen",
+   "z": 4.25,
+   "ki_pro_1000": 0.13,
+   "mensch_pro_1000": 0.015,
+   "docs_ki": 41,
+   "docs_mensch": 13
+  },
+  {
+   "ngramm": "erweist sich",
+   "z": 4.25,
+   "ki_pro_1000": 0.136,
+   "mensch_pro_1000": 0.017,
+   "docs_ki": 42,
+   "docs_mensch": 15
+  },
+  {
+   "ngramm": "nicht als",
+   "z": 4.24,
+   "ki_pro_1000": 0.328,
+   "mensch_pro_1000": 0.11,
+   "docs_ki": 96,
+   "docs_mensch": 82
+  },
+  {
+   "ngramm": "hängt",
+   "z": 4.22,
+   "ki_pro_1000": 0.263,
+   "mensch_pro_1000": 0.075,
+   "docs_ki": 75,
+   "docs_mensch": 57
+  },
+  {
+   "ngramm": "als vielmehr",
+   "z": 4.2,
+   "ki_pro_1000": 0.111,
+   "mensch_pro_1000": 0.009,
+   "docs_ki": 33,
+   "docs_mensch": 8
+  },
+  {
+   "ngramm": "einschränkend ist",
+   "z": 4.19,
+   "ki_pro_1000": 0.093,
+   "mensch_pro_1000": 0.003,
+   "docs_ki": 30,
+   "docs_mensch": 3
+  },
+  {
+   "ngramm": "ergibt sich daraus",
+   "z": 4.19,
+   "ki_pro_1000": 0.093,
+   "mensch_pro_1000": 0.003,
+   "docs_ki": 29,
+   "docs_mensch": 3
+  },
+  {
+   "ngramm": "eng",
+   "z": 4.19,
+   "ki_pro_1000": 0.241,
+   "mensch_pro_1000": 0.065,
+   "docs_ki": 72,
+   "docs_mensch": 51
+  },
+  {
+   "ngramm": "etwa die",
+   "z": 4.16,
+   "ki_pro_1000": 0.161,
+   "mensch_pro_1000": 0.028,
+   "docs_ki": 46,
+   "docs_mensch": 22
+  },
+  {
+   "ngramm": "zu berücksichtigen",
+   "z": 4.16,
+   "ki_pro_1000": 0.229,
+   "mensch_pro_1000": 0.06,
+   "docs_ki": 73,
+   "docs_mensch": 40
+  },
+  {
+   "ngramm": "unterscheiden",
+   "z": 4.12,
+   "ki_pro_1000": 0.44,
+   "mensch_pro_1000": 0.182,
+   "docs_ki": 112,
+   "docs_mensch": 111
+  },
+  {
+   "ngramm": "ohne",
+   "z": 4.12,
+   "ki_pro_1000": 0.947,
+   "mensch_pro_1000": 0.537,
+   "docs_ki": 204,
+   "docs_mensch": 255
+  },
+  {
+   "ngramm": "da sie",
+   "z": 4.11,
+   "ki_pro_1000": 0.347,
+   "mensch_pro_1000": 0.126,
+   "docs_ki": 98,
+   "docs_mensch": 87
+  },
+  {
+   "ngramm": "erfasst",
+   "z": 4.11,
+   "ki_pro_1000": 0.347,
+   "mensch_pro_1000": 0.126,
+   "docs_ki": 74,
+   "docs_mensch": 83
+  },
+  {
+   "ngramm": "sich ein",
+   "z": 4.11,
+   "ki_pro_1000": 0.331,
+   "mensch_pro_1000": 0.117,
+   "docs_ki": 93,
+   "docs_mensch": 92
+  },
+  {
+   "ngramm": "sich daher",
+   "z": 4.1,
+   "ki_pro_1000": 0.161,
+   "mensch_pro_1000": 0.029,
+   "docs_ki": 51,
+   "docs_mensch": 23
+  },
+  {
+   "ngramm": "besonders deutlich",
+   "z": 4.1,
+   "ki_pro_1000": 0.127,
+   "mensch_pro_1000": 0.016,
+   "docs_ki": 41,
+   "docs_mensch": 12
+  },
+  {
+   "ngramm": "ermöglicht es",
+   "z": 4.1,
+   "ki_pro_1000": 0.124,
+   "mensch_pro_1000": 0.015,
+   "docs_ki": 40,
+   "docs_mensch": 12
+  },
+  {
+   "ngramm": "dort",
+   "z": 4.1,
+   "ki_pro_1000": 0.495,
+   "mensch_pro_1000": 0.219,
+   "docs_ki": 122,
+   "docs_mensch": 133
+  },
+  {
+   "ngramm": "person",
+   "z": 4.09,
+   "ki_pro_1000": 0.554,
+   "mensch_pro_1000": 0.258,
+   "docs_ki": 93,
+   "docs_mensch": 122
+  },
+  {
+   "ngramm": "sowie",
+   "z": 4.0,
+   "ki_pro_1000": 2.508,
+   "mensch_pro_1000": 1.817,
+   "docs_ki": 332,
+   "docs_mensch": 351
+  },
+  {
+   "ngramm": "ist damit",
+   "z": 4.0,
+   "ki_pro_1000": 0.145,
+   "mensch_pro_1000": 0.025,
+   "docs_ki": 46,
+   "docs_mensch": 20
+  },
+  {
+   "ngramm": "zwar",
+   "z": 3.99,
+   "ki_pro_1000": 0.811,
+   "mensch_pro_1000": 0.446,
+   "docs_ki": 192,
+   "docs_mensch": 234
+  },
+  {
+   "ngramm": "auffällig ist",
+   "z": 3.99,
+   "ki_pro_1000": 0.142,
+   "mensch_pro_1000": 0.024,
+   "docs_ki": 43,
+   "docs_mensch": 19
+  },
+  {
+   "ngramm": "wobei",
+   "z": 3.99,
+   "ki_pro_1000": 0.495,
+   "mensch_pro_1000": 0.225,
+   "docs_ki": 131,
+   "docs_mensch": 135
+  },
+  {
+   "ngramm": "einschränkend",
+   "z": 3.97,
+   "ki_pro_1000": 0.099,
+   "mensch_pro_1000": 0.008,
+   "docs_ki": 32,
+   "docs_mensch": 7
+  },
+  {
+   "ngramm": "diesem hintergrund",
+   "z": 3.96,
+   "ki_pro_1000": 0.18,
+   "mensch_pro_1000": 0.04,
+   "docs_ki": 58,
+   "docs_mensch": 30
+  },
+  {
+   "ngramm": "vor diesem hintergrund",
+   "z": 3.96,
+   "ki_pro_1000": 0.18,
+   "mensch_pro_1000": 0.04,
+   "docs_ki": 58,
+   "docs_mensch": 30
+  },
+  {
+   "ngramm": "für die vorliegende",
+   "z": 3.95,
+   "ki_pro_1000": 0.127,
+   "mensch_pro_1000": 0.018,
+   "docs_ki": 33,
+   "docs_mensch": 13
+  },
+  {
+   "ngramm": "erfassen",
+   "z": 3.95,
+   "ki_pro_1000": 0.235,
+   "mensch_pro_1000": 0.069,
+   "docs_ki": 64,
+   "docs_mensch": 53
+  },
+  {
+   "ngramm": "darin",
+   "z": 3.95,
+   "ki_pro_1000": 0.532,
+   "mensch_pro_1000": 0.252,
+   "docs_ki": 133,
+   "docs_mensch": 147
+  },
+  {
+   "ngramm": "sich daraus",
+   "z": 3.92,
+   "ki_pro_1000": 0.158,
+   "mensch_pro_1000": 0.031,
+   "docs_ki": 49,
+   "docs_mensch": 26
+  },
+  {
+   "ngramm": "ableiten",
+   "z": 3.89,
+   "ki_pro_1000": 0.176,
+   "mensch_pro_1000": 0.04,
+   "docs_ki": 54,
+   "docs_mensch": 31
+  },
+  {
+   "ngramm": "gemeinsam mit",
+   "z": 3.88,
+   "ki_pro_1000": 0.149,
+   "mensch_pro_1000": 0.028,
+   "docs_ki": 43,
+   "docs_mensch": 22
+  },
+  {
+   "ngramm": "sodass sich",
+   "z": 3.88,
+   "ki_pro_1000": 0.099,
+   "mensch_pro_1000": 0.009,
+   "docs_ki": 30,
+   "docs_mensch": 8
+  },
+  {
+   "ngramm": "in besonderem maße",
+   "z": 3.87,
+   "ki_pro_1000": 0.105,
+   "mensch_pro_1000": 0.011,
+   "docs_ki": 32,
+   "docs_mensch": 9
+  },
+  {
+   "ngramm": "besonderem maße",
+   "z": 3.87,
+   "ki_pro_1000": 0.105,
+   "mensch_pro_1000": 0.011,
+   "docs_ki": 32,
+   "docs_mensch": 9
+  },
+  {
+   "ngramm": "vor diesem",
+   "z": 3.86,
+   "ki_pro_1000": 0.18,
+   "mensch_pro_1000": 0.043,
+   "docs_ki": 58,
+   "docs_mensch": 32
+  },
+  {
+   "ngramm": "zunächst",
+   "z": 3.86,
+   "ki_pro_1000": 0.926,
+   "mensch_pro_1000": 0.543,
+   "docs_ki": 216,
+   "docs_mensch": 235
+  },
+  {
+   "ngramm": "vor",
+   "z": 3.85,
+   "ki_pro_1000": 2.585,
+   "mensch_pro_1000": 1.907,
+   "docs_ki": 347,
+   "docs_mensch": 384
+  },
+  {
+   "ngramm": "nicht allein",
+   "z": 3.84,
+   "ki_pro_1000": 0.152,
+   "mensch_pro_1000": 0.03,
+   "docs_ki": 45,
+   "docs_mensch": 24
+  },
+  {
+   "ngramm": "liegt",
+   "z": 3.82,
+   "ki_pro_1000": 0.858,
+   "mensch_pro_1000": 0.494,
+   "docs_ki": 189,
+   "docs_mensch": 236
+  },
+  {
+   "ngramm": "entscheidend ist",
+   "z": 3.8,
+   "ki_pro_1000": 0.093,
+   "mensch_pro_1000": 0.008,
+   "docs_ki": 30,
+   "docs_mensch": 6
+  },
+  {
+   "ngramm": "ausdrücklich",
+   "z": 3.79,
+   "ki_pro_1000": 0.118,
+   "mensch_pro_1000": 0.017,
+   "docs_ki": 34,
+   "docs_mensch": 12
+  }
+ ],
+ "mensch_typisch": [
+  {
+   "ngramm": "es",
+   "z": -8.76,
+   "ki_pro_1000": 3.247,
+   "mensch_pro_1000": 5.784,
+   "docs_ki": 361,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "z",
+   "z": -8.44,
+   "ki_pro_1000": 0.034,
+   "mensch_pro_1000": 0.925,
+   "docs_ki": 4,
+   "docs_mensch": 241
+  },
+  {
+   "ngramm": "z b",
+   "z": -8.1,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.789,
+   "docs_ki": 1,
+   "docs_mensch": 232
+  },
+  {
+   "ngramm": "ich",
+   "z": -7.65,
+   "ki_pro_1000": 0.155,
+   "mensch_pro_1000": 1.02,
+   "docs_ki": 12,
+   "docs_mensch": 132
+  },
+  {
+   "ngramm": "kapitel",
+   "z": -7.46,
+   "ki_pro_1000": 0.22,
+   "mensch_pro_1000": 1.106,
+   "docs_ki": 50,
+   "docs_mensch": 225
+  },
+  {
+   "ngramm": "immer",
+   "z": -7.04,
+   "ki_pro_1000": 0.217,
+   "mensch_pro_1000": 1.021,
+   "docs_ki": 61,
+   "docs_mensch": 308
+  },
+  {
+   "ngramm": "wir",
+   "z": -7.03,
+   "ki_pro_1000": 0.034,
+   "mensch_pro_1000": 0.665,
+   "docs_ki": 9,
+   "docs_mensch": 141
+  },
+  {
+   "ngramm": "auch",
+   "z": -7.0,
+   "ki_pro_1000": 4.414,
+   "mensch_pro_1000": 6.633,
+   "docs_ki": 391,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "man",
+   "z": -6.98,
+   "ki_pro_1000": 0.35,
+   "mensch_pro_1000": 1.24,
+   "docs_ki": 89,
+   "docs_mensch": 266
+  },
+  {
+   "ngramm": "arbeit",
+   "z": -6.91,
+   "ki_pro_1000": 0.96,
+   "mensch_pro_1000": 2.155,
+   "docs_ki": 147,
+   "docs_mensch": 321
+  },
+  {
+   "ngramm": "b",
+   "z": -6.82,
+   "ki_pro_1000": 0.22,
+   "mensch_pro_1000": 0.989,
+   "docs_ki": 26,
+   "docs_mensch": 257
+  },
+  {
+   "ngramm": "so",
+   "z": -6.45,
+   "ki_pro_1000": 1.09,
+   "mensch_pro_1000": 2.235,
+   "docs_ki": 235,
+   "docs_mensch": 388
+  },
+  {
+   "ngramm": "des",
+   "z": -6.37,
+   "ki_pro_1000": 5.752,
+   "mensch_pro_1000": 7.999,
+   "docs_ki": 397,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "aber",
+   "z": -6.28,
+   "ki_pro_1000": 0.706,
+   "mensch_pro_1000": 1.656,
+   "docs_ki": 159,
+   "docs_mensch": 358
+  },
+  {
+   "ngramm": "sehr",
+   "z": -6.18,
+   "ki_pro_1000": 0.297,
+   "mensch_pro_1000": 1.01,
+   "docs_ki": 76,
+   "docs_mensch": 312
+  },
+  {
+   "ngramm": "schon",
+   "z": -6.0,
+   "ki_pro_1000": 0.053,
+   "mensch_pro_1000": 0.543,
+   "docs_ki": 16,
+   "docs_mensch": 220
+  },
+  {
+   "ngramm": "haben",
+   "z": -5.78,
+   "ki_pro_1000": 0.923,
+   "mensch_pro_1000": 1.862,
+   "docs_ki": 181,
+   "docs_mensch": 376
+  },
+  {
+   "ngramm": "gibt",
+   "z": -5.53,
+   "ki_pro_1000": 0.319,
+   "mensch_pro_1000": 0.939,
+   "docs_ki": 91,
+   "docs_mensch": 311
+  },
+  {
+   "ngramm": "bzw",
+   "z": -5.33,
+   "ki_pro_1000": 0.387,
+   "mensch_pro_1000": 1.012,
+   "docs_ki": 93,
+   "docs_mensch": 274
+  },
+  {
+   "ngramm": "zu",
+   "z": -5.14,
+   "ki_pro_1000": 10.532,
+   "mensch_pro_1000": 12.906,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "der",
+   "z": -5.14,
+   "ki_pro_1000": 33.978,
+   "mensch_pro_1000": 38.226,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "in",
+   "z": -5.13,
+   "ki_pro_1000": 16.156,
+   "mensch_pro_1000": 19.078,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "innen",
+   "z": -5.08,
+   "ki_pro_1000": 0.139,
+   "mensch_pro_1000": 0.579,
+   "docs_ki": 23,
+   "docs_mensch": 75
+  },
+  {
+   "ngramm": "von",
+   "z": -5.02,
+   "ki_pro_1000": 9.984,
+   "mensch_pro_1000": 12.245,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "gibt es",
+   "z": -4.98,
+   "ki_pro_1000": 0.074,
+   "mensch_pro_1000": 0.449,
+   "docs_ki": 24,
+   "docs_mensch": 212
+  },
+  {
+   "ngramm": "welche",
+   "z": -4.87,
+   "ki_pro_1000": 0.678,
+   "mensch_pro_1000": 1.354,
+   "docs_ki": 146,
+   "docs_mensch": 322
+  },
+  {
+   "ngramm": "mitarbeiter",
+   "z": -4.86,
+   "ki_pro_1000": 0.127,
+   "mensch_pro_1000": 0.529,
+   "docs_ki": 28,
+   "docs_mensch": 109
+  },
+  {
+   "ngramm": "zum beispiel",
+   "z": -4.86,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.281,
+   "docs_ki": 0,
+   "docs_mensch": 119
+  },
+  {
+   "ngramm": "aber auch",
+   "z": -4.81,
+   "ki_pro_1000": 0.105,
+   "mensch_pro_1000": 0.484,
+   "docs_ki": 30,
+   "docs_mensch": 223
+  },
+  {
+   "ngramm": "dieser arbeit",
+   "z": -4.74,
+   "ki_pro_1000": 0.121,
+   "mensch_pro_1000": 0.503,
+   "docs_ki": 31,
+   "docs_mensch": 180
+  },
+  {
+   "ngramm": "doch",
+   "z": -4.69,
+   "ki_pro_1000": 0.099,
+   "mensch_pro_1000": 0.458,
+   "docs_ki": 29,
+   "docs_mensch": 195
+  },
+  {
+   "ngramm": "durch",
+   "z": -4.63,
+   "ki_pro_1000": 2.74,
+   "mensch_pro_1000": 3.873,
+   "docs_ki": 349,
+   "docs_mensch": 410
+  },
+  {
+   "ngramm": "hierbei",
+   "z": -4.55,
+   "ki_pro_1000": 0.093,
+   "mensch_pro_1000": 0.431,
+   "docs_ki": 30,
+   "docs_mensch": 170
+  },
+  {
+   "ngramm": "und somit",
+   "z": -4.51,
+   "ki_pro_1000": 0.012,
+   "mensch_pro_1000": 0.27,
+   "docs_ki": 4,
+   "docs_mensch": 154
+  },
+  {
+   "ngramm": "um",
+   "z": -4.47,
+   "ki_pro_1000": 2.356,
+   "mensch_pro_1000": 3.375,
+   "docs_ki": 327,
+   "docs_mensch": 407
+  },
+  {
+   "ngramm": "werden",
+   "z": -4.46,
+   "ki_pro_1000": 7.411,
+   "mensch_pro_1000": 9.143,
+   "docs_ki": 391,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "letzten",
+   "z": -4.44,
+   "ki_pro_1000": 0.046,
+   "mensch_pro_1000": 0.333,
+   "docs_ki": 12,
+   "docs_mensch": 192
+  },
+  {
+   "ngramm": "aufgrund",
+   "z": -4.37,
+   "ki_pro_1000": 0.211,
+   "mensch_pro_1000": 0.604,
+   "docs_ki": 63,
+   "docs_mensch": 245
+  },
+  {
+   "ngramm": "hat",
+   "z": -4.36,
+   "ki_pro_1000": 1.059,
+   "mensch_pro_1000": 1.763,
+   "docs_ki": 209,
+   "docs_mensch": 386
+  },
+  {
+   "ngramm": "bezüglich",
+   "z": -4.25,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.222,
+   "docs_ki": 1,
+   "docs_mensch": 121
+  },
+  {
+   "ngramm": "in den",
+   "z": -4.21,
+   "ki_pro_1000": 1.514,
+   "mensch_pro_1000": 2.3,
+   "docs_ki": 267,
+   "docs_mensch": 396
+  },
+  {
+   "ngramm": "d h",
+   "z": -4.17,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.207,
+   "docs_ki": 0,
+   "docs_mensch": 105
+  },
+  {
+   "ngramm": "in bezug",
+   "z": -4.12,
+   "ki_pro_1000": 0.022,
+   "mensch_pro_1000": 0.249,
+   "docs_ki": 7,
+   "docs_mensch": 120
+  },
+  {
+   "ngramm": "außerdem",
+   "z": -4.0,
+   "ki_pro_1000": 0.099,
+   "mensch_pro_1000": 0.381,
+   "docs_ki": 28,
+   "docs_mensch": 168
+  },
+  {
+   "ngramm": "d",
+   "z": -3.98,
+   "ki_pro_1000": 0.059,
+   "mensch_pro_1000": 0.308,
+   "docs_ki": 12,
+   "docs_mensch": 132
+  },
+  {
+   "ngramm": "uns",
+   "z": -3.96,
+   "ki_pro_1000": 0.012,
+   "mensch_pro_1000": 0.215,
+   "docs_ki": 4,
+   "docs_mensch": 85
+  },
+  {
+   "ngramm": "durch die",
+   "z": -3.96,
+   "ki_pro_1000": 0.597,
+   "mensch_pro_1000": 1.095,
+   "docs_ki": 147,
+   "docs_mensch": 327
+  },
+  {
+   "ngramm": "in bezug auf",
+   "z": -3.93,
+   "ki_pro_1000": 0.022,
+   "mensch_pro_1000": 0.231,
+   "docs_ki": 7,
+   "docs_mensch": 111
+  },
+  {
+   "ngramm": "bezug auf",
+   "z": -3.92,
+   "ki_pro_1000": 0.046,
+   "mensch_pro_1000": 0.279,
+   "docs_ki": 14,
+   "docs_mensch": 136
+  },
+  {
+   "ngramm": "welches",
+   "z": -3.9,
+   "ki_pro_1000": 0.059,
+   "mensch_pro_1000": 0.3,
+   "docs_ki": 19,
+   "docs_mensch": 154
+  },
+  {
+   "ngramm": "ist es",
+   "z": -3.89,
+   "ki_pro_1000": 0.316,
+   "mensch_pro_1000": 0.7,
+   "docs_ki": 89,
+   "docs_mensch": 281
+  },
+  {
+   "ngramm": "deutschland",
+   "z": -3.87,
+   "ki_pro_1000": 0.362,
+   "mensch_pro_1000": 0.763,
+   "docs_ki": 79,
+   "docs_mensch": 224
+  },
+  {
+   "ngramm": "bisher",
+   "z": -3.85,
+   "ki_pro_1000": 0.046,
+   "mensch_pro_1000": 0.272,
+   "docs_ki": 15,
+   "docs_mensch": 146
+  },
+  {
+   "ngramm": "noch",
+   "z": -3.85,
+   "ki_pro_1000": 0.957,
+   "mensch_pro_1000": 1.539,
+   "docs_ki": 205,
+   "docs_mensch": 371
+  },
+  {
+   "ngramm": "auswirkungen",
+   "z": -3.82,
+   "ki_pro_1000": 0.04,
+   "mensch_pro_1000": 0.257,
+   "docs_ki": 13,
+   "docs_mensch": 108
+  },
+  {
+   "ngramm": "des weiteren",
+   "z": -3.81,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.173,
+   "docs_ki": 0,
+   "docs_mensch": 100
+  },
+  {
+   "ngramm": "mit hilfe",
+   "z": -3.79,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.171,
+   "docs_ki": 0,
+   "docs_mensch": 87
+  },
+  {
+   "ngramm": "siehe",
+   "z": -3.78,
+   "ki_pro_1000": 0.04,
+   "mensch_pro_1000": 0.254,
+   "docs_ki": 11,
+   "docs_mensch": 111
+  },
+  {
+   "ngramm": "viel",
+   "z": -3.78,
+   "ki_pro_1000": 0.068,
+   "mensch_pro_1000": 0.304,
+   "docs_ki": 19,
+   "docs_mensch": 164
+  },
+  {
+   "ngramm": "sein",
+   "z": -3.75,
+   "ki_pro_1000": 0.814,
+   "mensch_pro_1000": 1.344,
+   "docs_ki": 181,
+   "docs_mensch": 360
+  },
+  {
+   "ngramm": "oft",
+   "z": -3.75,
+   "ki_pro_1000": 0.115,
+   "mensch_pro_1000": 0.381,
+   "docs_ki": 34,
+   "docs_mensch": 175
+  },
+  {
+   "ngramm": "etc",
+   "z": -3.75,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.167,
+   "docs_ki": 0,
+   "docs_mensch": 89
+  },
+  {
+   "ngramm": "h",
+   "z": -3.74,
+   "ki_pro_1000": 0.043,
+   "mensch_pro_1000": 0.256,
+   "docs_ki": 9,
+   "docs_mensch": 120
+  },
+  {
+   "ngramm": "u",
+   "z": -3.71,
+   "ki_pro_1000": 0.025,
+   "mensch_pro_1000": 0.217,
+   "docs_ki": 8,
+   "docs_mensch": 103
+  },
+  {
+   "ngramm": "den",
+   "z": -3.68,
+   "ki_pro_1000": 10.157,
+   "mensch_pro_1000": 11.825,
+   "docs_ki": 403,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "verschiedenen",
+   "z": -3.67,
+   "ki_pro_1000": 0.207,
+   "mensch_pro_1000": 0.516,
+   "docs_ki": 63,
+   "docs_mensch": 237
+  },
+  {
+   "ngramm": "daß",
+   "z": -3.65,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.158,
+   "docs_ki": 0,
+   "docs_mensch": 19
+  },
+  {
+   "ngramm": "mich",
+   "z": -3.64,
+   "ki_pro_1000": 0.012,
+   "mensch_pro_1000": 0.185,
+   "docs_ki": 1,
+   "docs_mensch": 68
+  },
+  {
+   "ngramm": "möglichkeiten",
+   "z": -3.62,
+   "ki_pro_1000": 0.13,
+   "mensch_pro_1000": 0.392,
+   "docs_ki": 37,
+   "docs_mensch": 182
+  },
+  {
+   "ngramm": "zum",
+   "z": -3.62,
+   "ki_pro_1000": 1.932,
+   "mensch_pro_1000": 2.671,
+   "docs_ki": 294,
+   "docs_mensch": 403
+  },
+  {
+   "ngramm": "wichtig",
+   "z": -3.57,
+   "ki_pro_1000": 0.142,
+   "mensch_pro_1000": 0.407,
+   "docs_ki": 39,
+   "docs_mensch": 173
+  },
+  {
+   "ngramm": "kann",
+   "z": -3.57,
+   "ki_pro_1000": 2.145,
+   "mensch_pro_1000": 2.91,
+   "docs_ki": 286,
+   "docs_mensch": 397
+  },
+  {
+   "ngramm": "wie z",
+   "z": -3.53,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.148,
+   "docs_ki": 0,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "wie z b",
+   "z": -3.53,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.148,
+   "docs_ki": 0,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "social",
+   "z": -3.53,
+   "ki_pro_1000": 0.158,
+   "mensch_pro_1000": 0.426,
+   "docs_ki": 19,
+   "docs_mensch": 49
+  },
+  {
+   "ngramm": "ganz",
+   "z": -3.49,
+   "ki_pro_1000": 0.065,
+   "mensch_pro_1000": 0.272,
+   "docs_ki": 20,
+   "docs_mensch": 147
+  },
+  {
+   "ngramm": "teilnehmer",
+   "z": -3.49,
+   "ki_pro_1000": 0.037,
+   "mensch_pro_1000": 0.221,
+   "docs_ki": 8,
+   "docs_mensch": 60
+  },
+  {
+   "ngramm": "konnte",
+   "z": -3.47,
+   "ki_pro_1000": 0.108,
+   "mensch_pro_1000": 0.343,
+   "docs_ki": 31,
+   "docs_mensch": 170
+  },
+  {
+   "ngramm": "im gegensatz",
+   "z": -3.46,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.176,
+   "docs_ki": 5,
+   "docs_mensch": 116
+  },
+  {
+   "ngramm": "scheint",
+   "z": -3.46,
+   "ki_pro_1000": 0.043,
+   "mensch_pro_1000": 0.23,
+   "docs_ki": 13,
+   "docs_mensch": 120
+  },
+  {
+   "ngramm": "in deutschland",
+   "z": -3.4,
+   "ki_pro_1000": 0.26,
+   "mensch_pro_1000": 0.562,
+   "docs_ki": 63,
+   "docs_mensch": 194
+  },
+  {
+   "ngramm": "thema",
+   "z": -3.4,
+   "ki_pro_1000": 0.257,
+   "mensch_pro_1000": 0.557,
+   "docs_ki": 62,
+   "docs_mensch": 205
+  },
+  {
+   "ngramm": "a",
+   "z": -3.39,
+   "ki_pro_1000": 0.198,
+   "mensch_pro_1000": 0.472,
+   "docs_ki": 36,
+   "docs_mensch": 177
+  },
+  {
+   "ngramm": "zukunft",
+   "z": -3.38,
+   "ki_pro_1000": 0.056,
+   "mensch_pro_1000": 0.246,
+   "docs_ki": 16,
+   "docs_mensch": 120
+  },
+  {
+   "ngramm": "den letzten",
+   "z": -3.37,
+   "ki_pro_1000": 0.019,
+   "mensch_pro_1000": 0.175,
+   "docs_ki": 6,
+   "docs_mensch": 118
+  },
+  {
+   "ngramm": "kann man",
+   "z": -3.36,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.142,
+   "docs_ki": 1,
+   "docs_mensch": 85
+  },
+  {
+   "ngramm": "wie",
+   "z": -3.35,
+   "ki_pro_1000": 3.068,
+   "mensch_pro_1000": 3.913,
+   "docs_ki": 352,
+   "docs_mensch": 410
+  },
+  {
+   "ngramm": "nun",
+   "z": -3.34,
+   "ki_pro_1000": 0.111,
+   "mensch_pro_1000": 0.335,
+   "docs_ki": 32,
+   "docs_mensch": 162
+  },
+  {
+   "ngramm": "immer mehr",
+   "z": -3.32,
+   "ki_pro_1000": 0.009,
+   "mensch_pro_1000": 0.152,
+   "docs_ki": 3,
+   "docs_mensch": 92
+  },
+  {
+   "ngramm": "es gibt",
+   "z": -3.3,
+   "ki_pro_1000": 0.012,
+   "mensch_pro_1000": 0.157,
+   "docs_ki": 4,
+   "docs_mensch": 92
+  },
+  {
+   "ngramm": "natürlich",
+   "z": -3.29,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.136,
+   "docs_ki": 1,
+   "docs_mensch": 85
+  },
+  {
+   "ngramm": "der arbeit",
+   "z": -3.28,
+   "ki_pro_1000": 0.115,
+   "mensch_pro_1000": 0.334,
+   "docs_ki": 32,
+   "docs_mensch": 148
+  },
+  {
+   "ngramm": "diese arbeit",
+   "z": -3.28,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.135,
+   "docs_ki": 1,
+   "docs_mensch": 91
+  },
+  {
+   "ngramm": "s",
+   "z": -3.27,
+   "ki_pro_1000": 0.176,
+   "mensch_pro_1000": 0.427,
+   "docs_ki": 23,
+   "docs_mensch": 130
+  },
+  {
+   "ngramm": "wie auch",
+   "z": -3.26,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.134,
+   "docs_ki": 1,
+   "docs_mensch": 84
+  },
+  {
+   "ngramm": "u a",
+   "z": -3.26,
+   "ki_pro_1000": 0.019,
+   "mensch_pro_1000": 0.166,
+   "docs_ki": 6,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "gegensatz",
+   "z": -3.24,
+   "ki_pro_1000": 0.031,
+   "mensch_pro_1000": 0.189,
+   "docs_ki": 9,
+   "docs_mensch": 123
+  },
+  {
+   "ngramm": "im",
+   "z": -3.23,
+   "ki_pro_1000": 7.721,
+   "mensch_pro_1000": 8.997,
+   "docs_ki": 404,
+   "docs_mensch": 412
+  },
+  {
+   "ngramm": "internet",
+   "z": -3.23,
+   "ki_pro_1000": 0.17,
+   "mensch_pro_1000": 0.413,
+   "docs_ki": 33,
+   "docs_mensch": 94
+  },
+  {
+   "ngramm": "in den letzten",
+   "z": -3.22,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.157,
+   "docs_ki": 5,
+   "docs_mensch": 110
+  },
+  {
+   "ngramm": "mehr",
+   "z": -3.21,
+   "ki_pro_1000": 0.858,
+   "mensch_pro_1000": 1.31,
+   "docs_ki": 176,
+   "docs_mensch": 338
+  },
+  {
+   "ngramm": "unserer",
+   "z": -3.21,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.122,
+   "docs_ki": 0,
+   "docs_mensch": 64
+  },
+  {
+   "ngramm": "oftmals",
+   "z": -3.19,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.155,
+   "docs_ki": 5,
+   "docs_mensch": 93
+  },
+  {
+   "ngramm": "meiner",
+   "z": -3.15,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.152,
+   "docs_ki": 2,
+   "docs_mensch": 61
+  },
+  {
+   "ngramm": "aufgezeigt",
+   "z": -3.13,
+   "ki_pro_1000": 0.009,
+   "mensch_pro_1000": 0.137,
+   "docs_ki": 3,
+   "docs_mensch": 82
+  },
+  {
+   "ngramm": "einmal",
+   "z": -3.12,
+   "ki_pro_1000": 0.087,
+   "mensch_pro_1000": 0.275,
+   "docs_ki": 26,
+   "docs_mensch": 139
+  },
+  {
+   "ngramm": "bezüglich der",
+   "z": -3.1,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.115,
+   "docs_ki": 0,
+   "docs_mensch": 77
+  },
+  {
+   "ngramm": "soll",
+   "z": -3.1,
+   "ki_pro_1000": 0.56,
+   "mensch_pro_1000": 0.922,
+   "docs_ki": 125,
+   "docs_mensch": 280
+  },
+  {
+   "ngramm": "und jugendlichen",
+   "z": -3.09,
+   "ki_pro_1000": 0.031,
+   "mensch_pro_1000": 0.178,
+   "docs_ki": 8,
+   "docs_mensch": 29
+  },
+  {
+   "ngramm": "gesellschaft",
+   "z": -3.09,
+   "ki_pro_1000": 0.22,
+   "mensch_pro_1000": 0.471,
+   "docs_ki": 44,
+   "docs_mensch": 170
+  },
+  {
+   "ngramm": "menschen",
+   "z": -3.08,
+   "ki_pro_1000": 0.681,
+   "mensch_pro_1000": 1.072,
+   "docs_ki": 98,
+   "docs_mensch": 229
+  },
+  {
+   "ngramm": "denn",
+   "z": -3.06,
+   "ki_pro_1000": 0.269,
+   "mensch_pro_1000": 0.537,
+   "docs_ki": 73,
+   "docs_mensch": 213
+  },
+  {
+   "ngramm": "möchte",
+   "z": -3.06,
+   "ki_pro_1000": 0.043,
+   "mensch_pro_1000": 0.198,
+   "docs_ki": 13,
+   "docs_mensch": 107
+  },
+  {
+   "ngramm": "mir",
+   "z": -3.04,
+   "ki_pro_1000": 0.025,
+   "mensch_pro_1000": 0.162,
+   "docs_ki": 7,
+   "docs_mensch": 68
+  },
+  {
+   "ngramm": "wieder",
+   "z": -3.04,
+   "ki_pro_1000": 0.248,
+   "mensch_pro_1000": 0.504,
+   "docs_ki": 64,
+   "docs_mensch": 234
+  },
+  {
+   "ngramm": "einigen",
+   "z": -3.02,
+   "ki_pro_1000": 0.031,
+   "mensch_pro_1000": 0.172,
+   "docs_ki": 10,
+   "docs_mensch": 117
+  },
+  {
+   "ngramm": "so dass",
+   "z": -2.99,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.107,
+   "docs_ki": 0,
+   "docs_mensch": 73
+  },
+  {
+   "ngramm": "es ist",
+   "z": -2.99,
+   "ki_pro_1000": 0.087,
+   "mensch_pro_1000": 0.264,
+   "docs_ki": 28,
+   "docs_mensch": 156
+  },
+  {
+   "ngramm": "der gesellschaft",
+   "z": -2.97,
+   "ki_pro_1000": 0.037,
+   "mensch_pro_1000": 0.18,
+   "docs_ki": 10,
+   "docs_mensch": 98
+  },
+  {
+   "ngramm": "einige",
+   "z": -2.97,
+   "ki_pro_1000": 0.164,
+   "mensch_pro_1000": 0.38,
+   "docs_ki": 48,
+   "docs_mensch": 180
+  },
+  {
+   "ngramm": "beinhaltet",
+   "z": -2.97,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.112,
+   "docs_ki": 1,
+   "docs_mensch": 75
+  },
+  {
+   "ngramm": "unsere",
+   "z": -2.97,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.112,
+   "docs_ki": 1,
+   "docs_mensch": 60
+  },
+  {
+   "ngramm": "wenn",
+   "z": -2.96,
+   "ki_pro_1000": 0.966,
+   "mensch_pro_1000": 1.401,
+   "docs_ki": 194,
+   "docs_mensch": 363
+  },
+  {
+   "ngramm": "es wird",
+   "z": -2.96,
+   "ki_pro_1000": 0.037,
+   "mensch_pro_1000": 0.179,
+   "docs_ki": 9,
+   "docs_mensch": 114
+  },
+  {
+   "ngramm": "unternehmen",
+   "z": -2.95,
+   "ki_pro_1000": 1.378,
+   "mensch_pro_1000": 1.885,
+   "docs_ki": 116,
+   "docs_mensch": 195
+  },
+  {
+   "ngramm": "definition",
+   "z": -2.95,
+   "ki_pro_1000": 0.071,
+   "mensch_pro_1000": 0.236,
+   "docs_ki": 18,
+   "docs_mensch": 126
+  },
+  {
+   "ngramm": "deutschen",
+   "z": -2.95,
+   "ki_pro_1000": 0.254,
+   "mensch_pro_1000": 0.503,
+   "docs_ki": 60,
+   "docs_mensch": 165
+  },
+  {
+   "ngramm": "dann",
+   "z": -2.94,
+   "ki_pro_1000": 0.406,
+   "mensch_pro_1000": 0.703,
+   "docs_ki": 101,
+   "docs_mensch": 269
+  },
+  {
+   "ngramm": "anhand",
+   "z": -2.93,
+   "ki_pro_1000": 0.232,
+   "mensch_pro_1000": 0.472,
+   "docs_ki": 65,
+   "docs_mensch": 191
+  },
+  {
+   "ngramm": "anderen",
+   "z": -2.93,
+   "ki_pro_1000": 0.792,
+   "mensch_pro_1000": 1.186,
+   "docs_ki": 184,
+   "docs_mensch": 366
+  },
+  {
+   "ngramm": "könnte",
+   "z": -2.92,
+   "ki_pro_1000": 0.195,
+   "mensch_pro_1000": 0.419,
+   "docs_ki": 49,
+   "docs_mensch": 171
+  },
+  {
+   "ngramm": "leben",
+   "z": -2.92,
+   "ki_pro_1000": 0.186,
+   "mensch_pro_1000": 0.406,
+   "docs_ki": 44,
+   "docs_mensch": 147
+  },
+  {
+   "ngramm": "untersucht",
+   "z": -2.92,
+   "ki_pro_1000": 0.145,
+   "mensch_pro_1000": 0.347,
+   "docs_ki": 39,
+   "docs_mensch": 159
+  },
+  {
+   "ngramm": "aufgrund der",
+   "z": -2.91,
+   "ki_pro_1000": 0.084,
+   "mensch_pro_1000": 0.253,
+   "docs_ki": 26,
+   "docs_mensch": 145
+  },
+  {
+   "ngramm": "letzten jahren",
+   "z": -2.91,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.108,
+   "docs_ki": 1,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "den letzten jahren",
+   "z": -2.91,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.108,
+   "docs_ki": 1,
+   "docs_mensch": 81
+  },
+  {
+   "ngramm": "bezug",
+   "z": -2.9,
+   "ki_pro_1000": 0.164,
+   "mensch_pro_1000": 0.373,
+   "docs_ki": 45,
+   "docs_mensch": 175
+  },
+  {
+   "ngramm": "studie",
+   "z": -2.9,
+   "ki_pro_1000": 0.232,
+   "mensch_pro_1000": 0.468,
+   "docs_ki": 45,
+   "docs_mensch": 163
+  },
+  {
+   "ngramm": "empirischen",
+   "z": -2.88,
+   "ki_pro_1000": 0.046,
+   "mensch_pro_1000": 0.189,
+   "docs_ki": 15,
+   "docs_mensch": 107
+  },
+  {
+   "ngramm": "speziell",
+   "z": -2.87,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.131,
+   "docs_ki": 5,
+   "docs_mensch": 78
+  },
+  {
+   "ngramm": "in dieser arbeit",
+   "z": -2.87,
+   "ki_pro_1000": 0.037,
+   "mensch_pro_1000": 0.172,
+   "docs_ki": 12,
+   "docs_mensch": 95
+  },
+  {
+   "ngramm": "ca",
+   "z": -2.87,
+   "ki_pro_1000": 0.019,
+   "mensch_pro_1000": 0.137,
+   "docs_ki": 4,
+   "docs_mensch": 64
+  },
+  {
+   "ngramm": "anzahl",
+   "z": -2.86,
+   "ki_pro_1000": 0.115,
+   "mensch_pro_1000": 0.297,
+   "docs_ki": 28,
+   "docs_mensch": 151
+  },
+  {
+   "ngramm": "weiteren",
+   "z": -2.85,
+   "ki_pro_1000": 0.241,
+   "mensch_pro_1000": 0.476,
+   "docs_ki": 71,
+   "docs_mensch": 223
+  },
+  {
+   "ngramm": "bezug auf die",
+   "z": -2.84,
+   "ki_pro_1000": 0.009,
+   "mensch_pro_1000": 0.117,
+   "docs_ki": 3,
+   "docs_mensch": 76
+  },
+  {
+   "ngramm": "beleuchtet",
+   "z": -2.84,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.103,
+   "docs_ki": 1,
+   "docs_mensch": 71
+  },
+  {
+   "ngramm": "sozialen",
+   "z": -2.82,
+   "ki_pro_1000": 0.486,
+   "mensch_pro_1000": 0.792,
+   "docs_ki": 88,
+   "docs_mensch": 206
+  },
+  {
+   "ngramm": "trotzdem",
+   "z": -2.82,
+   "ki_pro_1000": 0.0,
+   "mensch_pro_1000": 0.094,
+   "docs_ki": 0,
+   "docs_mensch": 72
+  },
+  {
+   "ngramm": "sagen",
+   "z": -2.81,
+   "ki_pro_1000": 0.006,
+   "mensch_pro_1000": 0.108,
+   "docs_ki": 2,
+   "docs_mensch": 69
+  },
+  {
+   "ngramm": "meinung",
+   "z": -2.81,
+   "ki_pro_1000": 0.031,
+   "mensch_pro_1000": 0.156,
+   "docs_ki": 8,
+   "docs_mensch": 85
+  }
+ ],
+ "methode": "log-odds ratio mit informativem Dirichlet-Prior (Monroe, Colaresi & Quinn 2008; Prior-Stärke = Korpusgröße), alle Abschnitte, min. 4 Dokumente"
+}

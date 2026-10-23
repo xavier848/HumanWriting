@@ -1,0 +1,39 @@
+## Kano-Vorstudie und Ableitung des Conjoint-Designs
+
+Um aus der Vielzahl denkbarer Gestaltungsmerkmale von Recruiting-Videos diejenigen auszuwählen, die in der Choice-Based-Conjoint-Analyse (CBC) untersucht werden sollten, wurde eine Vorstudie auf Basis des Kano-Modells durchgeführt. Ziel war es, die Merkmale danach einzuordnen, welchen Einfluss sie auf die Zufriedenheit der Zielgruppe haben, und so eine begründete Grundlage für das Conjoint-Design zu schaffen.
+
+Das Kano-Modell unterscheidet Eigenschaften nach ihrer Wirkung auf die Zufriedenheit. Basiseigenschaften werden als selbstverständlich vorausgesetzt: Ihr Fehlen führt zu Unzufriedenheit, ihre Erfüllung steigert die Zufriedenheit jedoch kaum. Leistungseigenschaften wirken proportional, das heißt, je besser sie erfüllt sind, desto zufriedener ist die Zielgruppe. Begeisterungseigenschaften werden nicht erwartet und lösen bei Vorhandensein überproportionale Zufriedenheit aus, während ihr Fehlen keine Unzufriedenheit erzeugt. Indifferente Eigenschaften haben keinen nennenswerten Einfluss, Rückweisungseigenschaften wirken sich bei Vorhandensein negativ aus. Zu jeder Ausprägung wird ein Fragenpaar gestellt, bestehend aus einer funktionalen Frage (Wie fänden Sie es, wenn das Video diese Eigenschaft hätte?) und einer dysfunktionalen Frage (Wie fänden Sie es, wenn das Video diese Eigenschaft nicht hätte?). Aus der Kombination beider Antworten ergibt sich die Einordnung. Ergänzend lassen sich Zufriedenheitskoeffizienten berechnen: Der CS+ gibt an, wie stark eine Eigenschaft die Zufriedenheit steigern kann, der CS− beschreibt, in welchem Maß ihr Fehlen Unzufriedenheit auslöst.
+
+### Durchführung und Rücklauf
+
+Der Kano-Fragebogen umfasste zwölf Attribute mit jeweils vier Ausprägungen. Die Erhebung erfolgte online vom 11. bis 13. Mai 2013 unter Studierenden des Departments Informatik; insgesamt gingen 40 auswertbare Fragebögen ein. Bereits die einleitende Frage nach dem Begriffsverständnis zeigte, dass der Untersuchungsgegenstand nicht allen Befragten vertraut war: 18 % gaben an, den Begriff „Recruiting-Video“ nicht zu kennen, weitere 33 % machten keine Angabe. In einem Einzelfall wurde das Recruiting-Video mit einem Bewerbungsvideo verwechselt, das der Kandidat selbst erstellt. Etwa 30 % der Befragten verstanden unter einem Recruiting-Video hingegen ein Werbe- bzw. Marketinginstrument, mit dem sich ein Unternehmen positiv als Arbeitgeber darstellt und neues Personal gewinnen möchte.
+
+### Ergebnisse der Kano-Klassifizierung
+
+Die Auswertung der 48 Ausprägungen ergab vier Basis- und vier Leistungseigenschaften. Begeisterungseigenschaften konnten nicht identifiziert werden. Mit 37 Ausprägungen fiel der weit überwiegende Teil in die Kategorie der indifferenten Eigenschaften; drei Ausprägungen wurden als Rückweisungseigenschaften eingestuft, fragwürdige Antworten traten nicht auf.
+
+Der hohe Anteil indifferenter Eigenschaften lässt sich vermutlich auf die geringe Bekanntheit des Gegenstands zurückführen. Wer keine konkrete Vorstellung von Recruiting-Videos hat, kann kaum beurteilen, wie sich das Vorhandensein oder Fehlen einzelner Merkmale auf die eigene Zufriedenheit auswirken würde. Hinzu kommt, dass die Befragten die textlich beschriebenen Merkmale gedanklich in ein audiovisuelles Format übertragen mussten. Diese Abstraktionsleistung bedeutet eine erhebliche kognitive Belastung, die bei der weiteren Merkmalsauswahl berücksichtigt werden musste.
+
+### Reduktion der Merkmale
+
+Die Ableitung des Conjoint-Designs erfolgte in zwei Schritten. Im ersten Schritt wurden alle Merkmale ausgeschlossen, die ausschließlich indifferente oder zurückweisende Ausprägungen aufwiesen, da von ihnen kein Beitrag zur Erklärung von Präferenzen zu erwarten war. Davon betroffen war unter anderem das Merkmal „Produktion“. Mit seinem Wegfall lässt sich das Spannungsverhältnis zwischen Professionalität und Authentizität eines Videos nicht mehr im Rahmen der Conjoint-Analyse überprüfen. Da diese Frage für die Gestaltung von Recruiting-Videos jedoch relevant ist, wurde sie stattdessen als eigene Frage in den Rahmenfragebogen aufgenommen.
+
+Nach diesem Schritt verblieben sechs Merkmale. Erfahrungen zeigen allerdings, dass sechs Attribute in einer CBC-Befragung zu einer Überforderung der Probanden führen können, die ihre Entscheidungen dann nur noch an wenigen Merkmalen ausrichten (Weiber et al., 1996). Um dieser Vereinfachungsstrategie vorzubeugen und die kognitive Belastung gering zu halten, wurde eine Reduktion auf vier Attribute angestrebt.
+
+Im zweiten Schritt wurden daher zwei weitere Merkmale ausgeschlossen: eines, das nur indifferente Ausprägungen aufwies, und eines, dessen Ausprägungen ausschließlich Basiseigenschaften darstellten. Basismerkmale gehören nicht in eine Conjoint-Analyse, weil ihr Fehlen zwar Unzufriedenheit auslöst, ihre Erfüllung aber als selbstverständlich vorausgesetzt wird und daher keine Präferenzunterschiede erzeugt.
+
+Die verbleibenden vier Merkmale wurden zudem danach ausgewählt, ob sie miteinander konkurrieren können. Die stärkste Eigenschaft ist „informativ“ aus dem Merkmal Stil. Ihr stehen mit „Arbeitsalltag“ (Inhalt), „wen wollen wir gewinnen“ (Antwort) und „Stelle“ (Fokus) Ausprägungen gegenüber, die ein vergleichbares Gewicht haben. Auf diese Weise wird verhindert, dass ein einzelnes Kriterium die Entscheidungen dominiert und die übrigen Merkmale kaum noch Einfluss auf die Wahl haben.
+
+### Gestaltung der Stimuli
+
+Da nur vier Merkmale variiert werden, erhielten die Probanden den Hinweis, dass die Stimuli lediglich eine Auswahl möglicher Eigenschaften darstellen und alle nicht untersuchten Merkmale bei sämtlichen Videos als gleich anzunehmen sind. Auf dieser Grundlage wurden drei Videokonzepte entwickelt, die jeweils eine eigene Fragestellung prüfen.
+
+Video 1 kombiniert zwei Basiseigenschaften (Karrieremöglichkeiten und Stelle) mit denjenigen Ausprägungen der Merkmale Antwort und Stil, die den kleinsten positiven Zufriedenheitskoeffizienten (CS+) aufweisen. Damit lässt sich prüfen, welches Gewicht Basiseigenschaften bei der Wahl tatsächlich zukommt. Gleichzeitig besitzt dieses Video das geringste Attraktivitäts- und Unzufriedenheitspotenzial.
+
+Video 2 enthält drei der vier Leistungseigenschaften (Arbeitsalltag, wen wollen wir gewinnen und Team) sowie einen ernsten Stil. Seine Zufriedenheitskoeffizienten liegen im Mittel zwischen denen von Video 1 und Video 3.
+
+Video 3 setzt sich aus drei indifferenten Ausprägungen und der Eigenschaft „informativ“ zusammen, die den höchsten negativen Koeffizienten (CS−) aufweist. Trotz der indifferenten Ausprägungen erreicht dieses Video insgesamt die höchsten Koeffizienten. Hier wird geprüft, ob die Kombination anderer Ausprägungen schwerer wiegt als einzelne starke Eigenschaften. Für die Praxis ist dieses Konzept besonders relevant: Es rückt die Arbeitsatmosphäre und damit das Employer Branding in den Mittelpunkt, ist universeller einsetzbar als ein stellenbezogenes Video und dadurch auch kosteneffizienter.
+
+### Rahmenfragebogen
+
+Ergänzend zur Conjoint-Aufgabe enthielt die Befragung einen Rahmenfragebogen. Dieser erfasst die Bewerbungsgewohnheiten der Studierenden, vertieft einzelne Meinungen aus dem explorativen Teil der Vorstudie und erhebt soziodemografische Daten, die eine Segmentierung der Stichprobe ermöglichen. Der vollständige Fragebogen findet sich im Anhang.

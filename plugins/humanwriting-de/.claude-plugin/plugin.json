@@ -1,0 +1,20 @@
+{
+  "name": "humanwriting-de",
+  "displayName": "Human Writing (Deutsch)",
+  "version": "0.1.0",
+  "description": "Deutsche Hochschultexte (Hausarbeit, Bachelorarbeit, Aufgabenbearbeitung) menschlich schreiben: Stilregeln mit kalibrierten Zielwerten, statistische Textanalyse (Satzlängen-Verteilung, Rhythmus, Satzklammer, Wortschatz, Funktionswörter, KI-Muster) und ein Stil-Coach mit Messschleife und Inhaltsprüfung.",
+  "author": {
+    "name": "Xavier Haas"
+  },
+  "repository": "https://github.com/xavier848/HumanWriting",
+  "license": "MIT",
+  "keywords": [
+    "deutsch",
+    "schreiben",
+    "hausarbeit",
+    "bachelorarbeit",
+    "stilometrie",
+    "ki-text",
+    "stil-coach"
+  ]
+}

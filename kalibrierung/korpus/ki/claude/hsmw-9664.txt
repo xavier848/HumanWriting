@@ -1,0 +1,35 @@
+Untersuchungsdesign, Datengrundlage und Kennzahlen der Beispieldiskussionen
+
+Im Folgenden wird das methodische Vorgehen der Untersuchung erläutert. Dabei werden zunächst die technischen Rahmenbedingungen der Plattform sowie das Nutzungsverhalten deutscher Facebook-User dargestellt, bevor die Auswahl der Plattform, die Untersuchungseinheit, der Erhebungszeitraum und die Bewertungskriterien begründet werden. Abschließend werden die grundlegenden Kennzahlen der beiden Beispieldiskussionen auf den Facebook-Seiten der Tagesschau und des Magazins Compact vergleichend vorgestellt. Die Gegenüberstellung eines etablierten öffentlich-rechtlichen Nachrichtenangebots und eines politisch rechts verorteten Alternativmediums ermöglicht es, Unterschiede in der Diskussionskultur zwischen zwei sehr verschiedenen Publika sichtbar zu machen.
+
+Technische Rahmenbedingungen auf Facebook
+
+Bei der Analyse politischer Diskussionen auf Facebook sind zunächst die technischen Besonderheiten der Plattform zu berücksichtigen. Kommentare werden dort nicht chronologisch dargestellt; die Standardsortierung zeigt vielmehr die meistdiskutierten Beiträge zuerst an. Zudem werden Nutzer benachrichtigt, sobald jemand auf ihren Beitrag antwortet. Inwiefern solche Funktionen die Qualität von Diskussionen beeinflussen, ist bislang nicht erforscht. Dennoch müssen sie bei der Analyse mitgedacht werden, da sie Struktur und Dynamik der Diskussionen prägen können – etwa indem besonders kontrovers diskutierte Kommentare durch die Sortierung zusätzliche Sichtbarkeit erhalten.
+
+Nutzungsverhalten und Plattformwahl
+
+Um die untersuchten Diskussionen einordnen und ihre Repräsentativität beurteilen zu können, ist ein Blick auf das Nutzungsverhalten deutscher Facebook-User hilfreich. Politische Information zählt zwar nicht zu den Hauptmotiven der Facebook-Nutzung, allerdings schließen lediglich 21 % der Nutzer Facebook als politische Informationsquelle grundsätzlich aus. Von denjenigen, die sich auf Facebook politisch informieren, nutzen rund 70 % die Fanpages klassischer Medien wie Zeitungen oder Fernsehsender. 57 % bewerten zudem die Meinungen ihrer Freunde als wichtig. Facebook ist damit zwar keine primär politische Plattform, spielt für die politische Meinungsbildung aber dennoch eine nicht zu unterschätzende Rolle.
+
+Die Entscheidung für Facebook als Untersuchungsplattform ergibt sich aus dessen Stellung im Vergleich zu anderen sozialen Netzwerken. Die Zahl der Twitter-Follower ist für das Gesamtranking der reichweitenstärksten Medienangebote nicht ausschlaggebend, und Instagram sowie Google+ verfügen über deutlich weniger Nutzer. Das Ranking wird daher maßgeblich durch die Facebook-Likes bestimmt. Diese Führungsposition begründet die Auswahl von Facebook für die vorliegende Untersuchung.
+
+Untersuchungseinheit und Erhebungszeitraum
+
+Als Untersuchungseinheit dienen alle Kommentare, auf die mindestens eine Antwort erfolgte, sowie die dazugehörigen Antworten. Für die Diskussion auf der Seite der Tagesschau ergeben sich so 70 Kommentare und 454 Antworten, insgesamt also 524 Äußerungen. Auf der Seite von Compact sind es 51 Kommentare und 573 Antworten, zusammen 624 Äußerungen. Unbeantwortete Kommentare wurden aus der Analyse ausgeschlossen, da bei ihnen keine Auseinandersetzung über Geltungsansprüche stattfindet und sie somit nicht als Teil einer Diskussion im eigentlichen Sinne gelten können.
+
+Die Daten wurden im Zeitraum vom 20.09. bis 07.10.2016 erhoben. Der große zeitliche Abstand zur Veröffentlichung der Ausgangsposts stellt sicher, dass die Diskussionen weitgehend abgeschlossen sind und vollständig erfasst werden konnten. Threads, deren jüngste Antworten zum Zeitpunkt der Erhebung weniger als 24 Stunden alt waren, wurden zu einem späteren Zeitpunkt erneut geprüft.
+
+Bewertungskriterien
+
+Die Kriterien nach Habermas, die sich auf die Rahmenebene beziehen – öffentliche Zugänglichkeit, unbegrenzte Fortsetzbarkeit und thematische Offenheit –, werden vorab pauschal für beide Kanäle diskutiert, da sie sich nicht auf einzelne Äußerungen beziehen (Habermas o. J.). Für die Bewertung der einzelnen Äußerungen werden neben Habermas weitere Kriterien herangezogen, die sich an Steenbergen, Bächtiger, Spörndli und Steiner (o. J.), an Gerhards, Neidhardt und Rucht (o. J.) sowie an Burkart (o. J.) anlehnen. Während Habermas mit den Geltungsansprüchen der Wahrheit, Richtigkeit, Wahrhaftigkeit und Verständlichkeit den normativen Ausgangspunkt liefert, haben Steenbergen et al. mit dem Discourse Quality Index ein Instrument entwickelt, das unter anderem das Begründungsniveau, den Respekt gegenüber anderen Positionen und konstruktive Lösungsvorschläge erfasst. Gerhards, Neidhardt und Rucht unterscheiden verschiedene Modelle von Öffentlichkeit und bieten damit Kriterien zur Einordnung diskursiver Qualität, während Burkart die Habermas’schen Geltungsansprüche für die empirische Analyse verständigungsorientierter Kommunikation operationalisiert. Die beiden Diskussionen werden anschließend anhand ihrer Kennzahlen, ihrer Diskursqualität (VOI) und der meistgenannten Akteure miteinander verglichen.
+
+Ausgangsposts
+
+Ausgangspunkt beider Diskussionen ist eine Meldung über die Ausschreitungen in Bautzen am 14.09.2016. Die Tagesschau veröffentlichte hierzu einen Post mit eingebettetem Video, Compact hingegen eine kurze Zusammenfassung mit einem Link zum ausführlichen Artikel. Das Transkript des Videos sowie eine Kopie des Artikels finden sich im Anhang.
+
+Kennzahlen der Diskussionen
+
+Die Zahl der Teilnehmenden ist in beiden Diskussionen ähnlich: An der Diskussion der Tagesschau beteiligten sich 448 Personen, an der von Compact 499. Auf beiden Kanälen entfallen im Durchschnitt 1,7 Äußerungen auf eine Person. Über zwei Drittel der Teilnehmenden bei der Tagesschau und knapp drei Viertel bei Compact haben sich nur ein einziges Mal geäußert. Zwischen zwei und fünf Äußerungen verfassten 28 % (Tagesschau) bzw. 22 % (Compact), sechs bis zehn Äußerungen jeweils etwa 2 %.
+
+Diese Verteilung deutet auf eine insgesamt geringe Diskussionsbereitschaft hin. Die meisten Teilnehmenden äußern ihre Meinung einmalig, ohne auf die Beiträge anderer einzugehen; nur rund ein Drittel ist mehrfach aktiv. Dabei ist jedoch zu beachten, dass die Häufigkeit der Beteiligung keine Aussage über die Qualität der Beiträge zulässt. Eine einzige hochwertige Äußerung kann eine Diskussion stärker voranbringen als zahlreiche schwache.
+
+Die Bewertungsbasis umfasst N = 524 Äußerungen für die Tagesschau und N = 624 für Compact. Im Durchschnitt erhielt ein Kommentar bei der Tagesschau 7 und bei Compact 11 Antworten. Die Aussagekraft dieser Durchschnittswerte ist allerdings begrenzt: Einigen wenigen Top-Kommentaren mit über 100 Antworten steht eine große Zahl von Kommentaren mit unterdurchschnittlich wenigen Antworten gegenüber. Die Diskussionen konzentrieren sich somit stark auf einzelne Kommentare, während der überwiegende Teil kaum Resonanz erfährt.

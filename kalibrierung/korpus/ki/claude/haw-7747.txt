@@ -1,0 +1,35 @@
+## Probandenbefragung: Stichprobe, Einflussfaktoren auf die EDA-Messung und Stimmungsveränderung
+
+### Aufbau der Befragung und Datengrundlage
+
+Ergänzend zur Messung der elektrodermalen Aktivität (EDA) füllten die Probandinnen und Probanden vor und nach dem Szenario einen Fragebogen aus. Darin wurden zunächst körperliche Einschränkungen und Vorerkrankungen erfasst, da diese sowohl die Durchführung des Szenarios erschweren als auch das thermische und emotionale Schwitzen beeinflussen können. Darüber hinaus wurde gefragt, ob die Teilnehmenden in der Vergangenheit Krankheitsbilder negativ erlebt hatten. Auf diese Weise lässt sich einschätzen, ob das im Szenario dargestellte Krankheitsbild für einzelne Personen als persönlicher Stressor gewirkt haben könnte. Zusätzlich bewerteten die Teilnehmenden vor und nach dem Szenario ihren emotionalen Umgang mit Unfällen, ihre Laune und ihre Aufregung, um den Einfluss des Szenarios auf diese Größen prüfen zu können.
+
+An der Untersuchung nahmen 23 Personen teil. Ein Datensatz ging durch einen Fehler beim Import verloren, sodass 22 Datensätze ausgewertet werden konnten. Davon entfallen 10 auf die Gruppe mit App und 12 auf die Gruppe ohne App. Die Szenarien wurden mit Einwilligung der Teilnehmenden mit drei Kameras aufgezeichnet; zusätzlich wurden die durchgeführten Schritte protokolliert.
+
+Da die Teilnahme freiwillig war, ist davon auszugehen, dass die Probandinnen und Probanden ein grundsätzliches Interesse an Erster Hilfe mitbrachten. Dennoch zeigte sich die Mehrheit im Szenario sehr unsicher. Die Reaktionen und der Umfang der geleisteten Hilfe unterschieden sich stark zwischen den einzelnen Personen. In der App-Gruppe wurde die App als Stütze genutzt.
+
+Im Folgenden werden die Angaben aus der Vor- und Nachbefragung miteinander verglichen, wobei der Fokus auf möglichen Einflussfaktoren auf die EDA-Messung liegt. Die Fragen werden in chronologischer Reihenfolge nummeriert dargestellt; eine tabellarische Zusammenfassung der Ergebnisse findet sich am Ende des Kapitels.
+
+### Stichprobe
+
+Die Stichprobe besteht aus 15 Männern mit einem Durchschnittsalter von 28,8 Jahren und 7 Frauen mit einem Durchschnittsalter von 27 Jahren. Zum Vergleich: Im Jahr 2014 lag das Durchschnittsalter der Bevölkerung bei 42,9 Jahren für Männer und 45,6 Jahren für Frauen. Die männlichen Teilnehmenden sind damit im Mittel um 32,87 % jünger, die weiblichen um 40,79 %. Hinsichtlich des Alters ist die Stichprobe somit nicht repräsentativ für die Gesamtbevölkerung, was bei der Übertragung der Ergebnisse berücksichtigt werden sollte.
+
+Das vergleichsweise junge Alter der Stichprobe lässt eine höhere Technikaffinität vermuten. Damit dürfte auch die Hürde, eine App zu nutzen, geringer sein. Es ist daher anzunehmen, dass die App eher aktiv in das Hilfehandeln eingebunden wurde, als dass sie zu einer Überforderung führte. Dies ist für die Interpretation der Ergebnisse relevant, da Überforderung selbst als Stressor wirken kann. Gleichzeitig verringert das junge Alter die Wahrscheinlichkeit, bereits früher mit einem Unfall konfrontiert worden zu sein, da die bisherige Lebensspanne kürzer ist. Dies passt zu der beobachteten Unsicherheit im Szenario, die wiederum als Stressverstärker wirken kann.
+
+### Einflussfaktoren auf die EDA-Messung
+
+Aus den Angaben zu Körpergröße und Gewicht wurde der Body-Mass-Index (BMI) berechnet. Ziel war es, übergewichtige Personen zu identifizieren, da diese stärker thermisch schwitzen und die EDA-Messung dadurch beeinflusst werden kann.
+
+Die Frage nach Vorerkrankungen und regelmäßiger Medikamenteneinnahme verneinten 20 der 22 Teilnehmenden, zwei Personen bejahten sie. Eine Person gab eine Hypothyreose an, die mit L-Thyroxin behandelt wird. Da eine Schilddrüsenunterfunktion mit einer Hypothermie einhergehen kann, ist ein Einfluss auf das thermische Schwitzen und damit auf die EDA nicht auszuschließen. Die zweite Person leidet an Diabetes mellitus Typ 2 mit Nierenschädigung und nimmt Candesartan ein. Da ein Diabetes im Verlauf mit einer autonomen Neuropathie einhergehen kann, die auch die Funktion der Schweißdrüsen betrifft, ist hier ebenfalls ein Einfluss auf die Messung grundsätzlich denkbar. Auf Nachfrage wurden keine weiteren Erkrankungen genannt, die für die EDA-Messung relevant sein könnten; insbesondere lagen keine Hautsymptome vor.
+
+Das Vorwissen in Erster Hilfe schätzten die Teilnehmenden sehr unterschiedlich ein. Der Mittelwert liegt bei 3,18, was der Kategorie „eher schlecht“ entspricht. Zwei Personen bewerteten ihr Wissen mit 1 („sehr schlecht“), drei Personen mit 5 bis 6 („gut“ bis „sehr gut“). Insgesamt deutet dies auf ein eher mäßiges Selbstvertrauen in die eigenen Erste-Hilfe-Fähigkeiten hin. Für die EDA-Messung ist dies insofern bedeutsam, als ein geringes Vertrauen in das eigene Können die Unsicherheit im Szenario verstärken und damit das emotionale Schwitzen erhöhen kann.
+
+Auch die körperliche Fitness wurde erfragt. Obwohl das Szenario nur geringe körperliche Anforderungen stellte, kann eine schlechte Fitness zu verstärktem thermischem Schwitzen führen und so die Messergebnisse beeinflussen. Bereits typische Erste-Hilfe-Maßnahmen wie das Knien neben einer verletzten Person können bei untrainierten Personen zu einer messbaren körperlichen Belastung führen.
+
+### Veränderung der Laune
+
+Beim Vergleich der Laune vor und nach dem Szenario zeigt sich ein uneinheitliches Bild. Bei 10 Teilnehmenden blieb die Laune unverändert. Bei jeweils 4 Personen verschlechterte beziehungsweise verbesserte sie sich um eine Stufe. Drei Personen gaben eine Verschlechterung um zwei Stufen an, eine Person sogar um vier Stufen. Insgesamt überwiegen damit die Verschlechterungen gegenüber den Verbesserungen.
+
+Eine verbesserte Laune lässt sich als Erleichterung darüber deuten, das Szenario abgeschlossen und aus subjektiver Sicht ein gutes Ergebnis erzielt zu haben. Eine Verschlechterung kann dagegen auf eine negative Erfahrung zurückgeführt werden, etwa wenn die Teilnehmenden ihr eigenes Abschneiden als schlecht empfanden. Bei unveränderter Laune wurde das Szenario offenbar weder als besonders belastend noch als entlastend erlebt. Im Gruppenvergleich (Tabelle 6) zeigt sich für die App-Gruppe ein Mittelwert von 5,1 vor und 4,9 nach dem Szenario, was einer leicht negativen Tendenz entspricht. Angesichts der geringen Gruppengröße ist diese Veränderung jedoch zurückhaltend zu interpretieren.
+
+Zusammenfassend zeigt die Befragung eine junge, vermutlich technikaffine Stichprobe mit mäßigem Erste-Hilfe-Vorwissen. Mit zwei Vorerkrankungen sowie den Faktoren BMI und Fitness liegen mehrere mögliche Einflussgrößen auf die EDA-Messung vor, die bei der Auswertung der physiologischen Daten berücksichtigt werden müssen.
