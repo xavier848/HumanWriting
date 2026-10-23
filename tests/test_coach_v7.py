@@ -49,6 +49,9 @@ FHWS_ABSATZ = (
     "der Hochschule gesehen.")
 
 
+ZIEL_P = (analyse.lade_baselines() or {}).get("textsorten", {}).get("hochschule", {}).get("ziel_p_mensch") or 0.86
+
+
 def bewertung_setzen(**felder):
     """analysiere_und_bewerte mit vorgegebenen Feldern der Bewertung (score, score_ki, ziel_score_ki, p_mensch …)."""
     echt = coach.analyse.analysiere_und_bewerte
@@ -99,7 +102,7 @@ class ZielEinseitig(unittest.TestCase):
         with bewertung_setzen(score=40, score_ki=40, p_mensch=0.995):
             c = coach.coache(KI_TEXT, None, 15)
         b = coach.bericht(c)
-        self.assertIn("Modell 100 % (Ziel ≥ 86 %) erreicht", b)
+        self.assertIn(f"Modell 100 % (Ziel ≥ {round(c['ziel_p_mensch'] * 100)} %) erreicht", b)
         self.assertIn(f"bis {math.ceil(c['ziel_score'] - 1e-9)}", b)
 
 
@@ -263,7 +266,7 @@ class Bereinigung(unittest.TestCase):
 
 class Auftragsgrenze(unittest.TestCase):
     def test_messunsicherheit_hoechstens_ein_auftrag(self):
-        with bewertung_setzen(score=80, score_ki=80, p_mensch=0.845):
+        with bewertung_setzen(score=80, score_ki=80, p_mensch=round(ZIEL_P - 0.005, 3)):
             c = coach.coache(KI_TEXT, None, 15)
         self.assertIsNotNone(c["messunsicherheit"])
         self.assertLessEqual(len([h for h in c["hinweise"] if h["typ"] != "bereinigung"]), 1)
@@ -276,7 +279,7 @@ class Auftragsgrenze(unittest.TestCase):
 
     def test_kleine_luecke_hoechstens_zwei(self):
         # p knapp unter dem Ziel (Lücke < 0,02), Score deutlich darunter: höchstens zwei Modell-Aufträge plus Score-Hebel
-        with bewertung_setzen(score=40, score_ki=40, p_mensch=0.85):
+        with bewertung_setzen(score=40, score_ki=40, p_mensch=round(ZIEL_P - 0.01, 3)):
             c = coach.coache(KI_TEXT, None, 15)
         self.assertIsNone(c["messunsicherheit"])
         grenze = c["auftragsgrenze"]
@@ -287,7 +290,7 @@ class Auftragsgrenze(unittest.TestCase):
         # nur Modell-Lücke (Score erreicht): Aufträge nach Netto-Wirkung bis zum 1,5-Fachen der Lücke
         with bewertung_setzen(p_mensch=0.80, score=90, score_ki=90):
             c = coach.coache(KI_TEXT, None, 15, roh=True)
-        luecke = coach._logit(0.86) - coach._logit(0.80)
+        luecke = coach._logit(ZIEL_P) - coach._logit(0.80)
         auftr = [h for h in c["hinweise"] if h["typ"] != "bereinigung"]
         self.assertTrue(auftr)
         if c["auftragsgrenze"]:

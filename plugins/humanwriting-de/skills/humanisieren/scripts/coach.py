@@ -122,6 +122,8 @@ def alternative_text(L, h: str) -> str | None:
         teilen_da = any(x["typ"] in ("teilen", "mitte") or {"teilen", "mitte"} & set(x.get("typen") or []) for x in L.hinweise)
         if "teilen" in L.ausgesetzt or not teilen_da:
             return "Erlaubt bleibt: Satzlängen diese Runde so lassen."
+    if h == "funktionswoerter":
+        return ALTERNATIVE[h].rstrip(".") + fw_absatz_zusatz(L) + "."
     return ALTERNATIVE.get(h)
 
 
@@ -878,7 +880,9 @@ def zitat_masken(saetze: list[dict]) -> dict[int, str]:
     Genau.«): ein Stapel führt die Verschachtelungstiefe, das Zitat endet erst bei Tiefe 0. Ist das erste Guillemet im Absatz
     ein », gilt « nur als Schließer (deutsche Form), sonst umgekehrt (»…« bzw. «…»); ebenso › und ‹. Eine Quellenklammer direkt
     hinter dem schließenden Zeichen gehört zum Zitat. Ein nie geschlossenes „, », «, › bzw. ‹ gilt bis zum Satzende; ein nie
-    geschlossenes “ oder " ist vermutlich ein einzelnes Zeichen und wird nicht maskiert."""
+    geschlossenes “ oder " ist vermutlich ein einzelnes Zeichen und wird nicht maskiert. Nie geschlossene Öffner zählen danach
+    nicht mehr mit (erneuter Durchlauf ohne sie): ein verirrtes oder falsch geschlossenes Zeichen („…", Zoll-Zeichen) hielte die
+    Tiefe sonst für den Rest des Absatzes über 0, und spätere echte Zitate blieben ungeschützt (v7-Prüfung, fhws S26/S27)."""
     masken: dict[int, str] = {}
     absaetze: dict[int, list[dict]] = {}
     for s in saetze:
@@ -892,29 +896,54 @@ def zitat_masken(saetze: list[dict]) -> dict[int, str]:
         erst_g = next((ch for ch in text if ch in "»«"), "»")
         erst_e = next((ch for ch in text if ch in "›‹"), "›")
         oeffner = {"„": "“”", "“": "”", '"': '"', erst_g: "«" if erst_g == "»" else "»", erst_e: "‹" if erst_e == "›" else "›"}
-        spannen: list[tuple[int, int]] = []
-        stapel: list[tuple[str, str, int]] = []  # (Öffner, Schließer, Start)
-        i = 0
-        while i < len(text):
-            ch = text[i]
-            # schließt das Zeichen eine offene Ebene? (die innerste zuerst; nicht geschlossene innere Ebenen fallen mit weg)
-            ebene = next((k for k in range(len(stapel) - 1, -1, -1) if ch in stapel[k][1]), None)
-            if ebene is not None:
-                start = stapel[ebene][2]
-                del stapel[ebene:]
-                if not stapel:
-                    ende = _beleg_ende(text, i + 1)
-                    spannen.append((start, ende))
-                    i = max(i + 1, ende)
+        # gemischt geschlossen („…"): das nächste Anführungszeichen nach „ ist ein gerades und bis zum nächsten „ (bzw. Absatzende)
+        # folgt kein “/” mehr – dann schließt dieses " das „ (sonst bliebe „ offen und das " öffnete eine neue Ebene)
+        scan = list(text)
+        for i, ch in enumerate(text):
+            if ch != "„":
+                continue
+            j = next((k for k in range(i + 1, len(text)) if text[k] in "“”\"„"), None)
+            if j is None or text[j] != '"':
+                continue
+            k = next((k for k in range(j + 1, len(text)) if text[k] in "“”„"), None)
+            if k is None or text[k] == "„":
+                scan[j] = "“"
+
+        def durchlauf(ignoriert: set[int]) -> tuple[list[tuple[int, int]], list[tuple[str, str, int]]]:
+            spannen_: list[tuple[int, int]] = []
+            stapel: list[tuple[str, str, int]] = []  # (Öffner, Schließer, Start)
+            i = 0
+            while i < len(text):
+                ch = scan[i]
+                if i in ignoriert:
+                    i += 1
                     continue
-            elif ch in oeffner:
-                stapel.append((ch, oeffner[ch], i))
-            i += 1
-        offen = next((x for x in stapel if x[0] in "„»«›‹"), None)
-        if offen is not None:
-            start = offen[2]
-            ende = next((e for a, e in grenzen if a <= start < e), len(text))
-            spannen.append((start, ende))
+                # schließt das Zeichen eine offene Ebene? (die innerste zuerst; nicht geschlossene innere Ebenen fallen mit weg)
+                ebene = next((k for k in range(len(stapel) - 1, -1, -1) if ch in stapel[k][1]), None)
+                if ebene is not None:
+                    start = stapel[ebene][2]
+                    del stapel[ebene:]
+                    if not stapel:
+                        ende = _beleg_ende(text, i + 1)
+                        spannen_.append((start, ende))
+                        i = max(i + 1, ende)
+                        continue
+                elif ch in oeffner:
+                    stapel.append((ch, oeffner[ch], i))
+                i += 1
+            return spannen_, stapel
+
+        ignoriert: set[int] = set()
+        offene: list[tuple[str, str, int]] = []
+        spannen, stapel = durchlauf(ignoriert)
+        while stapel:
+            offene += stapel
+            ignoriert |= {x[2] for x in stapel}
+            spannen, stapel = durchlauf(ignoriert)
+        for zeichen_, _zu, start in offene:
+            if zeichen_ in "„»«›‹":
+                ende = next((e for a, e in grenzen if a <= start < e), len(text))
+                spannen.append((start, ende))
         zeichen = list(text)
         for a, e in spannen:
             for i in range(a, e):
@@ -1536,7 +1565,10 @@ def fugen_technik(fuge: str) -> str:
                 "statt „Sie …“), kein Pronomen")
     if f in ("etwa", "nämlich", "also", "insbesondere", "darunter", "vor"):
         return "die Erläuterung als eigenen Satz mit Verb formulieren"
-    return f"die {FUGE_ART.get(f, 'Verknüpfung')} im zweiten Satz ausdrücklich behalten"
+    art = FUGE_ART.get(f, "Verknüpfung")
+    # Artikel nach dem Genus („den Gegensatz“, „den Bezug“, „das Mittel“ – nicht „die Gegensatz“; v7-Prüfung)
+    artikel = "den" if art.split()[0] in ("Gegensatz", "Bezug", "Zeitbezug") else "das" if art == "Mittel" else "die"
+    return f"{artikel} {art} im zweiten Satz ausdrücklich behalten"
 
 
 # Wörter, die der zweite Satz beim Teilen an dieser Fuge voraussichtlich dazubekommt (Subjekt, „Dazu gehören …“)
@@ -1809,6 +1841,7 @@ class Lauf:
         # Folge, wenn der Bericht ohnehin „Wortwahl einfacher“ als Hebel führt
         self.kette_max: dict[int, int] = {}
         self.gender_info: list[str] = []  # Gender-Restformen nur in wörtlichen Zitaten: Info statt Auftrag
+        self.fw_teilsatz_gesperrt: set[tuple[int, str]] = set()  # (Satz, Typ): Funktionswort-Umbau höbe das Verhältnis 2:1
 
     def absatz_anzahl(self, sim: list[list[int]]) -> list[int]:
         """Sätze je Absatz im Fokus für einen Simulationszustand (Bündeln −1, Teilen +1 im Absatz des Satzes)."""
@@ -2656,6 +2689,8 @@ def buendel_paar_grund(L: Lauf, a: dict, b: dict, laenge: bool = True) -> str | 
     t_neu = ha + na_ + hb + nb_ - (0 if buendel_technik(L, "buendeln") == "relativ" else 1)
     if hb + nb_ >= 3 or t_neu >= 4:
         return "verschachtelt"  # zusammen entstünde ein Satz mit vier und mehr Teilsätzen
+    if t_neu >= 3 and not teilsatz_hoch(L):
+        return "verschachtelt"  # drei Teilsätze nur, wo sie das (zu hohe) Verhältnis 2:1 senken – sonst wie bisher höchstens zwei
     if t_neu >= 3 and (re.search(r",\s*sondern\b", L.masken[a["nr"]]) or ZUSAMMENFASSUNG_A_RE.match(a["text"].lstrip("„\"(»"))):
         return "verschachtelt"  # drei Teilsätze um eine Gegenüberstellung bzw. ein Fazit („Insgesamt …“): der Bezug verschwimmt
     if KOPULA_DASS_RE.match(b["text"]) or (re.search(r"(?:^|,)\s*dass\b", L.masken[a["nr"]], re.IGNORECASE)
@@ -3349,7 +3384,8 @@ def nebensatz_auftrag(L: Lauf, s: dict, mk: str) -> tuple[int, str, int] | None:
                     return None
                 kopf = vorne.strip(" ,„\"(»")
                 return rang, (f"„{kopf}, dass …“ als Ankündigung mit Doppelpunkt schreiben („{kopf}: …“), der Inhalt des „dass“-Satzes "
-                              "wird Hauptsatz – keine Nominalgruppe; Aussagestatus erhalten."), 0
+                              "wird Hauptsatz – keine Nominalgruppe; Aussagestatus erhalten: eine Forderung bleibt eine Forderung "
+                              "(„Unternehmen müssen …“), keine Tatsachenbehauptung."), 0
             sperre = nominal_sperre(L, s, mk, teil)
             if sperre:
                 return None
@@ -4254,6 +4290,7 @@ def _funktionswoerter(L: Lauf) -> None:
                 and not teilsatz_ok(L, {"typ": typ, "satz": s["nr"], "fw_weg": dict(bilanz[0])}):
             # aus drei Teilsätzen würden zwei: das Verhältnis 2:1 stiege weiter (v6-Prüfung, Agile S41: 1,11 → 1,17)
             L.unterdrueckt["fw_teilsatz"] += 1
+            L.fw_teilsatz_gesperrt.add((s["nr"], typ))
             continue
         ersetzbar = [w for w in re.findall(r"[A-Za-zÄÖÜäöüß]+", fund) if w.lower() not in analyse.FUNKTIONSWOERTER and len(w) > 3]
         if L.hinweis(typ, s, f"{zitat(s)}: „{fund}“ {technik}.", 0.8, fund=fund, ersetzbar=ersetzbar):
@@ -6202,6 +6239,8 @@ def fw_stellen(L: Lauf, woerter: list[str]) -> dict[str, dict[str, list]]:
                     grund = "der Umbau entfernte menschlich häufige Wörter mit"
                 elif fw_technik(L, kid, _t, mk, t) is None:
                     grund = "das Ersatzverb steht schon im Satz"
+                elif (s["nr"], typ) in getattr(L, "fw_teilsatz_gesperrt", set()):
+                    grund = "das Verhältnis der Sätze mit zwei zu einem Teilsatz stiege weiter"
                 else:
                     konstr.append((t.start(), ende, _FW_KONSTR_LABEL[kid], k_woerter))
                     continue
@@ -6681,6 +6720,18 @@ def _ziele(L: Lauf) -> dict:
             "luecke_logit": (_logit(ziel_p) - _logit(p)) if luecke_p > 0 else 0.0}
 
 
+def gegenseite_punkte(L: Lauf, Z: dict) -> float:
+    """Score-Punkte, die Kennzahlen auf der der KI abgewandten Seite kosten (gelb ≈ 50, rot ≈ 100 · Gewicht / Gewichtssumme). Nur im
+    Rückfall auf den zweiseitigen Score; einseitig zählen sie ohnehin wie grün (0). Decken sie die Score-Lücke, wäre der Text
+    einseitig gerechnet am Ziel: dann keine Score-Aufträge auf der KI-Seite (Info „Menschlicher als typisch“ statt Punktesammeln)."""
+    if Z.get("einseitig"):
+        return 0.0
+    bew = L.bew
+    gsum = sum(max(0.0, float(z["gewicht"] or 0)) for z in bew.get("kennzahlen", []) if z["bewertet"]) or 1.0
+    return sum((50.0 if z["status"] == "gelb" else 100.0) * max(0.0, float(z["gewicht"] or 0)) / gsum
+               for z in L.kz.values() if z["bewertet"] and z["status"] != "gruen" and z["seite"] == "gegen")
+
+
 def _teilziel_familien(L: Lauf, fehlt: float) -> list[str]:
     """Hebel der gewichtigsten Kennzahlen auf der KI-Seite, die eine Score-Lücke schließen (je Kennzahl gelb → grün bzw.
     rot → gelb ≈ 50 · Gewicht / Gewichtssumme Punkte)."""
@@ -6804,12 +6855,12 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
         # Modell-Ziel erreicht, nur der Score fehlt: nur die Hebel der gewichtigsten Kennzahlen, die die Lücke schließen; kein
         # Auftrag, der das Modell simuliert unter das Ziel drückte
         fehlt = Z["luecke_score"]
-        familien = _teilziel_familien(L, fehlt)
-        gsum = sum(max(0.0, float(z["gewicht"] or 0)) for z in bew["kennzahlen"] if z["bewertet"]) or 1.0
-        gegen = 0.0 if Z["einseitig"] else sum(
-            (50.0 if z["status"] == "gelb" else 100.0) * max(0.0, float(z["gewicht"] or 0)) / gsum
-            for z in kz.values() if z["bewertet"] and z["status"] != "gruen" and z["seite"] == "gegen")
-        teilziel = {"fehlt": fehlt, "hebel": familien, "gegenseite_punkte": round(gegen, 1)}
+        gegen = gegenseite_punkte(L, Z)
+        deckt = gegen >= fehlt
+        # deckt die Gegenseite die Lücke (Rückfall auf den zweiseitigen Score), kein Punktesammeln auf der KI-Seite – der Text wäre
+        # einseitig gerechnet am Ziel (v7-Prüfung: fhws p = 1,0, Score 50 / KI-Seite 83 → Absatz teilen + Gegenfolie)
+        familien = [] if deckt else _teilziel_familien(L, fehlt)
+        teilziel = {"fehlt": fehlt, "hebel": familien, "gegenseite_punkte": round(gegen, 1), "gegenseite_deckt": deckt}
         eindeutig = [h for h in eindeutig if (h["hebel"] in familien or h["hebel"] == "vorgaben" or (h["typ"] == "teilen" and diag["ueberkorrektur"]))
                      and 1 / (1 + math.exp(-(_logit(Z["p"]) + h["netto_logit"]))) >= ziel_p]
         max_hinweise = min(max_hinweise, 8)
@@ -6833,7 +6884,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             pos = [h for h in eindeutig if h.get("netto_logit", 0) > NETTO_TOLERANZ]
             bester = max(pos, key=lambda h: h["netto_logit"]) if pos else None
         else:
-            familien = _teilziel_familien(L, max(1, Z["luecke_score"]))
+            familien = [] if gegenseite_punkte(L, Z) >= Z["luecke_score"] else _teilziel_familien(L, max(1, Z["luecke_score"]))
             pos = [h for h in eindeutig if h["hebel"] in familien and h.get("netto_logit", 0) >= -NETTO_TOLERANZ]
             bester = min(pos, key=lambda h: (familien.index(h["hebel"]), -h.get("netto_logit", 0))) if pos else None
         eindeutig = [bester] if bester else []
@@ -6852,7 +6903,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
                 gewaehlt.append(h)
                 summe += h["netto_logit"]
             score_teil = []
-            if Z["luecke_score"] > RAUSCHEN_SCORE:
+            if Z["luecke_score"] > RAUSCHEN_SCORE and gegenseite_punkte(L, Z) < Z["luecke_score"]:
                 familien = _teilziel_familien(L, Z["luecke_score"])
                 score_teil = [h for h in eindeutig if h["hebel"] in familien and not any(h is x for x in gewaehlt)]
                 teilziel = {"fehlt": Z["luecke_score"], "hebel": familien, "mit_modell": True}
@@ -6955,7 +7006,7 @@ def _ergebnis(L: Lauf, max_hinweise: int, roh: bool) -> dict:
             and (L.vorher or {}).get("diagnose_kurz"):
         diagnose_wie = dict(L.vorher["diagnose_kurz"], messung=len(L.messungen))  # nur erneut gemessen: Kurzfassung
     hinweis_felder = ("typ", "typen", "anfang", "satz", "ziel", "ziel_wert", "laenge", "weitere", "zaehlung", "pos", "laengen_alt", "sim",
-                      "variante", "teilsaetze", "netto_logit", "technik", "fw_weg")
+                      "variante", "teilsaetze", "netto_logit", "technik")
     stand = {"score": bew.get("score"), "score_ki": bew.get("score_ki"), "p_mensch": bew.get("p_mensch"),
              "kennzahlen": {z["id"]: {"wert": z["wert"], "status": z["status"]} for z in bew.get("kennzahlen", []) if z["bewertet"]},
              "roh": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in L.roh_jetzt.items()},
@@ -7314,8 +7365,13 @@ def bericht(c: dict) -> str:
     elif c.get("teilziel") and not c["teilziel"].get("mit_modell"):
         namen = ", ".join(HEBEL_TEXT[h][0] for h in c["teilziel"]["hebel"] if h in HEBEL_TEXT)
         fehlt = c["teilziel"]["fehlt"]
-        out.append(f"\n_{modell_txt} erreicht; dem {score_art} fehlen noch {fmt(fehlt)} Punkt{'e' if fehlt != 1 else ''} bis {ziel_s}. "
-                   f"Deshalb nur Hinweise zu: {namen or '–'}._")
+        if c["teilziel"].get("gegenseite_deckt"):
+            out.append(f"\n_{modell_txt} erreicht; dem {score_art} fehlen noch {fmt(fehlt)} Punkt{'e' if fehlt != 1 else ''} bis {ziel_s} – "
+                       f"sie liegen auf der der KI abgewandten Seite (≈ {fmt(c['teilziel']['gegenseite_punkte'])} Punkte durch Werte, die "
+                       "„menschlicher als typisch“ sind): kein Handlungsbedarf, keine Aufträge dazu._")
+        else:
+            out.append(f"\n_{modell_txt} erreicht; dem {score_art} fehlen noch {fmt(fehlt)} Punkt{'e' if fehlt != 1 else ''} bis {ziel_s}. "
+                       f"Deshalb nur Hinweise zu: {namen or '–'}._")
     elif c["bewertung"].get("verfuegbar"):
         grenze = c.get("auftragsgrenze")
         zusatz = (f" Unten nur die Stellen mit der größten simulierten Wirkung – sie reichen rechnerisch (zusammen ≈ "
@@ -7367,7 +7423,8 @@ def bericht(c: dict) -> str:
                 regel = f"– nicht mehr bündeln als unten genannt (höchstens ~{BUENDEL_MAX_ZIEL} Wörter je Satz)"
             out.append(f"\n**Satzlängen:** {sl['lange']} von {sl['n']} Sätzen haben ≥ {LANG_AB} Wörter; bis zum menschlichen Median (~15 %) {fehlen} "
                        f"{regel}{mitte}" + (f" ({abw})." if abw else "."))
-    if c["hebel"] and not c["ziel_erreicht"] and not c.get("messunsicherheit"):
+    if c["hebel"] and not c["ziel_erreicht"] and not c.get("messunsicherheit") \
+            and not (c.get("teilziel") or {}).get("gegenseite_deckt"):  # Score-Lücke nur auf der Gegenseite: keine Hebel
         normal = [h for h in c["hebel"] if not h.get("stellenlos")][:4]
         orientierung = [h for h in c["hebel"][:6] if h.get("stellenlos")][:3]
         # rote bewertete Kennzahlen ohne Auftrag immer nennen (v4: DP Konnektoren über P90, weder Auftrag noch Erwähnung)
@@ -7420,7 +7477,9 @@ def bericht(c: dict) -> str:
             out.append(f"\n_{rest} weitere Hinweise nach der nächsten Messung._")
     elif c.get("teilziel") and not c["teilziel"].get("mit_modell") and not c["ziel_erreicht"]:
         tz = c["teilziel"]
-        if (tz.get("gegenseite_punkte") or 0) >= tz["fehlt"]:
+        if tz.get("gegenseite_deckt"):
+            pass  # die Kopfzeile sagt es schon („kein Handlungsbedarf, keine Aufträge dazu“)
+        elif (tz.get("gegenseite_punkte") or 0) >= tz["fehlt"]:
             out.append(f"\n_Keine sichere Einzelstelle für die Score-Lücke. Die fehlenden Punkte liegen überwiegend auf der der KI abgewandten "
                        f"Seite (≈ {fmt(tz['gegenseite_punkte'])} Punkte durch Werte, die „menschlicher als typisch“ sind) – kein "
                        "Handlungsbedarf._")

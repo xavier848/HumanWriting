@@ -229,9 +229,9 @@
    "gewicht": 0.0,
    "regex": "\\bes\\s+ist\\s+(daher\\s+|somit\\s+|jedoch\\s+|dabei\\s+)?(wichtig|entscheidend|essenziell|essentiell|unerlässlich|zentral|von\\s+bedeutung|hervorzuheben|zu\\s+betonen|anzumerken),?\\s+(dass|zu|die|den|das)\\b",
    "ersatz": "Direkt die Forderung/Aussage: „KMU sollten …“, „Entscheidend ist …“ nur einmal im Text.",
-   "rate_mensch_pro_1000": 0.007,
+   "rate_mensch_pro_1000": 0.006,
    "rate_ki_pro_1000": 0.0,
-   "verhaeltnis_ki_mensch": 0.75
+   "verhaeltnis_ki_mensch": 0.78
   },
   {
    "id": "gilt_es",
@@ -416,9 +416,9 @@
    "gewicht": 0.0,
    "regex": "\\b(zunehmend\\w*|immer\\s+mehr|immer\\s+stärker|immer\\s+wichtiger)\\b",
    "ersatz": "Zeitraum und Ausmaß nennen, wenn belegt; sonst „mehr“/„häufiger“.",
-   "rate_mensch_pro_1000": 0.633,
+   "rate_mensch_pro_1000": 0.634,
    "rate_ki_pro_1000": 0.539,
-   "verhaeltnis_ki_mensch": 0.86
+   "verhaeltnis_ki_mensch": 0.85
   },
   {
    "id": "sicherstellen",
@@ -522,7 +522,7 @@
   }
  ],
  "kalibrierung": {
-  "token_mensch": 890109,
+  "token_mensch": 890080,
   "token_ki": 323029
  }
 }

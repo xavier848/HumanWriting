@@ -126,8 +126,9 @@ class KontingentBisZumMedian(unittest.TestCase):
             k = d["kontingent"]
             abstand = lambda j: abs((lange + j) / (n - j) - p50)  # noqa: E731
             self.assertLessEqual(abstand(k), min(abstand(j) for j in range(0, 10)) + 1e-9, (n, lange, k))
-            # nie mehr als einen halben Satz über dem Median
-            self.assertLessEqual((lange + k) / (n - k), p50 + 0.5 / (n - k) + 1e-9, (n, lange, k))
+            # nie mehr als einen halben Bündelschritt über dem Median: ein Schritt verschiebt den Anteil um
+            # (1 + Anteil) / (n − k), bei Anteilen um 0,15–0,2 also um höchstens 1,2 / (n − k)
+            self.assertLessEqual((lange + k) / (n - k), p50 + 0.6 / (n - k) + 1e-9, (n, lange, k))
 
     def test_simulierter_stand_nach_dem_buendeln(self):
         p50 = REF["anteil_lange_saetze"]["mensch"]["p50"]

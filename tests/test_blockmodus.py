@@ -149,17 +149,25 @@ class ZClipping(unittest.TestCase):
 
 class Modellbeitraege(unittest.TestCase):
     def nachrechnen(self, bew: dict, metriken: dict, baselines: dict):
-        """Unabhängig: Logit aus den Koeffizienten = Intercept-Term am menschlichen Median + Σ Beiträge."""
+        """Unabhängig: Logit aus den Koeffizienten = Intercept-Term am menschlichen Median + Σ Beiträge. Merkmale mit
+        Kappung (v4-Baselines) werden auf der der KI abgewandten Seite am Bandrand begrenzt, bevor sie standardisiert werden."""
         ts = baselines["textsorten"]["hochschule"]
         mod = ts["modell"]
         logit = mod["intercept"]
         am_median = mod["intercept"]
         mit_wert = []
+
+        def gekappt(k, x):
+            kappe = (mod.get("kappen") or {}).get(k)
+            if not kappe:
+                return x
+            return min(x, kappe["wert"]) if kappe["seite"] == "oben" else max(x, kappe["wert"])
+
         for k, c in mod["koeffizienten"].items():
             if metriken.get(k) is None:
                 continue
             sd = mod["sd"][k] or 1.0
-            logit += c * clip((metriken[k] - mod["mittel"][k]) / sd)
+            logit += c * clip((gekappt(k, metriken[k]) - mod["mittel"][k]) / sd)
             p50 = ts["metriken"][k]["mensch"]["p50"] if k in ts["metriken"] else mod["mittel"][k]
             am_median += c * clip((p50 - mod["mittel"][k]) / sd)
             mit_wert.append(k)

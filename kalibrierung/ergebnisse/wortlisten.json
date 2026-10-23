@@ -4,13 +4,13 @@
    "ngramm": "etwa",
    "z": 14.19,
    "ki_pro_1000": 1.969,
-   "mensch_pro_1000": 0.368,
+   "mensch_pro_1000": 0.369,
    "docs_ki": 327,
    "docs_mensch": 156
   },
   {
    "ngramm": "zugleich",
-   "z": 10.79,
+   "z": 10.8,
    "ki_pro_1000": 0.96,
    "mensch_pro_1000": 0.139,
    "docs_ki": 206,
@@ -36,20 +36,20 @@
    "ngramm": "als",
    "z": 10.34,
    "ki_pro_1000": 10.104,
-   "mensch_pro_1000": 6.615,
+   "mensch_pro_1000": 6.617,
    "docs_ki": 403,
    "docs_mensch": 412
   },
   {
    "ngramm": "sich",
-   "z": 10.08,
+   "z": 10.09,
    "ki_pro_1000": 12.739,
-   "mensch_pro_1000": 8.861,
+   "mensch_pro_1000": 8.862,
    "docs_ki": 404,
    "docs_mensch": 412
   },
   {
-   "ngramm": "diese weise",
+   "ngramm": "auf diese weise",
    "z": 8.58,
    "ki_pro_1000": 0.514,
    "mensch_pro_1000": 0.054,
@@ -57,7 +57,7 @@
    "docs_mensch": 34
   },
   {
-   "ngramm": "auf diese weise",
+   "ngramm": "diese weise",
    "z": 8.58,
    "ki_pro_1000": 0.514,
    "mensch_pro_1000": 0.054,
@@ -74,9 +74,9 @@
   },
   {
    "ngramm": "damit",
-   "z": 7.85,
+   "z": 7.84,
    "ki_pro_1000": 2.508,
-   "mensch_pro_1000": 1.273,
+   "mensch_pro_1000": 1.274,
    "docs_ki": 349,
    "docs_mensch": 356
   },
@@ -113,20 +113,20 @@
    "docs_mensch": 62
   },
   {
-   "ngramm": "während",
-   "z": 7.16,
-   "ki_pro_1000": 1.483,
-   "mensch_pro_1000": 0.649,
-   "docs_ki": 275,
-   "docs_mensch": 251
-  },
-  {
    "ngramm": "kaum",
    "z": 7.16,
    "ki_pro_1000": 0.864,
    "mensch_pro_1000": 0.274,
    "docs_ki": 181,
    "docs_mensch": 153
+  },
+  {
+   "ngramm": "während",
+   "z": 7.14,
+   "ki_pro_1000": 1.483,
+   "mensch_pro_1000": 0.652,
+   "docs_ki": 275,
+   "docs_mensch": 252
   },
   {
    "ngramm": "ergibt sich",
@@ -170,7 +170,7 @@
   },
   {
    "ngramm": "jedoch",
-   "z": 6.58,
+   "z": 6.59,
    "ki_pro_1000": 2.309,
    "mensch_pro_1000": 1.29,
    "docs_ki": 341,
@@ -194,7 +194,7 @@
   },
   {
    "ngramm": "weitgehend",
-   "z": 6.19,
+   "z": 6.2,
    "ki_pro_1000": 0.458,
    "mensch_pro_1000": 0.108,
    "docs_ki": 122,
@@ -210,9 +210,9 @@
   },
   {
    "ngramm": "ein",
-   "z": 6.0,
+   "z": 6.01,
    "ki_pro_1000": 7.996,
-   "mensch_pro_1000": 6.122,
+   "mensch_pro_1000": 6.123,
    "docs_ki": 401,
    "docs_mensch": 412
   },
@@ -234,15 +234,15 @@
   },
   {
    "ngramm": "die",
-   "z": 5.65,
+   "z": 5.66,
    "ki_pro_1000": 44.94,
-   "mensch_pro_1000": 40.811,
+   "mensch_pro_1000": 40.822,
    "docs_ki": 404,
    "docs_mensch": 412
   },
   {
    "ngramm": "hinaus",
-   "z": 5.63,
+   "z": 5.64,
    "ki_pro_1000": 0.858,
    "mensch_pro_1000": 0.363,
    "docs_ki": 215,
@@ -250,9 +250,9 @@
   },
   {
    "ngramm": "über",
-   "z": 5.61,
+   "z": 5.59,
    "ki_pro_1000": 3.863,
-   "mensch_pro_1000": 2.674,
+   "mensch_pro_1000": 2.677,
    "docs_ki": 371,
    "docs_mensch": 402
   },
@@ -266,9 +266,9 @@
   },
   {
    "ngramm": "zudem",
-   "z": 5.58,
+   "z": 5.57,
    "ki_pro_1000": 1.22,
-   "mensch_pro_1000": 0.61,
+   "mensch_pro_1000": 0.611,
    "docs_ki": 259,
    "docs_mensch": 207
   },
@@ -322,7 +322,7 @@
   },
   {
    "ngramm": "mitarbeitenden",
-   "z": 5.29,
+   "z": 5.3,
    "ki_pro_1000": 0.217,
    "mensch_pro_1000": 0.028,
    "docs_ki": 31,
@@ -386,7 +386,7 @@
   },
   {
    "ngramm": "darüber",
-   "z": 5.2,
+   "z": 5.21,
    "ki_pro_1000": 0.957,
    "mensch_pro_1000": 0.458,
    "docs_ki": 230,
@@ -482,7 +482,7 @@
   },
   {
    "ngramm": "dabei",
-   "z": 5.03,
+   "z": 5.04,
    "ki_pro_1000": 2.322,
    "mensch_pro_1000": 1.508,
    "docs_ki": 347,
@@ -546,7 +546,7 @@
   },
   {
    "ngramm": "gelten",
-   "z": 4.81,
+   "z": 4.82,
    "ki_pro_1000": 0.384,
    "mensch_pro_1000": 0.12,
    "docs_ki": 103,
@@ -570,7 +570,7 @@
   },
   {
    "ngramm": "zentrale",
-   "z": 4.75,
+   "z": 4.76,
    "ki_pro_1000": 0.489,
    "mensch_pro_1000": 0.183,
    "docs_ki": 133,
@@ -580,7 +580,7 @@
    "ngramm": "eine",
    "z": 4.75,
    "ki_pro_1000": 10.142,
-   "mensch_pro_1000": 8.451,
+   "mensch_pro_1000": 8.453,
    "docs_ki": 404,
    "docs_mensch": 412
   },
@@ -618,7 +618,7 @@
   },
   {
    "ngramm": "befunde",
-   "z": 4.67,
+   "z": 4.68,
    "ki_pro_1000": 0.257,
    "mensch_pro_1000": 0.06,
    "docs_ki": 62,
@@ -634,7 +634,7 @@
   },
   {
    "ngramm": "zeigt",
-   "z": 4.64,
+   "z": 4.65,
    "ki_pro_1000": 1.04,
    "mensch_pro_1000": 0.562,
    "docs_ki": 227,
@@ -650,15 +650,15 @@
   },
   {
    "ngramm": "erforderlich",
-   "z": 4.59,
+   "z": 4.56,
    "ki_pro_1000": 0.306,
-   "mensch_pro_1000": 0.087,
+   "mensch_pro_1000": 0.088,
    "docs_ki": 84,
    "docs_mensch": 55
   },
   {
    "ngramm": "vergleichsweise",
-   "z": 4.55,
+   "z": 4.56,
    "ki_pro_1000": 0.276,
    "mensch_pro_1000": 0.072,
    "docs_ki": 73,
@@ -945,14 +945,6 @@
    "docs_mensch": 255
   },
   {
-   "ngramm": "erfasst",
-   "z": 4.11,
-   "ki_pro_1000": 0.347,
-   "mensch_pro_1000": 0.126,
-   "docs_ki": 74,
-   "docs_mensch": 83
-  },
-  {
    "ngramm": "da sie",
    "z": 4.11,
    "ki_pro_1000": 0.347,
@@ -961,8 +953,16 @@
    "docs_mensch": 87
   },
   {
+   "ngramm": "erfasst",
+   "z": 4.11,
+   "ki_pro_1000": 0.347,
+   "mensch_pro_1000": 0.126,
+   "docs_ki": 74,
+   "docs_mensch": 83
+  },
+  {
    "ngramm": "sich ein",
-   "z": 4.1,
+   "z": 4.11,
    "ki_pro_1000": 0.331,
    "mensch_pro_1000": 0.117,
    "docs_ki": 93,
@@ -994,7 +994,7 @@
   },
   {
    "ngramm": "dort",
-   "z": 4.09,
+   "z": 4.1,
    "ki_pro_1000": 0.495,
    "mensch_pro_1000": 0.219,
    "docs_ki": 122,
@@ -1010,11 +1010,11 @@
   },
   {
    "ngramm": "sowie",
-   "z": 4.01,
+   "z": 4.0,
    "ki_pro_1000": 2.508,
-   "mensch_pro_1000": 1.814,
+   "mensch_pro_1000": 1.817,
    "docs_ki": 332,
-   "docs_mensch": 350
+   "docs_mensch": 351
   },
   {
    "ngramm": "ist damit",
@@ -1042,7 +1042,7 @@
   },
   {
    "ngramm": "wobei",
-   "z": 3.98,
+   "z": 3.99,
    "ki_pro_1000": 0.495,
    "mensch_pro_1000": 0.225,
    "docs_ki": 131,
@@ -1129,7 +1129,7 @@
    "docs_mensch": 8
   },
   {
-   "ngramm": "besonderem maße",
+   "ngramm": "in besonderem maße",
    "z": 3.87,
    "ki_pro_1000": 0.105,
    "mensch_pro_1000": 0.011,
@@ -1137,7 +1137,7 @@
    "docs_mensch": 9
   },
   {
-   "ngramm": "in besonderem maße",
+   "ngramm": "besonderem maße",
    "z": 3.87,
    "ki_pro_1000": 0.105,
    "mensch_pro_1000": 0.011,
@@ -1154,7 +1154,7 @@
   },
   {
    "ngramm": "zunächst",
-   "z": 3.85,
+   "z": 3.86,
    "ki_pro_1000": 0.926,
    "mensch_pro_1000": 0.543,
    "docs_ki": 216,
@@ -1178,7 +1178,7 @@
   },
   {
    "ngramm": "liegt",
-   "z": 3.81,
+   "z": 3.82,
    "ki_pro_1000": 0.858,
    "mensch_pro_1000": 0.494,
    "docs_ki": 189,
@@ -1193,12 +1193,12 @@
    "docs_mensch": 6
   },
   {
-   "ngramm": "damit nicht",
+   "ngramm": "ausdrücklich",
    "z": 3.79,
    "ki_pro_1000": 0.118,
    "mensch_pro_1000": 0.017,
-   "docs_ki": 38,
-   "docs_mensch": 14
+   "docs_ki": 34,
+   "docs_mensch": 12
   }
  ],
  "mensch_typisch": [
@@ -1206,7 +1206,7 @@
    "ngramm": "es",
    "z": -8.76,
    "ki_pro_1000": 3.247,
-   "mensch_pro_1000": 5.782,
+   "mensch_pro_1000": 5.784,
    "docs_ki": 361,
    "docs_mensch": 412
   },
@@ -1220,7 +1220,7 @@
   },
   {
    "ngramm": "z b",
-   "z": -8.11,
+   "z": -8.1,
    "ki_pro_1000": 0.003,
    "mensch_pro_1000": 0.789,
    "docs_ki": 1,
@@ -1238,7 +1238,7 @@
    "ngramm": "kapitel",
    "z": -7.46,
    "ki_pro_1000": 0.22,
-   "mensch_pro_1000": 1.105,
+   "mensch_pro_1000": 1.106,
    "docs_ki": 50,
    "docs_mensch": 225
   },
@@ -1262,7 +1262,7 @@
    "ngramm": "auch",
    "z": -7.0,
    "ki_pro_1000": 4.414,
-   "mensch_pro_1000": 6.63,
+   "mensch_pro_1000": 6.633,
    "docs_ki": 391,
    "docs_mensch": 412
   },
@@ -1302,13 +1302,13 @@
    "ngramm": "des",
    "z": -6.37,
    "ki_pro_1000": 5.752,
-   "mensch_pro_1000": 7.997,
+   "mensch_pro_1000": 7.999,
    "docs_ki": 397,
    "docs_mensch": 412
   },
   {
    "ngramm": "aber",
-   "z": -6.29,
+   "z": -6.28,
    "ki_pro_1000": 0.706,
    "mensch_pro_1000": 1.656,
    "docs_ki": 159,
@@ -1316,23 +1316,23 @@
   },
   {
    "ngramm": "sehr",
-   "z": -6.17,
+   "z": -6.18,
    "ki_pro_1000": 0.297,
-   "mensch_pro_1000": 1.009,
+   "mensch_pro_1000": 1.01,
    "docs_ki": 76,
    "docs_mensch": 312
   },
   {
    "ngramm": "schon",
-   "z": -5.99,
+   "z": -6.0,
    "ki_pro_1000": 0.053,
-   "mensch_pro_1000": 0.542,
+   "mensch_pro_1000": 0.543,
    "docs_ki": 16,
    "docs_mensch": 220
   },
   {
    "ngramm": "haben",
-   "z": -5.79,
+   "z": -5.78,
    "ki_pro_1000": 0.923,
    "mensch_pro_1000": 1.862,
    "docs_ki": 181,
@@ -1358,7 +1358,7 @@
    "ngramm": "zu",
    "z": -5.14,
    "ki_pro_1000": 10.532,
-   "mensch_pro_1000": 12.904,
+   "mensch_pro_1000": 12.906,
    "docs_ki": 404,
    "docs_mensch": 412
   },
@@ -1366,7 +1366,7 @@
    "ngramm": "der",
    "z": -5.14,
    "ki_pro_1000": 33.978,
-   "mensch_pro_1000": 38.212,
+   "mensch_pro_1000": 38.226,
    "docs_ki": 404,
    "docs_mensch": 412
   },
@@ -1374,7 +1374,7 @@
    "ngramm": "in",
    "z": -5.13,
    "ki_pro_1000": 16.156,
-   "mensch_pro_1000": 19.068,
+   "mensch_pro_1000": 19.078,
    "docs_ki": 404,
    "docs_mensch": 412
   },
@@ -1388,15 +1388,15 @@
   },
   {
    "ngramm": "von",
-   "z": -5.01,
+   "z": -5.02,
    "ki_pro_1000": 9.984,
-   "mensch_pro_1000": 12.232,
+   "mensch_pro_1000": 12.245,
    "docs_ki": 404,
    "docs_mensch": 412
   },
   {
    "ngramm": "gibt es",
-   "z": -4.99,
+   "z": -4.98,
    "ki_pro_1000": 0.074,
    "mensch_pro_1000": 0.449,
    "docs_ki": 24,
@@ -1404,7 +1404,7 @@
   },
   {
    "ngramm": "welche",
-   "z": -4.88,
+   "z": -4.87,
    "ki_pro_1000": 0.678,
    "mensch_pro_1000": 1.354,
    "docs_ki": 146,
@@ -1484,9 +1484,9 @@
   },
   {
    "ngramm": "werden",
-   "z": -4.45,
+   "z": -4.46,
    "ki_pro_1000": 7.411,
-   "mensch_pro_1000": 9.137,
+   "mensch_pro_1000": 9.143,
    "docs_ki": 391,
    "docs_mensch": 412
   },
@@ -1508,7 +1508,7 @@
   },
   {
    "ngramm": "hat",
-   "z": -4.37,
+   "z": -4.36,
    "ki_pro_1000": 1.059,
    "mensch_pro_1000": 1.763,
    "docs_ki": 209,
@@ -1524,7 +1524,7 @@
   },
   {
    "ngramm": "in den",
-   "z": -4.22,
+   "z": -4.21,
    "ki_pro_1000": 1.514,
    "mensch_pro_1000": 2.3,
    "docs_ki": 267,
@@ -1628,9 +1628,9 @@
   },
   {
    "ngramm": "noch",
-   "z": -3.84,
+   "z": -3.85,
    "ki_pro_1000": 0.957,
-   "mensch_pro_1000": 1.538,
+   "mensch_pro_1000": 1.539,
    "docs_ki": 205,
    "docs_mensch": 371
   },
@@ -1676,7 +1676,7 @@
   },
   {
    "ngramm": "sein",
-   "z": -3.76,
+   "z": -3.75,
    "ki_pro_1000": 0.814,
    "mensch_pro_1000": 1.344,
    "docs_ki": 181,
@@ -1684,7 +1684,7 @@
   },
   {
    "ngramm": "oft",
-   "z": -3.76,
+   "z": -3.75,
    "ki_pro_1000": 0.115,
    "mensch_pro_1000": 0.381,
    "docs_ki": 34,
@@ -1718,7 +1718,7 @@
    "ngramm": "den",
    "z": -3.68,
    "ki_pro_1000": 10.157,
-   "mensch_pro_1000": 11.819,
+   "mensch_pro_1000": 11.825,
    "docs_ki": 403,
    "docs_mensch": 412
   },
@@ -1756,15 +1756,15 @@
   },
   {
    "ngramm": "zum",
-   "z": -3.61,
+   "z": -3.62,
    "ki_pro_1000": 1.932,
-   "mensch_pro_1000": 2.669,
+   "mensch_pro_1000": 2.671,
    "docs_ki": 294,
    "docs_mensch": 403
   },
   {
    "ngramm": "wichtig",
-   "z": -3.58,
+   "z": -3.57,
    "ki_pro_1000": 0.142,
    "mensch_pro_1000": 0.407,
    "docs_ki": 39,
@@ -1779,7 +1779,7 @@
    "docs_mensch": 397
   },
   {
-   "ngramm": "wie z b",
+   "ngramm": "wie z",
    "z": -3.53,
    "ki_pro_1000": 0.0,
    "mensch_pro_1000": 0.148,
@@ -1787,7 +1787,7 @@
    "docs_mensch": 81
   },
   {
-   "ngramm": "wie z",
+   "ngramm": "wie z b",
    "z": -3.53,
    "ki_pro_1000": 0.0,
    "mensch_pro_1000": 0.148,
@@ -1820,11 +1820,11 @@
   },
   {
    "ngramm": "konnte",
-   "z": -3.46,
+   "z": -3.47,
    "ki_pro_1000": 0.108,
-   "mensch_pro_1000": 0.342,
+   "mensch_pro_1000": 0.343,
    "docs_ki": 31,
-   "docs_mensch": 169
+   "docs_mensch": 170
   },
   {
    "ngramm": "im gegensatz",
@@ -1836,11 +1836,11 @@
   },
   {
    "ngramm": "scheint",
-   "z": -3.44,
+   "z": -3.46,
    "ki_pro_1000": 0.043,
-   "mensch_pro_1000": 0.229,
+   "mensch_pro_1000": 0.23,
    "docs_ki": 13,
-   "docs_mensch": 119
+   "docs_mensch": 120
   },
   {
    "ngramm": "in deutschland",
@@ -1860,7 +1860,7 @@
   },
   {
    "ngramm": "a",
-   "z": -3.4,
+   "z": -3.39,
    "ki_pro_1000": 0.198,
    "mensch_pro_1000": 0.472,
    "docs_ki": 36,
@@ -1894,7 +1894,7 @@
    "ngramm": "wie",
    "z": -3.35,
    "ki_pro_1000": 3.068,
-   "mensch_pro_1000": 3.911,
+   "mensch_pro_1000": 3.913,
    "docs_ki": 352,
    "docs_mensch": 410
   },
@@ -1982,7 +1982,7 @@
    "ngramm": "im",
    "z": -3.23,
    "ki_pro_1000": 7.721,
-   "mensch_pro_1000": 8.993,
+   "mensch_pro_1000": 8.997,
    "docs_ki": 404,
    "docs_mensch": 412
   },
@@ -2004,7 +2004,7 @@
   },
   {
    "ngramm": "mehr",
-   "z": -3.22,
+   "z": -3.21,
    "ki_pro_1000": 0.858,
    "mensch_pro_1000": 1.31,
    "docs_ki": 176,
@@ -2059,6 +2059,14 @@
    "docs_mensch": 77
   },
   {
+   "ngramm": "soll",
+   "z": -3.1,
+   "ki_pro_1000": 0.56,
+   "mensch_pro_1000": 0.922,
+   "docs_ki": 125,
+   "docs_mensch": 280
+  },
+  {
    "ngramm": "und jugendlichen",
    "z": -3.09,
    "ki_pro_1000": 0.031,
@@ -2075,24 +2083,16 @@
    "docs_mensch": 170
   },
   {
-   "ngramm": "soll",
-   "z": -3.08,
-   "ki_pro_1000": 0.56,
-   "mensch_pro_1000": 0.92,
-   "docs_ki": 125,
-   "docs_mensch": 278
-  },
-  {
    "ngramm": "menschen",
    "z": -3.08,
    "ki_pro_1000": 0.681,
-   "mensch_pro_1000": 1.071,
+   "mensch_pro_1000": 1.072,
    "docs_ki": 98,
    "docs_mensch": 229
   },
   {
    "ngramm": "denn",
-   "z": -3.07,
+   "z": -3.06,
    "ki_pro_1000": 0.269,
    "mensch_pro_1000": 0.537,
    "docs_ki": 73,
@@ -2132,7 +2132,7 @@
   },
   {
    "ngramm": "so dass",
-   "z": -3.0,
+   "z": -2.99,
    "ki_pro_1000": 0.0,
    "mensch_pro_1000": 0.107,
    "docs_ki": 0,
@@ -2147,28 +2147,20 @@
    "docs_mensch": 156
   },
   {
-   "ngramm": "einige",
-   "z": -2.98,
-   "ki_pro_1000": 0.164,
-   "mensch_pro_1000": 0.38,
-   "docs_ki": 48,
-   "docs_mensch": 180
-  },
-  {
    "ngramm": "der gesellschaft",
-   "z": -2.98,
+   "z": -2.97,
    "ki_pro_1000": 0.037,
    "mensch_pro_1000": 0.18,
    "docs_ki": 10,
    "docs_mensch": 98
   },
   {
-   "ngramm": "unsere",
+   "ngramm": "einige",
    "z": -2.97,
-   "ki_pro_1000": 0.003,
-   "mensch_pro_1000": 0.112,
-   "docs_ki": 1,
-   "docs_mensch": 60
+   "ki_pro_1000": 0.164,
+   "mensch_pro_1000": 0.38,
+   "docs_ki": 48,
+   "docs_mensch": 180
   },
   {
    "ngramm": "beinhaltet",
@@ -2179,8 +2171,16 @@
    "docs_mensch": 75
   },
   {
-   "ngramm": "wenn",
+   "ngramm": "unsere",
    "z": -2.97,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.112,
+   "docs_ki": 1,
+   "docs_mensch": 60
+  },
+  {
+   "ngramm": "wenn",
+   "z": -2.96,
    "ki_pro_1000": 0.966,
    "mensch_pro_1000": 1.401,
    "docs_ki": 194,
@@ -2238,9 +2238,9 @@
    "ngramm": "anderen",
    "z": -2.93,
    "ki_pro_1000": 0.792,
-   "mensch_pro_1000": 1.185,
+   "mensch_pro_1000": 1.186,
    "docs_ki": 184,
-   "docs_mensch": 365
+   "docs_mensch": 366
   },
   {
    "ngramm": "könnte",
@@ -2259,20 +2259,20 @@
    "docs_mensch": 147
   },
   {
+   "ngramm": "untersucht",
+   "z": -2.92,
+   "ki_pro_1000": 0.145,
+   "mensch_pro_1000": 0.347,
+   "docs_ki": 39,
+   "docs_mensch": 159
+  },
+  {
    "ngramm": "aufgrund der",
    "z": -2.91,
    "ki_pro_1000": 0.084,
    "mensch_pro_1000": 0.253,
    "docs_ki": 26,
    "docs_mensch": 145
-  },
-  {
-   "ngramm": "den letzten jahren",
-   "z": -2.91,
-   "ki_pro_1000": 0.003,
-   "mensch_pro_1000": 0.108,
-   "docs_ki": 1,
-   "docs_mensch": 81
   },
   {
    "ngramm": "letzten jahren",
@@ -2283,12 +2283,12 @@
    "docs_mensch": 81
   },
   {
-   "ngramm": "untersucht",
-   "z": -2.9,
-   "ki_pro_1000": 0.145,
-   "mensch_pro_1000": 0.346,
-   "docs_ki": 39,
-   "docs_mensch": 159
+   "ngramm": "den letzten jahren",
+   "z": -2.91,
+   "ki_pro_1000": 0.003,
+   "mensch_pro_1000": 0.108,
+   "docs_ki": 1,
+   "docs_mensch": 81
   },
   {
    "ngramm": "bezug",
@@ -2315,6 +2315,14 @@
    "docs_mensch": 107
   },
   {
+   "ngramm": "speziell",
+   "z": -2.87,
+   "ki_pro_1000": 0.015,
+   "mensch_pro_1000": 0.131,
+   "docs_ki": 5,
+   "docs_mensch": 78
+  },
+  {
    "ngramm": "in dieser arbeit",
    "z": -2.87,
    "ki_pro_1000": 0.037,
@@ -2332,19 +2340,11 @@
   },
   {
    "ngramm": "anzahl",
-   "z": -2.87,
+   "z": -2.86,
    "ki_pro_1000": 0.115,
    "mensch_pro_1000": 0.297,
    "docs_ki": 28,
    "docs_mensch": 151
-  },
-  {
-   "ngramm": "speziell",
-   "z": -2.86,
-   "ki_pro_1000": 0.015,
-   "mensch_pro_1000": 0.13,
-   "docs_ki": 5,
-   "docs_mensch": 77
   },
   {
    "ngramm": "weiteren",
@@ -2356,7 +2356,7 @@
   },
   {
    "ngramm": "bezug auf die",
-   "z": -2.85,
+   "z": -2.84,
    "ki_pro_1000": 0.009,
    "mensch_pro_1000": 0.117,
    "docs_ki": 3,
