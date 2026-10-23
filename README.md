@@ -47,24 +47,37 @@ Eine englische Variante kommt als eigenes Plugin (`humanwriting-en`), damit jede
 
 ## Kalibrierung und Evaluation
 
-**Referenzwerte** (`kalibrierung/ergebnisse/bericht.md`): 412 deutsche Hochschularbeiten vor 2022 (1116 Abschnitte zu 800 Wörtern) gegen 412 themengleiche Claude-Texte (404 Abschnitte). Das Modell „P(menschlich)“ trennt die beiden Gruppen in 5×5-facher, nach Thema gruppierter Kreuzvalidierung mit AUROC 0,996 (Score 0,78). „Ziel erreicht“ heißt: Modell ≥ 0,86 und Score ≥ 56 – das schaffen 81 % der echten und 0,5 % der KI-Abschnitte. Kein einzelnes Merkmal hebt einen typischen KI-Abschnitt allein über die Schwelle.
+**Referenzwerte** (`kalibrierung/ergebnisse/bericht.md`): 412 deutsche Hochschularbeiten vor 2022 (1116 Abschnitte zu 800 Wörtern) gegen 412 themengleiche Claude-Texte (404 Abschnitte). Das Modell „P(menschlich)“ trennt die beiden Gruppen in 5×5-facher, nach Thema gruppierter Kreuzvalidierung mit AUROC 0,996. „Ziel erreicht“ heißt: Modell ≥ 0,85 und einseitiger Score ≥ 73 (der einseitige Score zählt nur Abweichungen in Richtung KI, AUROC 0,958). Das schaffen 83 % der echten und 0,7 % der KI-Abschnitte. Jedes Modellmerkmal ist auf der der KI abgewandten Seite am menschlichen Band gekappt: Übertreiben bringt keine Punkte. Kein einzelnes Merkmal hebt einen typischen KI-Abschnitt allein über die Schwelle.
 
-**Stil-Coach**, geprüft in mehreren Runden: Simulierte Studenten haben fünf neue Claude-Texte (BWL-Themen) ausschließlich nach den Coach-Hinweisen überarbeitet; ein unabhängiger Prüfer hat den Inhalt verglichen, ein Kritiker die Hinweise und Nebenwirkungen bewertet.
+**Skill `menschlich-schreiben`** (A/B-Test, fünf BWL-Abschnitte zu je ~900 Wörtern, alle von Claude geschrieben):
 
-| Version | Modell Ø (Start ~0,00) | am Ziel | Überkorrektur-Markierungen | Textähnlichkeit zum Original |
+| Fassung | Modell Ø | Score KI-Seite Ø | am Ziel | KI-Muster pro 1000 W. (gewichtet) |
 |---|---|---|---|---|
-| v1 | 0,84 | 3/5 | 66 | 0,82 |
-| v2 | 0,41 | 1/5 | 24 | 0,89 |
-| v3 | 0,34 | 0/5 | 12 | 0,94 |
-| v4 | 0,35 | 0/5 | 8 | 0,95 |
-| v5 | 0,25 | 0/5 | 6 | 0,97 |
+| ohne Skill | 0,003 | 52 | 0/5 | 7,6 |
+| mit Skill (erste Fassung) | 0,92 | 82 | 4/5 | 1,3 |
+| mit Skill (Zielbänder) | 0,96 | 90 | 5/5 | 0 |
+
+Alle Quellen der Skill-Texte waren real und richtig zugeordnet. Ein Prüfer (nicht blind) hielt die Fassung mit Zielbändern auch inhaltlich für die beste. Rest-Schwächen (zu wenige gezählte Konnektoren, Einzelfälle von Überkorrektur) sind danach in den Regeln nachgeschärft.
+
+**Stil-Coach** auf echten Texten (Hauptzweck): In einer Stichprobe von 60 echten Abschnitten erreichen 88 % das Ziel sofort, 47 von 60 bekommen gar keinen Hinweis (im Mittel 0,4 Hinweise; KI-Abschnitte rund 10). Fünf echte Abschnitte knapp unter dem Ziel erreichen es nach 0–3 kleinen Aufträgen alle; der Inhalt blieb laut unabhängigem Prüfer gleich, nie gab es Aufträge in wörtlichen Zitaten.
+
+**Stil-Coach auf Claude-Texten**, geprüft in sieben Runden: Simulierte Studenten haben fünf Claude-Texte ausschließlich nach den Coach-Hinweisen überarbeitet; ein Prüfer hat den Inhalt verglichen, ein Kritiker Hinweise und Nebenwirkungen bewertet. Alle Stände mit der aktuellen Messung neu gemessen:
+
+| Version | Modell Ø (Start 0,003) | Modellziel | Überkorrektur-Markierungen | Textähnlichkeit zum Original |
+|---|---|---|---|---|
+| v1 | 0,84 | 2/5 | 65 | 0,82 |
+| v2 | 0,40 | 1/5 | 24 | 0,89 |
+| v3 | 0,36 | 0/5 | 12 | 0,94 |
+| v4 | 0,38 | 0/5 | 8 | 0,95 |
+| v5 | 0,27 | 0/5 | 6 | 0,97 |
+| v6 | 0,32 | 0/5 | 10 | 0,96 |
+| v7 | 0,32 | 0/5 | 5 | 0,97 |
 
 - v1 erreichte das Ziel durch **Überkorrektur**: zu viele lange Sätze, schwerere Lesbarkeit, Inhaltsverschiebungen. Ab v2 gibt der Coach nur so viele Aufträge, wie bis zum menschlichen Median nötig sind, simuliert jeden Auftrag vorab und meldet Überkorrektur.
-- Danach verbessert der Coach Claude-Texte deutlich (Logit-Summe −10,7 → −5,8), bringt sie mit Einzelkorrekturen aber **nicht** auf menschliches Niveau. Der größte Rest ist das **Funktionswort-Profil** (Verteilung kleiner Wörter wie „als“, „sich“, „es“, „werden“). Es entsteht beim Formulieren selbst und lässt sich durch Umbauen einzelner Sätze kaum verschieben. Der Coach sagt das ehrlich, statt weiter an Einzelstellen zu drehen.
-- v5 ist die präziseste und ehrlichste Fassung (nichts hinzuerfunden, Diagnose unterscheidet „Grenze des Coaches“ von „Grenze der Einzelkorrekturen“). Drei ihrer Sperren haben wirksame Hebel ersatzlos abgeschaltet; sie sind im aktuellen Stand wieder auf das v4-Niveau gelockert (nicht erneut simuliert).
-- **Echte Texte** bekommen wenig: Auf menschlichen Abschnitten zeigt der Coach im Schnitt rund 2 Hinweise (KI-Abschnitte rund 13), am Ziel nur noch Vorgaben wie Semikolon oder Gender; nie Hinweise in wörtlichen Zitaten.
+- Danach verbessert der Coach Claude-Texte deutlich (Logit-Summe −11,1 → −6,2), bringt sie mit Einzelkorrekturen aber **nicht** auf menschliches Niveau. Der größte Rest ist das **Funktionswort-Profil** (Verteilung kleiner Wörter wie „als“, „sich“, „es“, „werden“). Es entsteht beim Formulieren selbst und lässt sich durch Umbauen einzelner Sätze kaum verschieben. Der Coach sagt das ehrlich und nennt die Absätze, die man neu formulieren müsste.
+- v7 ist die schonendste Fassung (wenigste Markierungen, höchste Ähnlichkeit, Ziel einseitig, Vorgaben getrennt, Zitatschutz auch verschachtelt). v7.1 behebt danach die Befunde der Abschlussprüfungen (Berichtsklarheit, abschaltbare Vorgaben, Mindestwirkung je Auftrag).
 
-Fazit: Der Coach ist für **selbst geschriebene Texte** gebaut. Einen Claude-Entwurf statistisch „menschlich“ zu machen, gelingt durch Nachbessern nicht ohne Überkorrektur – und das Text-Wasserzeichen bleibt ohnehin.
+Fazit: Der Coach ist für **selbst geschriebene Texte** gebaut. Ein Claude-Entwurf wird durch nachträgliches Coachen nicht menschlich; mit den Regeln von `menschlich-schreiben` von Anfang an geschrieben, erreicht er das Stil-Ziel dagegen schon im ersten Wurf.
 
 ## Hochschulvorgaben (Munich Business School)
 
